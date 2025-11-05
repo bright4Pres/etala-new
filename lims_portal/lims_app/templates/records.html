@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Book Thingy</title>
+  <link rel="icon" href="../static/pisay.png">
+  <link rel="stylesheet" href="../static/Scripts/records.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-datetimepicker/2.5.20/jquery.datetimepicker.min.css">
+  <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/css/bootstrap.min.css">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet">
+  <style>
+    .details-container {
+      display: none;
+      overflow: hidden;
+      padding: 1em 2em;
+      border-radius: 0 0 10px 10px;
+      font-size: 0.9em;
+    }
+    tr.shown {
+      background-color: #f0ffee !important;
+    }
+  </style>
+</head>
+<body>
+
+{% include 'partials/upbox.html' %}
+
+<div id="recordsContainer" style="margin-top: 5em;">
+  <div class="container" style="color: black">
+    <div class="row">
+      <!-- filter container -->
+      <div class="col-md-4" style="background-color: aliceblue; padding: 2em; border-radius: 1em;">
+        <h3 style="text-align: center;">Filter Books</h3>
+        <form method="GET" action="{% url 'records' %}">
+          {% csrf_token %}
+          <div class="mb-3">
+            <label for="bookType" class="form-label">Book Type</label>
+            <select id="bookType" name="book_type" class="form-select">
+              <option value="">All Types</option>
+              {% for type in type_CHOICES %}
+              <option value="{{ type.0 }}" {% if request.GET.book_type == type.0 %}selected{% endif %}>
+                {{ type.1 }}
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label for="language" class="form-label">Language</label>
+            <select id="language" name="language" class="form-select select2">
+              <option value="">All Languages</option>
+              {% for lang in distinct_languages %}
+              <option value="{{ lang }}" {% if request.GET.language == lang %}selected{% endif %}>
+                {{ lang }}
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label for="publisher" class="form-label">Publisher</label>
+            <select id="publisher" name="publisher" class="form-select select2">
+              <option value="">All Publishers</option>
+              {% for pub in distinct_publishers %}
+              <option value="{{ pub }}" {% if request.GET.publisher == pub %}selected{% endif %}>
+                {{ pub }}
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label for="mainAuthor" class="form-label">Main Author</label>
+            <select id="mainAuthor" name="main_author" class="form-select select2">
+              <option value="">All Authors</option>
+              {% for author in distinct_authors %}
+              <option value="{{ author }}" {% if request.GET.main_author == author %}selected{% endif %}>
+                {{ author }}
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label for="location" class="form-label">Location</label>
+            <select id="location" name="location" class="form-select select2">
+              <option value="">All Locations</option>
+              {% for loc in distinct_locations %}
+              <option value="{{ loc }}" {% if request.GET.location == loc %}selected{% endif %}>
+                {{ loc }}
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <button type="submit" class="btn btn-primary w-100 mt-3">Apply Filters</button>
+        </form>
+      </div>
+
+      <!-- Book Table -->
+      <div class="col-md-8">
+        <table id="booksTable" class="table table-striped table-bordered" style="font-size: 1.2em;">
+          <thead class="table-dark">
+            <tr>
+              <th>Book Details</th>
+              <th>Status | Location</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for book in recorded_books %}
+            <tr class="book-row" data-details="
+              <strong>Co-Author:</strong> {{ book.coAuthor|default:'-' }}<br>
+              <strong>Publisher:</strong> {{ book.Publisher|default:'-' }}<br>
+              <strong>Place of Publication:</strong> {{ book.placeofPublication|default:'-' }}<br>
+              <strong>Publication Date:</strong> {% if book.publicationDate %}{{ book.publicationDate|date:'Y-m-d' }}{% else %}-{% endif %}<br>
+              <strong>Language:</strong> {{ book.Language }}<br>
+              <strong>Type:</strong> {{ book.Type }}<br>
+              <strong>Accession Number:</strong> {{ book.accessionNumber }}<br>
+              {% if book.status == 'Borrowed' %}
+                <hr>
+                <strong>Borrowed By:</strong> {{ book.borrowed_by }}<br>
+                <strong>Student ID:</strong> {{ book.student_id }}<br>
+                <strong>Borrow Date:</strong> {{ book.borrow_date|date:'Y-m-d H:i' }}<br>
+                <strong>Return Date:</strong> {{ book.return_date|date:'Y-m-d H:i' }}<br>
+              {% endif %}
+            ">
+              <td><strong>{{ book.Title }}</strong> by {{ book.mainAuthor }}</td>
+              <td style="text-align:center;">
+                {% if book.status == 'Processing Borrow' %}
+                  <span>Processing Borrow</span>
+                {% elif book.status == 'Processing Return' %}
+                  <span>Processing Return</span>
+                {% elif book.status == 'Borrowed' %}
+                  <span class="text-danger">Borrowed</span>
+                {% else %}
+                  <span class="text-success">Available</span>
+                {% endif %}
+                <br>
+                <h1 style="font-size: 1.2em;">{{ book.Location|title }}</h1>
+                <button class="btn btn-secondary btn-sm mt-2 print-button" onclick="generatePDF(this)">Print</button>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<script>
+$(document).ready(function() {
+  const table = $('#booksTable').DataTable({
+    order: [],
+    columnDefs: [{ orderable: false, targets: "_all" }],
+    language: {
+      search: "Quick Filter:",
+      searchPlaceholder: "Find books here!"
+    }
+  });
+
+  // Animated toggle for details
+  $('#booksTable tbody').on('click', 'tr.book-row', function() {
+    const tr = $(this);
+    const row = table.row(tr);
+
+    if (row.child.isShown()) {
+      // Animate collapse
+      $('div.details-container', row.child()).slideUp(250, function() {
+        row.child.hide();
+        tr.removeClass('shown');
+      });
+    } else {
+      // Animate expand
+      const detailsHTML = tr.attr('data-details');
+      row.child(`<div class='details-container'>${detailsHTML}</div>`).show();
+      $('div.details-container', row.child()).slideDown(250);
+      tr.addClass('shown');
+    }
+  });
+});
+
+// PDF generation
+function generatePDF(button) {
+  try {
+    const row = $(button).closest('tr');
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    let y = 20;
+
+    doc.text("Book Record", 20, y);
+    y += 10;
+
+    const details = $(row).attr('data-details')
+      .replace(/<br>/g, '\n')
+      .replace(/<[^>]*>?/gm, ''); // strip HTML
+
+    details.split('\n').forEach(line => {
+      if (line.trim()) {
+        doc.text(line.trim(), 20, y);
+        y += 10;
+      }
+    });
+
+    doc.save('book_record.pdf');
+  } catch (error) {
+    console.error("PDF generation failed:", error);
+    alert("Failed to generate PDF. Please try again.");
+  }
+}
+</script>
+</body>
+</html>

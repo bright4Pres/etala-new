@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>eTala</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=0, maximum-scale=1.0">
+  <link rel="stylesheet" href="../static/Scripts/index.css">
+  <link rel="stylesheet" href="../static/Scripts/notif.css">
+  <link rel="icon" href="../static/pisay.png">
+</head>
+<body>
+{% include 'partials/upbox.html' %}
+<header style=" background-image: url('../static/zrcpic.png'); background-size: cover; background-position-y: -120px; background-repeat: no-repeat;">
+  <div class="container" style="font-family: 'Outfit', sans-serif;">
+  <div class="row">
+    <div class="col-10 col-md-7">
+      <div class="row">
+        <div class="col-10" >
+          <h1 style="font-size: 4.6em;">A scholar's <br> star map to <br> wisdom.</h1>
+        </div>
+        <div class="col-10">
+          <p> Type a title, author, or keyword to begin your journey </p>
+          <div id="searchContainer" style="width: 60%;">
+            <form id="globalSearchForm" method="GET" onsubmit="redirectToRecords(event);">
+                {% csrf_token %}
+                <input type="text" id="librarySearch" class="form-control"
+                      placeholder="Search the Library"
+                      value="{{ request.GET.search|default:'' }}"
+                      style="width: 80%; padding-left: 1em; font-size: 1.4em">
+            </form>
+            </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-10 col-md-3">
+      <div style="background-image: url('../static/pisaylogo.svg'); background-size: cover; height:300px; width: 300px; background-repeat: no-repeat;"> </div>  
+    </div>
+  </div>
+</div>
+</header>
+<main>
+  <section class="content fluid" id="home" style="height: 100vh; padding-top: 120px;">
+    <h2><span aria-hidden="true"> <img src="../static/arrow.svg" style="width: 60px; height: 60px;"> &nbsp;</span>
+    </h2>
+    <ul aria-hidden="true" style="--count: 4; font-size: 10vh;"> <!-- Adjusted count to match the number of meaningful items -->
+      <li style="--i: 0" class="redirect-records">find books.</li>
+      <li style="--i: 1" class="redirect-records">return books.</li>
+      <li style="--i: 2" class="redirect-records">borrow books.</li>
+      <li style="--i: 3" class="redirect-about">learn more.</li>
+      <li style="--i: 4" id="registerAccount">register an account.</li>
+      <li style="--i: 5"></li>
+
+    </ul>
+  </section>
+  <section style="height: 100vh; text-align: center;" id="todo">
+    <h2 class="fluid">firdasdasst</h2>
+  </section>
+    <section style="height: 100vh;" id="about">
+    <h2 class="fluid">second</h2>
+  </section>
+    <section style="height: 100vh;" id="statistic">
+    <h2 class="fluid">third</h2>
+  </section>
+</main>
+
+<!-- account registerer modal pop up -->
+<div id="registerModal" class="modal">
+  <div class="modal-content">
+    <span class="close">&times;</span>
+    <div class="form-container">
+      <form class="form" id="registerForm">
+        <div class="form-group">
+          <label for="name">Name</label>
+          <input type="text" id="name" name="name" placeholder="e.g. Bright Bastasa" required="">
+        </div>
+        <div class="form-group">
+          <label for="idNumber">ID Number</label>
+          <input type="text" id="idNumber" name="idNumber" placeholder="e.g. 13-2020-052" required="">
+        </div>
+        <div class="form-group">
+          <label for="email">School Email</label>
+          <input type="email" id="email" name="email" placeholder="e.g. example@gmail.com" required="">
+        </div>
+        <div class="form-group">
+          <label for="batch">Batch</label>
+          <input type="text" id="batch" name="batch" placeholder="e.g. 2026" required="">
+        </div>
+        <button class="form-submit-btn" type="submit">Submit</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div id="notification" class="notification"></div>
+
+<!-- partial -->
+<script type="module" src="../static/Scripts/index.js"></script>
+<script>
+  function redirectToRecords(event) {
+    event.preventDefault();
+    const searchValue = document.getElementById('librarySearch').value;
+    window.location.href = `/records?search=${encodeURIComponent(searchValue)}`;
+  }
+  document.addEventListener("DOMContentLoaded", function () {
+    const modal = document.getElementById("registerModal");
+    const btn = document.getElementById("registerAccount");
+    const span = document.getElementsByClassName("close")[0];
+    const mainContent = document.querySelector("main");
+    const notification = document.getElementById("notification");
+
+    btn.onclick = function() {
+      modal.style.display = "flex";
+      mainContent.classList.add("blurred");
+    }
+
+    span.onclick = function() {
+      modal.style.display = "none";
+      mainContent.classList.remove("blurred");
+    }
+
+    window.onclick = function(event) {
+      if (event.target == modal) {
+        modal.style.display = "none";
+        mainContent.classList.remove("blurred");
+      }
+    }
+
+    // submission handler for the modal
+    document.getElementById("registerForm").onsubmit = function(event) {
+      event.preventDefault();
+
+      const name = document.getElementById("name").value;
+      const idNumber = document.getElementById("idNumber").value;
+      const email = document.getElementById("email").value;
+      const batch = document.getElementById("batch").value;
+
+      // check for duplicate id and name
+      fetch('/check-duplicate/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': getCookie('csrftoken'),
+        },
+        body: JSON.stringify({
+          idNumber: idNumber,
+          name: name,
+        }),
+      })
+      .then(response => response.json())
+      .then(result => {
+        if (result.duplicate) {
+          showNotification('Duplicate ID number or student name found. Please use a different ID number or name.');
+        } else {
+          fetch('/register-account/', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRFToken': getCookie('csrftoken'),
+            },
+            body: JSON.stringify({
+              name: name,
+              idNumber: idNumber,
+              email: email,
+              batch: batch 
+            }),
+          })
+          .then(response => response.json())
+          .then(result => {
+            if (result.error) {
+              showNotification(result.error);
+            } else {
+              showNotification(result.message);
+              modal.style.display = "none";
+              mainContent.classList.remove("blurred");
+              document.getElementById("registerForm").reset();
+            }
+          })
+          .catch(error => console.error('Error:', error));
+        }
+      })
+      .catch(error => console.error('Error:', error));
+    };
+
+    // CSRF Token Helper
+    function getCookie(name) {
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+          const cookie = cookies[i].trim();
+          if (cookie.startsWith(name + '=')) {
+            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+            break;
+          }
+        }
+      }
+      return cookieValue;
+    }
+
+    // notifcaiton
+    function showNotification(message) {
+      notification.textContent = message;
+      notification.classList.add('show');
+      setTimeout(() => {
+        notification.classList.remove('show');
+      }, 3000);
+    }
+    // redirect to /books
+    document.querySelectorAll('.redirect-books').forEach(item => {
+      item.addEventListener('click', () => {
+        window.location.href = '/books';
+      });
+    });
+    document.querySelectorAll('.redirect-about').forEach(item => {
+      item.addEventListener('click', () => {
+        window.location.href = '/about';
+      });
+    });
+    document.querySelectorAll('.redirect-records').forEach(item => {
+      item.addEventListener('click', () => {
+        window.location.href = '/records';
+      });
+    });
+  });
+
+  
+
+</script>
+</body>
+</html>
