@@ -3,29 +3,16 @@
 <head>
   <meta charset="UTF-8">
   <title>Book Thingy</title>
-  <link rel="icon" href="../static/pisay.png">
-  <link rel="stylesheet" href="../static/Scripts/records.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-datetimepicker/2.5.20/jquery.datetimepicker.min.css">
-  <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/css/bootstrap.min.css">
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet">
-  <style>
-    .details-container {
-      display: none;
-      overflow: hidden;
-      padding: 1em 2em;
-      border-radius: 0 0 10px 10px;
-      font-size: 0.9em;
-    }
-    tr.shown {
-      background-color: #f0ffee !important;
-    }
-  </style>
+  <link rel="icon" href="../static/img/pisay.png">
+  <link rel="stylesheet" href="../static/Scripts/css/records.css">
+  <link rel="stylesheet" href="../static/Scripts/css/jquery.datetimepicker.min.css">
+  <link rel="stylesheet" href="../static/Scripts/css/dataTables.bootstrap5.min.css">
+  <link rel="stylesheet" href="../static/Scripts/css/bootstrap.min.css">
+  <link href="../static/Scripts/css/select2.min.css" rel="stylesheet">
 </head>
 <body>
 
 {% include 'partials/upbox.html' %}
-
 <div id="recordsContainer" style="margin-top: 5em;">
   <div class="container" style="color: black">
     <div class="row">
@@ -149,11 +136,11 @@
   </div>
 </div>
 
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/js/bootstrap.bundle.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="../static/Scripts/js/jquery-3.6.0.min.js"></script>
+<script src="../static/Scripts/js/bootstrap.bundle.min.js"></script>
+<script src="../static/Scripts/js/jquery.dataTables.min.js"></script>
+<script src="../static/Scripts/js/dataTables.bootstrap5.min.js"></script>
+<script src="../static/Scripts/js/jspdf.umd.min.js"></script>
 
 <script>
 $(document).ready(function() {
