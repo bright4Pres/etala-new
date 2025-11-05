@@ -9,10 +9,24 @@
   <link rel="stylesheet" href="../static/Scripts/css/dataTables.bootstrap5.min.css">
   <link rel="stylesheet" href="../static/Scripts/css/bootstrap.min.css">
   <link href="../static/Scripts/css/select2.min.css" rel="stylesheet">
+  <style>
+    .details-container {
+      display: none;
+      overflow: hidden;
+      height: auto;
+      padding: 1em 2em;
+      border-radius: 0 0 10px 10px;
+      font-size: 0.9em;
+    }
+    tr.shown {
+      background-color: #f0ffee !important;
+    }
+  </style>
 </head>
 <body>
 
 {% include 'partials/upbox.html' %}
+
 <div id="recordsContainer" style="margin-top: 5em;">
   <div class="container" style="color: black">
     <div class="row">
