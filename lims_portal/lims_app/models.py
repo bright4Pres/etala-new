@@ -45,11 +45,17 @@ class BorrowHistory(models.Model):
         try:
             book = Book.objects.get(accessionNumber=self.bookID)
             self.bookTitle = book.Title
+            
+            # Check if book is already borrowed
+            if book.status == "Borrowed" and not self.returned:
+                raise ValidationError({
+                    "bookID": f"Book '{self.bookID}' is already borrowed."
+                })
+                
         except Book.DoesNotExist:
             raise ValidationError({
                 "bookID": f"No book found with accession number '{self.bookID}'."
             })
-
         # --- Validate Account ---
         try:
             account = Account.objects.get(school_id=self.accountID)
