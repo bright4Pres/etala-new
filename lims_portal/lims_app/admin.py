@@ -1,5 +1,7 @@
 from django.contrib import admin
-from .models import reader, book, account
+from .models import BorrowHistory, Book, Account
+from django.urls import path, reverse
+from django.shortcuts import redirect, get_object_or_404
 from django.utils import timezone
 from django.utils.html import format_html
 from django.urls import path
@@ -12,17 +14,56 @@ class CirculationAdmin(admin.ModelAdmin):
         queryset = super().get_queryset(request)
         return queryset
 
-class ReaderAdmin(admin.ModelAdmin):
-    search_fields = ['id', 'reader_name', 'reader_id', 'reader_contact', 'reader_address', 'name']
-    list_display = ['id', 'reader_name', 'reader_id', 'reader_contact', 'reader_address', 'name',
-                    'borrowDate', 'returnDate', 'active']
-    list_filter = ['borrowDate', 'returnDate', 'active']
-    ordering = ['returnDate']
+class historyAdmin(admin.ModelAdmin):
+    search_fields = ['bookID', 'accountID', 'bookTitle', 'accountName', 'borrow_date', 'return_date', 'returned']
+    list_display = ['bookID', 'bookTitle', 'accountID', 'accountName', 'borrow_date', 'return_date', 'returned', 'return_action']
+    list_filter = ['bookID', 'accountID', 'borrow_date', 'return_date', 'returned']
+    ordering = ['borrow_date']
 
+    def get_urls(self):
+        """Register a custom URL for marking books as returned."""
+        urls = super().get_urls()
+        custom_urls = [
+            path(
+                "mark-returned/<int:history_id>/",
+                self.admin_site.admin_view(self.mark_returned_view),
+                name="lims_app_borrowhistory_mark_returned",
+            ),
+        ]
+        return custom_urls + urls
 
+    def return_action(self, obj):
+        """Display a 'Mark as Returned' button if not yet returned."""
+        if not obj.returned:
+            url = reverse('admin:lims_app_borrowhistory_mark_returned', args=[obj.pk])
+            return format_html('<a class="button" href="{}">Return</a>', url)
+        return "-"
+    return_action.short_description = "Return"
+
+    def mark_returned_view(self, request, history_id):
+        """Handle the 'Mark as Returned' action."""
+        history = get_object_or_404(BorrowHistory, pk=history_id)
+        history.returned = True
+        history.save()
+
+        # Update Book model
+        try:
+            book = Book.objects.get(accessionNumber=history.bookID)
+            book.status = "Available"
+            book.borrowed_by = None
+            book.student_id = None
+            book.borrow_date = None
+            book.return_date = None
+            book.save()
+        except Book.DoesNotExist:
+            pass
+
+        # Redirect back to the BorrowHistory changelist
+        return redirect('admin:lims_app_borrowhistory_changelist')
+    
 class AccountAdmin(admin.ModelAdmin):
-    search_fields = ['account_name', 'account_address', 'account_id', 'account_batch']
-    list_display = ['account_name', 'account_address', 'account_id']
+    search_fields = ['name', 'email', 'school_id', 'batch', 'created_at']
+    list_display = ['name', 'email', 'school_id']
 
 class BookAdmin(admin.ModelAdmin):
     search_fields = ['Title', 'mainAuthor', 'coAuthor', 'accessionNumber', 'Location', 'Language', 'Type']
@@ -53,7 +94,7 @@ class BookAdmin(admin.ModelAdmin):
         return custom_urls + urls
 
     def approve_request_view(self, request, book_id): 
-        book_instance = get_object_or_404(book, pk=book_id)
+        book_instance = get_object_or_404(Book, pk=book_id)
 
         if book_instance.status == "Processing Borrow":
             book_instance.status = "Borrowed"
@@ -68,6 +109,6 @@ class BookAdmin(admin.ModelAdmin):
         return redirect("/admin/library/book/")  # Redirect after approval
 
 # Register your models and custom admin
-admin.site.register(reader, ReaderAdmin)
-admin.site.register(book, BookAdmin)
-admin.site.register(account, AccountAdmin)
+admin.site.register(BorrowHistory, historyAdmin)
+admin.site.register(Book, BookAdmin)
+admin.site.register(Account, AccountAdmin)

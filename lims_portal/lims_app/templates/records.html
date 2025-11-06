@@ -26,7 +26,6 @@
 <body>
 
 {% include 'partials/upbox.html' %}
-
 <div id="recordsContainer" style="margin-top: 5em;">
   <div class="container" style="color: black">
     <div class="row">
@@ -122,8 +121,8 @@
                 <hr>
                 <strong>Borrowed By:</strong> {{ book.borrowed_by }}<br>
                 <strong>Student ID:</strong> {{ book.student_id }}<br>
-                <strong>Borrow Date:</strong> {{ book.borrow_date|date:'Y-m-d H:i' }}<br>
-                <strong>Return Date:</strong> {{ book.return_date|date:'Y-m-d H:i' }}<br>
+                <strong>Borrow Date:</strong> {{ book.borrow_date|date:'Y-m-d' }}<br>
+                <strong>Return Date:</strong> {{ book.return_date|date:'Y-m-d' }}<br>
               {% endif %}
             ">
               <td><strong>{{ book.Title }}</strong> by {{ book.mainAuthor }}</td>

@@ -2,7 +2,7 @@ from django.http import JsonResponse
 from django.utils.dateparse import parse_datetime
 from django.utils import timezone
 from django.shortcuts import render
-from .models import book, account
+from .models import Book, Account
 from django.views.decorators.csrf import csrf_protect
 import json
 
@@ -13,14 +13,14 @@ def about(request):
     return render(request, "about.html", context={"current_tab": "about"})
 
 def books(request):
-    authors = book.objects.values_list('mainAuthor', flat=True).distinct()
-    locations = book.objects.values_list('Location', flat=True).distinct()
+    authors = Book.objects.values_list('mainAuthor', flat=True).distinct()
+    locations = Book.objects.values_list('Location', flat=True).distinct()
 
     selected_author = request.GET.get('author')
     selected_location = request.GET.get('location')
     search_query = request.GET.get('search')
 
-    books_query = book.objects.filter(is_borrowed=False)
+    books_query = Book.objects.filter(is_borrowed=False)
     if selected_author:
         books_query = books_query.filter(mainAuthor=selected_author)
     if selected_location:
@@ -41,38 +41,6 @@ def books(request):
             "search_query": search_query,
         }
     )
-def save_student(request):
-    student_name = request.POST['student_name']
-    return render(request, "welcome.html", context={'student_name': student_name})
-
-def create_account(request):
-    if request.method == 'POST':
-        data = json.loads(request.body)
-        account_name = data.get('account_name')
-        account_id = data.get('account_id')
-        account_contact = data.get('account_contact')
-        account_address = data.get('account_address')
-        account_batch = data.get('account_batch')# check if account exists
-
-
-# check if account exists
-        if account.objects.filter(account_id=account_id).exists():
-            return JsonResponse({"error": "Account ID already exists."}, status=400)
-        if account.objects.filter(account_name=account_name).exists():
-            return JsonResponse({"error": "Account Name already exists."}, status=400)
-
-# saves account to databse
-        account.objects.create(
-            account_name=account_name,
-            account_id=account_id,
-            account_contact=account_contact,
-            account_address=account_address,
-            account_batch=account_batch
-        )
-        return JsonResponse({"message": "Account created successfully!"}, status=201)
-
-    return JsonResponse({"error": "Invalid request method."}, status=400)
-
 def register_account(request):
     if request.method == 'POST':
         data = json.loads(request.body)
@@ -81,17 +49,17 @@ def register_account(request):
         email = data.get('email')
         batch = data.get('batch')
 
-        if account.objects.filter(account_id=id_number).exists():
+        if Account.objects.filter(school_id=id_number).exists():
             return JsonResponse({'error': 'ID Number already exists.'}, status=400)
-        if account.objects.filter(account_name=name).exists():
+        if Account.objects.filter(name=name).exists():
             return JsonResponse({'error': 'Name already exists.'}, status=400)
 
         if name and id_number and email and batch:
-            account.objects.create(
-                account_name=name,
-                account_id=id_number,
-                account_address=email,
-                account_batch=batch
+            Account.objects.create(
+                name=name,
+                school_id=id_number,
+                email=email,
+                batch=batch
             )
             return JsonResponse({'message': 'Account registered successfully!'})
         else:
@@ -104,13 +72,12 @@ def check_duplicate(request):
         id_number = data.get('idNumber')
         name = data.get('name')
 
-        duplicate = account.objects.filter(account_id=id_number).exists() or account.objects.filter(account_name=name).exists()
+        duplicate = Account.objects.filter(school_id=id_number).exists() or Account.objects.filter(name=name).exists()
         return JsonResponse({'duplicate': duplicate})
-
     return JsonResponse({'error': 'Invalid request method.'}, status=405)
 
 def records(request):
-    all_books = book.objects.all()
+    all_books = Book.objects.all()
 
     # Capture user-selected filters
     book_type = request.GET.get('book_type')

@@ -5,6 +5,7 @@
   <title>eTala</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=0, maximum-scale=1.0">
   <link rel="stylesheet" href="../static/Scripts/css/index.css">
+  <link rel="stylesheet" href="../static/Scripts/css/notif.css">
   <link rel="icon" href="../static/img/pisay.png">
 </head>
 <body>
@@ -18,7 +19,7 @@
           <h1 style="font-size: 4.6em;">A scholar's <br> star map to <br> wisdom.</h1>
         </div>
         <div class="col-10">
-          <p> Type a title, author, or keyword to begin your journey </p>
+          <p> Enter a title, author, or keyword to begin your journey </p>
           <div id="searchContainer" style="width: 60%;">
             <form id="globalSearchForm" method="GET" onsubmit="redirectToRecords(event);">
                 {% csrf_token %}
@@ -38,17 +39,11 @@
 </div>
 </header>
 <main>
-  <section class="optionsContainer" id="home" style="height: 100vh; padding-top: 120px;">
+  <section class="optionsContainer" id="home" style="height: 40vh;">
     {% include 'partials/options.html' %}
   </section>
   <section style="height: 100vh; text-align: center;" id="todo">
-    <h2 class="fluid">firdasdasst</h2>
-  </section>
-    <section style="height: 100vh;" id="about">
-    <h2 class="fluid">second</h2>
-  </section>
-    <section style="height: 100vh;" id="statistic">
-    <h2 class="fluid">third</h2>
+    <h2 class="fluid">welcome to PISAY</h2>
   </section>
 </main>
 
@@ -67,19 +62,18 @@
           <input type="text" id="idNumber" name="idNumber" placeholder="e.g. 13-2020-052" required="">
         </div>
         <div class="form-group">
-          <label for="email">School Email</label>
+          <label for="email">Email</label>
           <input type="email" id="email" name="email" placeholder="e.g. example@gmail.com" required="">
         </div>
         <div class="form-group">
           <label for="batch">Batch</label>
           <input type="text" id="batch" name="batch" placeholder="e.g. 2026" required="">
         </div>
-        <button class="form-submit-btn" type="submit">Submit</button>
+        <button class="form-submit-btn" id="registerAccount" type="submit">Submit</button>
       </form>
     </div>
   </div>
 </div>
-
 <div id="notification" class="notification"></div>
 
 <!-- partial -->
@@ -185,6 +179,14 @@
       return cookieValue;
     }
   });
-</script>
+      function showNotification(message) {
+      notification.textContent = message;
+      notification.classList.add('show');
+      setTimeout(() => {
+        notification.classList.remove('show');
+      }, 3000);
+    }
+    // redirect to /books
+    </script>
 </body>
 </html>
