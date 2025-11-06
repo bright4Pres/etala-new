@@ -5,3 +5,4 @@ lims_portal/lims_app/__pycache__/
 lims_portal/lims_app/migrations/
 db.sqlite3
 *.sqlite3
+.env
