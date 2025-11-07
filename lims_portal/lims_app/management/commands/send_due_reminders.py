@@ -6,7 +6,7 @@ import time
 
 
 class Command(BaseCommand):
-    help = "Send reminders for due or overdue books at 12:50 PM"
+    help = "Send reminders for due or overdue books at 9:00 AM daily."
 
     def handle(self, *args, **kwargs):
         # start time
@@ -14,14 +14,14 @@ class Command(BaseCommand):
 
         # target time
         now = timezone.localtime()
-        target_time = now.replace(hour=6, minute=0, second=0, microsecond=0)
+        target_time = now.replace(hour=9, minute=0, second=0, microsecond=0)
 
         # function to wait until target time
         if now < target_time:
             wait_seconds = (target_time - now).total_seconds()
             wait_minutes = wait_seconds / 60
             wait_hours = wait_minutes / 60
-            self.stdout.write(f"Waiting {wait_hours:.0f} hours or {wait_minutes:.0f} minutes or {wait_seconds:.0f} seconds until 6:00 AM")
+            self.stdout.write(f"Waiting {wait_hours:.0f} hours or {wait_minutes:.0f} minutes or {wait_seconds:.0f} seconds until 9:00 AM")
             time.sleep(wait_seconds)
 
         # fetch current date
