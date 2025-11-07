@@ -9,25 +9,27 @@ class Command(BaseCommand):
     help = "Send reminders for due or overdue books at 12:50 PM"
 
     def handle(self, *args, **kwargs):
-        # Log start time
+        # start time
         self.stdout.write(self.style.NOTICE(f"[{timezone.localtime()}] Command started."))
 
-        # Target time (adjust hour/minute here)
+        # target time
         now = timezone.localtime()
-        target_time = now.replace(hour=13, minute=44, second=0, microsecond=0)
+        target_time = now.replace(hour=6, minute=0, second=0, microsecond=0)
 
-        # Wait until the target time if not reached yet
+        # function to wait until target time
         if now < target_time:
             wait_seconds = (target_time - now).total_seconds()
-            self.stdout.write(f"Waiting {wait_seconds:.0f} seconds until 12:51 PM...")
+            wait_minutes = wait_seconds / 60
+            wait_hours = wait_minutes / 60
+            self.stdout.write(f"Waiting {wait_hours:.0f} hours or {wait_minutes:.0f} minutes or {wait_seconds:.0f} seconds until 6:00 AM")
             time.sleep(wait_seconds)
 
-        # Get today's date
+        # fetch current date
         today = timezone.localdate()
         histories = BorrowHistory.objects.filter(returned=False)
         self.stdout.write(self.style.NOTICE(f"Found {histories.count()} active borrow records."))
 
-        # Loop through each unreturned book
+        # loop for each book due
         for h in histories:
             try:
                 account = Account.objects.get(school_id=h.accountID)
@@ -35,7 +37,6 @@ class Command(BaseCommand):
                 self.stdout.write(self.style.WARNING(f"No account found for {h.accountID}"))
                 continue
 
-            # Normalize return_date type for comparison
             return_date = h.return_date.date() if hasattr(h.return_date, "date") else h.return_date
 
             user_email = account.email
@@ -43,7 +44,7 @@ class Command(BaseCommand):
             book_title = h.bookTitle
             book_id = h.bookID
 
-            # Determine if due today or overdue
+            # determine if due today or overdue
             if return_date == today:
                 subject = f"Reminder: Book '{book_title}' is due today"
                 message = (
@@ -65,12 +66,12 @@ class Command(BaseCommand):
             else:
                 continue  # Not due yet
 
-            # Send the email
+            # send email
             try:
                 send_mail(
                     subject,
                     message,
-                    "mycarbondioxide@gmail.com",  # Replace with your SMTP sender address
+                    "mycarbondioxide@gmail.com", 
                     [user_email],
                     fail_silently=False,
                 )
