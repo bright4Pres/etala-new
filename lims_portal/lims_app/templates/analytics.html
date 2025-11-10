@@ -75,7 +75,7 @@
                         <div class="kpi-value">{{ total_accounts|default:0 }}</div>
                         <div class="kpi-trend trend-up">
                             <i class="fas fa-arrow-up"></i>
-                            <span>+{{ period_new_accounts|default:0 }}</span>
+                            <span>+{{ period_new_accounts|default:0 }} in {{ period_label|lower }}</span>
                         </div>
                     </div>
                     <div class="kpi-icon">
@@ -89,7 +89,7 @@
                     <div class="kpi-info">
                         <h3>Total Borrows</h3>
                         <div class="kpi-value">{{ total_borrows_all_time|default:0 }}</div>
-                        <div class="kpi-subtitle">{{ period_borrows|default:0 }} {{ period_label|lower }}</div>
+                        <div class="kpi-subtitle">{{ period_borrows|default:0 }} in {{ period_label|lower }}</div>
                     </div>
                     <div class="kpi-icon">
                         <i class="fas fa-exchange-alt"></i>
