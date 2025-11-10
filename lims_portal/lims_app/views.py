@@ -133,6 +133,16 @@ def records(request):
         "selected_filters": selected_filters,
     })
     
+from django.http import JsonResponse
+from django.utils.dateparse import parse_datetime
+from django.utils import timezone
+from django.shortcuts import render
+from .models import Book, Account, BorrowHistory
+from django.views.decorators.csrf import csrf_protect
+from django.db.models import Count, Q, Avg
+from datetime import datetime, timedelta
+import json
+
 def analytics(request):
     now = timezone.now()
     
@@ -260,6 +270,54 @@ def analytics(request):
     avg_borrow_percent = int(min((avg_borrow_days / 14) * 100, 100))  # relative to a 14-day baseline
     return_rate_rounded = round(return_rate, 1)
 
+    # ========== CALENDAR HEATMAP DATA (Configurable Range & Navigation) ==========
+    heatmap_range = request.GET.get('heatmap_range', 'year')  # 'week', 'month', 'year'
+    heatmap_offset = int(request.GET.get('heatmap_offset', 0))
+    today = now.date()
+
+    if heatmap_range == 'week':
+        days = 7
+        period_label = 'This Week'
+        start_date = today - timedelta(days=(today.weekday() + 7 * heatmap_offset))
+        end_date = start_date + timedelta(days=6)
+    elif heatmap_range == 'month':
+        # Go back N months
+        month = today.month - heatmap_offset
+        year = today.year
+        while month < 1:
+            month += 12
+            year -= 1
+        start_date = datetime(year, month, 1).date()
+        # End of month
+        if month == 12:
+            end_date = datetime(year + 1, 1, 1).date() - timedelta(days=1)
+        else:
+            end_date = datetime(year, month + 1, 1).date() - timedelta(days=1)
+        days = (end_date - start_date).days + 1
+        period_label = start_date.strftime('%B %Y')
+    else:  # 'year' or default
+        # Go back N years
+        year = today.year - heatmap_offset
+        start_date = datetime(year, 1, 1).date()
+        end_date = datetime(year, 12, 31).date()
+        days = (end_date - start_date).days + 1
+        period_label = str(year)
+
+    # Build heatmap data for the selected period
+    heatmap_data = []
+    for i in range(days):
+        date = start_date + timedelta(days=i)
+        count = BorrowHistory.objects.filter(borrow_date__date=date).count()
+        heatmap_data.append({
+            'date': date.strftime('%Y-%m-%d'),
+            'count': count
+        })
+
+    # Navigation helpers
+    prev_offset = heatmap_offset + 1
+    next_offset = heatmap_offset - 1 if heatmap_offset > 0 else 0
+    can_go_next = heatmap_offset > 0
+
     # ========== PACKAGE METRICS JSON ==========
     metrics = {
         "monthlyLabels": monthly_labels,
@@ -271,6 +329,11 @@ def analytics(request):
         "languageLabels": language_labels,
         "languageData": language_data,
         "periodLabel": period_label,
+        "heatmapData": heatmap_data,
+        "heatmapRange": heatmap_range,
+        "heatmapOffset": heatmap_offset,
+        "heatmapPeriodLabel": period_label,
+        "heatmapCanGoNext": can_go_next,
     }
 
     context = {
@@ -305,6 +368,12 @@ def analytics(request):
 
         # Chart data
         "metrics_json": json.dumps(metrics),
+        "heatmap_range": heatmap_range,
+        "heatmap_offset": heatmap_offset,
+        "heatmap_period_label": period_label,
+        "heatmap_can_go_next": can_go_next,
+        "heatmap_prev_offset": prev_offset,
+        "heatmap_next_offset": next_offset,
     }
 
     return render(request, "analytics.html", context)

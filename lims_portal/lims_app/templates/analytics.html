@@ -74,7 +74,7 @@
                         <div class="kpi-value">{{ total_accounts|default:0 }}</div>
                         <div class="kpi-trend trend-up">
                             <i class="fas fa-arrow-up"></i>
-                            <span>+{{ period_new_accounts|default:0 }} {{ period_label|lower }}</span>
+                            <span>+{{ period_new_accounts|default:0 }}</span>
                         </div>
                     </div>
                     <div class="kpi-icon">
@@ -141,7 +141,7 @@
                     <canvas id="revenueChart"></canvas>
                 </div>
             </div>
-            
+    
             <div class="chart-card">
                 <div class="chart-header">
                     <h3>Daily Activity (Last 7 Days)</h3>
@@ -305,6 +305,38 @@
                     {% endfor %}
                 </div>
             </div>
+        </div>
+
+        <!-- Calendar Heatmap -->
+        <div class="chart-card heatmap-card" style="margin-bottom: 2em;">
+            <div class="chart-header">
+                <h3><i class="fas fa-calendar-alt"></i> Borrow Activity Calendar</h3>
+                <div class="heatmap-controls" style="display: flex; align-items: center; gap: 1em; margin-top: 0.5em;">
+                    <form id="heatmap-range-form" method="get" style="display: flex; align-items: center; gap: 0.5em;">
+                        <input type="hidden" name="period" value="{{ request.GET.period|default_if_none:'' }}">
+                        <button type="submit" name="heatmap_offset" value="{{ heatmap_prev_offset }}" class="heatmap-nav-btn" title="Previous" style="font-size:1.2em;">&#8592;</button>
+                        <select name="heatmap_range" id="heatmap-range-select" style="padding: 2px 6px;">
+                            <option value="week" {% if heatmap_range == 'week' %}selected{% endif %}>Week</option>
+                            <option value="month" {% if heatmap_range == 'month' %}selected{% endif %}>Month</option>
+                            <option value="year" {% if heatmap_range == 'year' %}selected{% endif %}>Year</option>
+                        </select>
+                        <span style="font-weight: 500;">{{ heatmap_period_label }}</span>
+                        <button type="submit" name="heatmap_offset" value="{{ heatmap_next_offset }}" class="heatmap-nav-btn" title="Next" style="font-size:1.2em;" {% if not heatmap_can_go_next %}disabled{% endif %}>&#8594;</button>
+                    </form>
+                </div>
+                <div class="heatmap-legend">
+                    <span class="heatmap-legend-label">Less</span>
+                    <div class="heatmap-legend-scale">
+                        <div class="heatmap-legend-box heatmap-level-0"></div>
+                        <div class="heatmap-legend-box heatmap-level-1"></div>
+                        <div class="heatmap-legend-box heatmap-level-2"></div>
+                        <div class="heatmap-legend-box heatmap-level-3"></div>
+                        <div class="heatmap-legend-box heatmap-level-4"></div>
+                    </div>
+                    <span class="heatmap-legend-label">More</span>
+                </div>
+            </div>
+            <div id="calendar-heatmap" class="calendar-heatmap-container"></div>
         </div>
 
         <!-- Overdue Books Alert -->
