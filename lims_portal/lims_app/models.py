@@ -28,8 +28,6 @@ class BorrowHistory(models.Model):
         max_length=100,
         help_text="Enter Student School ID",
     )
-
-    # --- Auto-Filled (uneditable) Fields ---
     bookTitle = models.CharField(max_length=255, editable=False, blank=True)
     accountName = models.CharField(max_length=255, editable=False, blank=True)
 

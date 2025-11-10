@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Library Analytics Dashboard - eTala</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../static/Scripts/css/statistics.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    {% include 'partials/upbox.html' %}
+    
+    <main class="container">
+        <!-- Header Section -->
+        <div class="container">
+            <div class="header-content">
+                <div class="logo-container">
+                    <div class="logo-text">
+                        <h1>Library Analytics by eTala</h1>
+                        <p>Statistical Data for Philippine Science High School Zamboanga Peninsula Region Campus Library</p>
+                    </div>
+                </div>
+                <div class="header-actions">
+                    <select id="period-select">
+                        <option value="day" {% if request.GET.period == 'day' %}selected{% endif %}>Today</option>
+                        <option value="week" {% if request.GET.period == 'week' %}selected{% endif %}>This Week</option>
+                        <option value="month" {% if request.GET.period == 'month' or not request.GET.period %}selected{% endif %}>This Month</option>
+                        <option value="quarter" {% if request.GET.period == 'quarter' %}selected{% endif %}>This Quarter</option>
+                        <option value="year" {% if request.GET.period == 'year' %}selected{% endif %}>This Year</option>
+                    </select>
+                    <button class="btn-primary" id="refresh-btn">
+                        <i class="fas fa-sync-alt"></i> Refresh
+                    </button>
+                    <button class="btn-secondary" onclick="window.print()">
+                        <i class="fas fa-download"></i> Export
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main KPI Cards -->
+        <div class="kpi-grid">
+            <div class="kpi-card">
+                <div class="kpi-header">
+                    <div class="kpi-info">
+                        <h3>Total Books</h3>
+                        <div class="kpi-value">{{ total_books_count|default:0 }}</div>
+                        <div class="kpi-subtitle">in library collection</div>
+                    </div>
+                    <div class="kpi-icon">
+                        <i class="fas fa-book"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="kpi-card">
+                <div class="kpi-header">
+                    <div class="kpi-info">
+                        <h3>Currently Borrowed</h3>
+                        <div class="kpi-value">{{ currently_borrowed|default:0 }}</div>
+                        <div class="kpi-subtitle">{{ available_books|default:0 }} available</div>
+                    </div>
+                    <div class="kpi-icon">
+                        <i class="fas fa-book-reader"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="kpi-card">
+                <div class="kpi-header">
+                    <div class="kpi-info">
+                        <h3>Registered Users</h3>
+                        <div class="kpi-value">{{ total_accounts|default:0 }}</div>
+                        <div class="kpi-trend trend-up">
+                            <i class="fas fa-arrow-up"></i>
+                            <span>+{{ period_new_accounts|default:0 }} {{ period_label|lower }}</span>
+                        </div>
+                    </div>
+                    <div class="kpi-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="kpi-card">
+                <div class="kpi-header">
+                    <div class="kpi-info">
+                        <h3>Total Borrows</h3>
+                        <div class="kpi-value">{{ total_borrows_all_time|default:0 }}</div>
+                        <div class="kpi-subtitle">{{ period_borrows|default:0 }} {{ period_label|lower }}</div>
+                    </div>
+                    <div class="kpi-icon">
+                        <i class="fas fa-exchange-alt"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="kpi-card kpi-card-{% if overdue_books > 0 %}danger{% else %}success{% endif %}">
+                <div class="kpi-header">
+                    <div class="kpi-info">
+                        <h3>Overdue Books</h3>
+                        <div class="kpi-value kpi-value-{% if overdue_books > 0 %}danger{% else %}success{% endif %}">
+                            {{ overdue_books|default:0 }}
+                        </div>
+                        <div class="kpi-subtitle">need attention</div>
+                    </div>
+                    <div class="kpi-icon kpi-icon-{% if overdue_books > 0 %}danger{% else %}success{% endif %}">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="kpi-card">
+                <div class="kpi-header">
+                    <div class="kpi-info">
+                        <h3>Return Rate</h3>
+                        <div class="kpi-value">{{ return_rate|default:0 }}%</div>
+                        <div class="kpi-subtitle">on-time returns</div>
+                    </div>
+                    <div class="kpi-icon">
+                        <i class="fas fa-undo-alt"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Charts Section -->
+        <div class="charts-grid">
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h3>Monthly Borrows Trend</h3>
+                    <div class="chart-legend">
+                        <div class="legend-item">
+                            <div class="legend-color legend-color-blue"></div>
+                            <span>Borrows</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="revenueChart"></canvas>
+                </div>
+            </div>
+            
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h3>Daily Activity (Last 7 Days)</h3>
+                    <div class="chart-legend">
+                        <div class="legend-item">
+                            <div class="legend-color legend-color-purple"></div>
+                            <span>Borrows / Day</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="userChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Additional Charts and Stats -->
+        <div class="additional-charts">
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h3>Books by Type</h3>
+                </div>
+                <div class="pie-chart-container">
+                    <canvas id="salesChart"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h3>Books by Language</h3>
+                </div>
+                <div class="pie-chart-container">
+                    <canvas id="languageChart"></canvas>
+                </div>
+            </div>
+            
+            <div class="metrics-card">
+                <h3>Library Performance</h3>
+                <div class="metric-item">
+                    <div class="metric-header">
+                        <span>Book Utilization</span>
+                        <span>{{ currently_borrowed|default:0 }}/{{ total_books_count|default:1 }}</span>
+                    </div>
+                    <div class="progress-bar">
+                        <!-- avoid template math inside style to prevent CSS linter errors -->
+                        <div class="progress-fill progress-fill-blue" data-percent="{{ utilization_percent|default:0 }}" style="width: 0%;"></div>
+                    </div>
+                </div>
+                
+                <div class="metric-item">
+                    <div class="metric-header">
+                        <span>Return Rate</span>
+                        <span>{{ return_rate|default:0 }}%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill progress-fill-green" data-percent="{{ return_rate|default:0 }}" style="width: 0%;"></div>
+                    </div>
+                </div>
+                
+                <div class="metric-item">
+                    <div class="metric-header">
+                        <span>Avg. Borrow Duration</span>
+                        <span>{{ avg_borrow_days|default:0 }} days</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill progress-fill-purple" data-percent="{{ avg_borrow_percent|default:0 }}" style="width: 0%;"></div>
+                    </div>
+                </div>
+                
+                <div class="metric-item">
+                    <div class="metric-header">
+                        <span>Active Period Borrows</span>
+                        <span>{{ period_borrows|default:0 }}</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill progress-fill-orange" style="width: 85%;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Top Stats Grid -->
+        <div class="stats-grid">
+            <!-- Top Borrowers -->
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h3><i class="fas fa-star"></i> Top Borrowers</h3>
+                </div>
+                <div class="activity-list">
+                    {% for borrower in top_borrowers %}
+                    <div class="activity-item activity-item-border">
+                        <div class="activity-content">
+                            <div class="activity-icon icon-blue">
+                                <i class="fas fa-user"></i>
+                            </div>
+                            <div class="activity-text">
+                                <h4>{{ borrower.accountName }}</h4>
+                                <p>ID: {{ borrower.accountID }}</p>
+                            </div>
+                        </div>
+                        <div class="activity-time activity-count-blue">
+                            {{ borrower.borrow_count }} borrows
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="empty-state">No data available</p>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Most Borrowed Books -->
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h3><i class="fas fa-fire"></i> Most Borrowed Books</h3>
+                </div>
+                <div class="activity-list">
+                    {% for book in most_borrowed %}
+                    <div class="activity-item activity-item-border">
+                        <div class="activity-content">
+                            <div class="activity-icon icon-purple">
+                                <i class="fas fa-book"></i>
+                            </div>
+                            <div class="activity-text">
+                                <h4>{{ book.bookTitle|truncatewords:5 }}</h4>
+                                <p>Acc: {{ book.bookID }}</p>
+                            </div>
+                        </div>
+                        <div class="activity-time activity-count-purple">
+                            {{ book.borrow_count }}x
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="empty-state">No data available</p>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Location Statistics -->
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h3><i class="fas fa-map-marker-alt"></i> Location Stats</h3>
+                </div>
+                <div class="activity-list">
+                    {% for loc in location_stats %}
+                    <div class="activity-item activity-item-border">
+                        <div class="activity-content">
+                            <div class="activity-icon icon-green">
+                                <i class="fas fa-bookmark"></i>
+                            </div>
+                            <div class="activity-text">
+                                <h4>{{ loc.Location|truncatewords:3 }}</h4>
+                                <p>Available: {{ loc.available }} | Borrowed: {{ loc.borrowed }}</p>
+                            </div>
+                        </div>
+                        <div class="activity-time activity-count-green">
+                            {{ loc.total }} books
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="empty-state">No data available</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Overdue Books Alert -->
+        {% if overdue_books > 0 %}
+        <div class="chart-card chart-card-danger">
+            <div class="chart-header">
+                <h3 class="chart-header-danger">
+                    <i class="fas fa-exclamation-circle"></i> Overdue Books ({{ overdue_books }})
+                </h3>
+            </div>
+            <div class="activity-list">
+                {% for overdue in overdue_list %}
+                <div class="activity-item">
+                    <div class="activity-content">
+                        <div class="activity-icon icon-red">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="activity-text">
+                            <h4>{{ overdue.bookTitle|truncatewords:6 }}</h4>
+                            <p>{{ overdue.accountName }} ({{ overdue.accountID }})</p>
+                        </div>
+                    </div>
+                    <div class="activity-time activity-time-danger">
+                        Due: {{ overdue.return_date|date:"M d, Y" }}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Recent Activity -->
+        <div class="activity-card">
+            <div class="activity-header">
+                <h3><i class="fas fa-history"></i> Recent Activity</h3>
+            </div>
+            <div class="activity-list">
+                {% for activity in borrowed_books %}
+                <div class="activity-item">
+                    <div class="activity-content">
+                        <div class="activity-icon icon-blue">
+                            <i class="fas fa-book"></i>
+                        </div>
+                        <div class="activity-text">
+                            <h4>{{ activity.bookTitle|truncatewords:8 }} was borrowed</h4>
+                            <p>{{ activity.accountName }} ({{ activity.accountID }})</p>
+                        </div>
+                    </div>
+                    <div class="activity-time">{{ activity.borrow_date|date:"M d, Y H:i" }}</div>
+                </div>
+                {% empty %}
+                <p class="empty-state">No recent activity</p>
+                {% endfor %}
+            </div>
+        </div>
+    </main>
+
+    <!-- Inject metrics for JS charts (escape to avoid editor parse errors) -->
+    <script>
+        window.analyticsData = JSON.parse('{{ metrics_json|escapejs }}');
+    </script>
+    <script src="../static/Scripts/js/statistics.js"></script>
+</body>
+</html>
