@@ -190,20 +190,30 @@ document.addEventListener('DOMContentLoaded', function() {
     const salesCanvas = document.getElementById('salesChart');
     if (salesCanvas) {
         const salesCtx = salesCanvas.getContext('2d');
+        function generateColors(n) {
+            const baseColors = [
+                '#06b6d4', '#14b8a6', '#84cc16', '#eab308', '#f97316',
+                '#ef4444', '#3b82f6', '#8b5cf6', '#10b981', '#f59e0b',
+                '#a21caf', '#6366f1', '#0ea5e9', '#f43f5e', '#22d3ee',
+                '#e11d48', '#facc15', '#16a34a', '#7c3aed', '#f472b6'
+            ];
+            if (n <= baseColors.length) return baseColors.slice(0, n);
+            // If more needed, generate HSL colors
+            const colors = baseColors.slice();
+            for (let i = colors.length; i < n; i++) {
+                const hue = Math.round((360 / n) * i);
+                colors.push(`hsl(${hue}, 70%, 55%)`);
+            }
+            return colors;
+        }
+        const langColors = generateColors(languageLabels.length);
         new Chart(salesCtx, {
             type: 'doughnut',
             data: {
                 labels: typeLabels,
                 datasets: [{
                     data: typeData,
-                    backgroundColor: [
-                        '#3b82f6',
-                        '#8b5cf6',
-                        '#10b981',
-                        '#f59e0b',
-                        '#ef4444',
-                        '#06b6d4'
-                    ],
+                    backgroundColor: langColors,
                     borderWidth: 0,
                     hoverOffset: 15,
                     hoverBorderWidth: 0
@@ -257,19 +267,31 @@ document.addEventListener('DOMContentLoaded', function() {
     const languageCanvas = document.getElementById('languageChart');
     if (languageCanvas) {
         const languageCtx = languageCanvas.getContext('2d');
+        // Generate enough unique colors for all languages
+        function generateColors(n) {
+            const baseColors = [
+                '#06b6d4', '#14b8a6', '#84cc16', '#eab308', '#f97316',
+                '#ef4444', '#3b82f6', '#8b5cf6', '#10b981', '#f59e0b',
+                '#a21caf', '#6366f1', '#0ea5e9', '#f43f5e', '#22d3ee',
+                '#e11d48', '#facc15', '#16a34a', '#7c3aed', '#f472b6'
+            ];
+            if (n <= baseColors.length) return baseColors.slice(0, n);
+            // If more needed, generate HSL colors
+            const colors = baseColors.slice();
+            for (let i = colors.length; i < n; i++) {
+                const hue = Math.round((360 / n) * i);
+                colors.push(`hsl(${hue}, 70%, 55%)`);
+            }
+            return colors;
+        }
+        const langColors = generateColors(languageLabels.length);
         new Chart(languageCtx, {
             type: 'doughnut',
             data: {
                 labels: languageLabels,
                 datasets: [{
                     data: languageData,
-                    backgroundColor: [
-                        '#06b6d4',
-                        '#14b8a6',
-                        '#84cc16',
-                        '#eab308',
-                        '#f97316'
-                    ],
+                    backgroundColor: langColors,
                     borderWidth: 0,
                     hoverOffset: 15,
                     hoverBorderWidth: 0
@@ -316,7 +338,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 }
             }
-            });
+        });
     }
 
     // ========== REFRESH BUTTON FUNCTIONALITY ==========
