@@ -50,4 +50,11 @@ document.addEventListener("DOMContentLoaded", function () {
       window.location.href = "/records/";
     });
   });
+    document.querySelectorAll(".redirect-analytics").forEach(item => {
+    item.addEventListener("click", e => {
+      e.preventDefault();
+      e.stopPropagation();
+      window.location.href = "/analytics/";
+    });
+  });
 });
