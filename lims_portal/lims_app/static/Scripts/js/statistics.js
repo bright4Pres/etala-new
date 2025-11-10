@@ -422,7 +422,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const maxCount = data.reduce((m, d) => Math.max(m, d.count || 0), 0);
 
         // color palette: 5 levels (0..4)
-        const colors = ['#ebedf0', '#c6e48b', '#7bc96f', '#239a3b', '#196127'];
+        const colors = ['#a8a8a8ff', '#c6e48b', '#7bc96f', '#239a3b', '#196127'];
 
         // helper: compute level 0..4
         function getLevel(count) {
