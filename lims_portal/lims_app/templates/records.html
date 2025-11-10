@@ -110,10 +110,14 @@
           <tbody>
             {% for book in recorded_books %}
             <tr class="book-row" data-details="
+              <strong>Title:</strong> {{ book.Title|default:'-' }}<br>
+              <strong>Main Author:</strong> {{ book.mainAuthor|default:'-' }}<br>
               <strong>Co-Author:</strong> {{ book.coAuthor|default:'-' }}<br>
+              <strong>Editors:</strong> {{ book.Editors|default:'-' }}<br>
               <strong>Publisher:</strong> {{ book.Publisher|default:'-' }}<br>
               <strong>Place of Publication:</strong> {{ book.placeofPublication|default:'-' }}<br>
               <strong>Publication Date:</strong> {% if book.publicationDate %}{{ book.publicationDate|date:'Y-m-d' }}{% else %}-{% endif %}<br>
+              <strong>Copyright Date:</strong> {% if book.copyrightDate %}{{ book.copyrightDate|date:'Y-m-d' }}{% else %}-{% endif %}<br>
               <strong>Language:</strong> {{ book.Language }}<br>
               <strong>Type:</strong> {{ book.Type }}<br>
               <strong>Accession Number:</strong> {{ book.accessionNumber }}<br>
