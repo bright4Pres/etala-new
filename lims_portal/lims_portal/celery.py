@@ -17,7 +17,6 @@ app.conf.beat_schedule = {
     'send-due-reminders-daily': {
         'task': 'lims_app.tasks.send_due_reminders_task',
         'schedule': crontab(hour=9, minute=0),  # Run at 9:00 AM daily
-        'options': {'queue': 'default'}
     },
 }
 
