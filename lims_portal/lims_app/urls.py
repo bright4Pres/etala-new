@@ -16,6 +16,7 @@ Including another URLconf
 """
 from django.urls import path
 from .views import home, books, about, register_account, check_duplicate, records, analytics
+from .views_otp import get_students_by_grade, verify_student_email, verify_otp, resend_otp
 
 urlpatterns = [
     path('', home, name='home'),
@@ -25,7 +26,13 @@ urlpatterns = [
     path('register-account/', register_account, name='register_account'),
     path('check-duplicate/', check_duplicate, name='check_duplicate'),
     path('records/', records, name='records'),
-    path('about/', about,  name='about')
+    path('about/', about,  name='about'),
+    
+    # OTP Registration Flow
+    path('api/get-students/', get_students_by_grade, name='get_students_by_grade'),
+    path('api/verify-email/', verify_student_email, name='verify_student_email'),
+    path('api/verify-otp/', verify_otp, name='verify_otp'),
+    path('api/resend-otp/', resend_otp, name='resend_otp'),
 ]
 
 

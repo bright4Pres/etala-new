@@ -52,25 +52,58 @@
   <div class="modal-content">
     <span class="close">&times;</span>
     <div class="form-container">
-      <form class="form" id="registerForm">
+      <div id="step1" class="registration-step">
+        <h3>Step 1: Select Your Grade</h3>
         <div class="form-group">
-          <label for="name">Name</label>
-          <input type="text" id="name" name="name" placeholder="e.g. Bright Bastasa" required="">
+          <label for="gradeSelect">Grade</label>
+          <select id="gradeSelect" required>
+            <option value="">-- Select Grade --</option>
+            <option value="7">Grade 7</option>
+            <option value="8">Grade 8</option>
+            <option value="9">Grade 9</option>
+            <option value="10">Grade 10</option>
+            <option value="11">Grade 11</option>
+            <option value="12">Grade 12</option>
+          </select>
         </div>
+        <button class="form-submit-btn" id="nextToStudents" type="button">Next</button>
+      </div>
+
+      <div id="step2" class="registration-step" style="display: none;">
+        <h3>Step 2: Select Your Name</h3>
         <div class="form-group">
-          <label for="idNumber">ID Number</label>
-          <input type="text" id="idNumber" name="idNumber" placeholder="e.g. 13-2020-052" required="">
+          <label for="studentSelect">Student Name</label>
+          <select id="studentSelect" required>
+            <option value="">-- Loading students --</option>
+          </select>
         </div>
+        <button class="form-submit-btn" id="backToGrade" type="button" style="background-color: #999;">Back</button>
+        <button class="form-submit-btn" id="nextToEmail" type="button">Next</button>
+      </div>
+
+      <div id="step3" class="registration-step" style="display: none;">
+        <h3>Step 3: Verify Email</h3>
         <div class="form-group">
-          <label for="email">Email</label>
-          <input type="email" id="email" name="email" placeholder="e.g. example@gmail.com" required="">
+          <label for="studentEmail">Email Address</label>
+          <input type="email" id="studentEmail" placeholder="Enter your email address" required="">
         </div>
+        <p id="emailHelp" style="font-size: 0.9em; color: #666; margin-top: 10px;"></p>
+        <button class="form-submit-btn" id="backToStudent" type="button" style="background-color: #999;">Back</button>
+        <button class="form-submit-btn" id="sendOtp" type="button">Send OTP</button>
+      </div>
+
+      <div id="step4" class="registration-step" style="display: none;">
+        <h3>Step 4: Enter OTP</h3>
+        <p style="font-size: 0.95em; color: #333; margin-bottom: 20px;">We've sent a 6-digit OTP to your email.</p>
         <div class="form-group">
-          <label for="batch">Batch</label>
-          <input type="text" id="batch" name="batch" placeholder="e.g. 2026" required="">
+          <label for="otpInput">OTP Code</label>
+          <input type="text" id="otpInput" maxlength="6" placeholder="e.g. 123456" required="">
         </div>
-        <button class="form-submit-btn" id="registerAccount" type="submit">Submit</button>
-      </form>
+        <p id="otpHelp" style="font-size: 0.9em; color: #666; margin-top: 10px;">OTP expires in 10 minutes</p>
+        <button class="form-submit-btn" id="backToEmail" type="button" style="background-color: #999;">Back</button>
+        <button class="form-submit-btn" id="verifyOtp" type="button">Activate Account</button>
+        <button class="form-link-btn" id="resendOtp" type="button" style="background-color: transparent; color: #007bff; border: none; text-decoration: underline; cursor: pointer; margin-top: 10px;">Didn't receive OTP? Resend</button>
+      </div>
     </div>
   </div>
 </div>
@@ -83,85 +116,238 @@
     const searchValue = document.getElementById('librarySearch').value;
     window.location.href = `/records?search=${encodeURIComponent(searchValue)}`;
   }
+
   document.addEventListener("DOMContentLoaded", function () {
     const modal = document.getElementById("registerModal");
-    const btn = document.getElementById("registerAccount");
     const span = document.getElementsByClassName("close")[0];
     const mainContent = document.querySelector("main");
     const notification = document.getElementById("notification");
 
-    btn.onclick = function() {
-      modal.style.display = "flex";
-      mainContent.classList.add("blurred");
+    // Close button handler
+    if (span) {
+      span.onclick = function() {
+        modal.style.display = "none";
+        mainContent.classList.remove("blurred");
+        resetRegistrationForm();
+      }
     }
 
-    span.onclick = function() {
-      modal.style.display = "none";
-      mainContent.classList.remove("blurred");
-    }
-
+    // Click outside modal to close
     window.onclick = function(event) {
       if (event.target == modal) {
         modal.style.display = "none";
         mainContent.classList.remove("blurred");
+        resetRegistrationForm();
       }
     }
 
-    // submission handler for the modal
-    document.getElementById("registerForm").onsubmit = function(event) {
-      event.preventDefault();
-
-      const name = document.getElementById("name").value;
-      const idNumber = document.getElementById("idNumber").value;
-      const email = document.getElementById("email").value;
-      const batch = document.getElementById("batch").value;
-
-      // check for duplicate id and name
-      fetch('/check-duplicate/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRFToken': getCookie('csrftoken'),
-        },
-        body: JSON.stringify({
-          idNumber: idNumber,
-          name: name,
-        }),
-      })
-      .then(response => response.json())
-      .then(result => {
-        if (result.duplicate) {
-          showNotification('Duplicate ID number or student name found. Please use a different ID number or name.');
-        } else {
-          fetch('/register-account/', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'X-CSRFToken': getCookie('csrftoken'),
-            },
-            body: JSON.stringify({
-              name: name,
-              idNumber: idNumber,
-              email: email,
-              batch: batch 
-            }),
-          })
-          .then(response => response.json())
-          .then(result => {
-            if (result.error) {
-              showNotification(result.error);
-            } else {
-              showNotification(result.message);
-              modal.style.display = "none";
-              mainContent.classList.remove("blurred");
-              document.getElementById("registerForm").reset();
-            }
-          })
-          .catch(error => console.error('Error:', error));
-        }
-      })
-      .catch(error => console.error('Error:', error));
+    // Registration flow state
+    let registrationState = {
+      grade: null,
+      studentId: null,
+      studentName: null,
+      email: null,
+      activationId: null,
     };
+
+    function showStep(stepNumber) {
+      for (let i = 1; i <= 4; i++) {
+        const step = document.getElementById(`step${i}`);
+        if (step) step.style.display = i === stepNumber ? "block" : "none";
+      }
+    }
+
+    function resetRegistrationForm() {
+      registrationState = {
+        grade: null,
+        studentId: null,
+        studentName: null,
+        email: null,
+        activationId: null,
+      };
+      document.getElementById("gradeSelect").value = "";
+      document.getElementById("studentSelect").innerHTML = '<option value="">-- Select student --</option>';
+      document.getElementById("studentEmail").value = "";
+      document.getElementById("otpInput").value = "";
+      showStep(1);
+    }
+
+    // Step 1: Grade selected
+    document.getElementById("nextToStudents").onclick = async function() {
+      const grade = document.getElementById("gradeSelect").value;
+      if (!grade) {
+        showNotification("Please select a grade");
+        return;
+      }
+
+      registrationState.grade = grade;
+
+      // Fetch students for this grade
+      try {
+        const response = await fetch("/api/get-students/", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": getCookie("csrftoken"),
+          },
+          body: JSON.stringify({ grade: grade }),
+        });
+
+        const data = await response.json();
+        if (data.success) {
+          // Populate student dropdown
+          const studentSelect = document.getElementById("studentSelect");
+          studentSelect.innerHTML = '<option value="">-- Select student --</option>';
+          
+          data.students.forEach(student => {
+            const option = document.createElement("option");
+            option.value = student.id;
+            option.textContent = `${student.name} (${student.school_id})`;
+            option.dataset.email = student.email;
+            studentSelect.appendChild(option);
+          });
+
+          showStep(2);
+        } else {
+          showNotification(data.error || "Error fetching students");
+        }
+      } catch (error) {
+        showNotification("Error: " + error.message);
+      }
+    }
+
+    // Step 2: Student selected
+    document.getElementById("nextToEmail").onclick = function() {
+      const studentSelect = document.getElementById("studentSelect");
+      const selectedOption = studentSelect.options[studentSelect.selectedIndex];
+
+      if (!selectedOption || selectedOption.value === "") {
+        showNotification("Please select a student");
+        return;
+      }
+
+      registrationState.studentId = selectedOption.value;
+      registrationState.studentName = selectedOption.textContent;
+      registrationState.email = selectedOption.dataset.email;
+
+      // Show the email in step 3
+      document.getElementById("emailHelp").textContent = 
+        `Confirm this email matches your school record`;
+
+      showStep(3);
+    }
+
+    // Step 3: Email verification and OTP sending
+    document.getElementById("sendOtp").onclick = async function() {
+      const enteredEmail = document.getElementById("studentEmail").value.trim();
+
+      if (!enteredEmail) {
+        showNotification("Please enter your email");
+        return;
+      }
+
+      // Cross-reference email
+      if (enteredEmail.toLowerCase() !== registrationState.email.toLowerCase()) {
+        showNotification("Email does not match our records. Please try again.");
+        return;
+      }
+
+      // Send OTP request
+      try {
+        const response = await fetch("/api/verify-email/", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": getCookie("csrftoken"),
+          },
+          body: JSON.stringify({
+            grade: registrationState.grade,
+            student_id: registrationState.studentId,
+            email: enteredEmail,
+          }),
+        });
+
+        const data = await response.json();
+        if (data.success) {
+          registrationState.activationId = data.activation_id;
+          showNotification(data.message);
+          showStep(4);
+        } else {
+          showNotification(data.error || "Error sending OTP");
+        }
+      } catch (error) {
+        showNotification("Error: " + error.message);
+      }
+    }
+
+    // Step 4: OTP verification
+    document.getElementById("verifyOtp").onclick = async function() {
+      const otp = document.getElementById("otpInput").value.trim();
+
+      if (!otp || otp.length !== 6) {
+        showNotification("OTP must be 6 digits");
+        return;
+      }
+
+      try {
+        const response = await fetch("/api/verify-otp/", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": getCookie("csrftoken"),
+          },
+          body: JSON.stringify({
+            activation_id: registrationState.activationId,
+            otp: otp,
+          }),
+        });
+
+        const data = await response.json();
+        if (data.success) {
+          showNotification(data.message);
+          setTimeout(() => {
+            modal.style.display = "none";
+            mainContent.classList.remove("blurred");
+            resetRegistrationForm();
+          }, 2000);
+        } else {
+          showNotification(data.error || "Error verifying OTP");
+        }
+      } catch (error) {
+        showNotification("Error: " + error.message);
+      }
+    }
+
+    // Resend OTP
+    document.getElementById("resendOtp").onclick = async function() {
+      try {
+        const response = await fetch("/api/resend-otp/", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": getCookie("csrftoken"),
+          },
+          body: JSON.stringify({
+            activation_id: registrationState.activationId,
+          }),
+        });
+
+        const data = await response.json();
+        if (data.success) {
+          showNotification(data.message);
+          document.getElementById("otpInput").value = "";
+        } else {
+          showNotification(data.error || "Error resending OTP");
+        }
+      } catch (error) {
+        showNotification("Error: " + error.message);
+      }
+    }
+
+    // Back buttons
+    document.getElementById("backToGrade").onclick = () => showStep(1);
+    document.getElementById("backToStudent").onclick = () => showStep(2);
+    document.getElementById("backToEmail").onclick = () => showStep(3);
 
     // CSRF Token Helper
     function getCookie(name) {
@@ -178,15 +364,15 @@
       }
       return cookieValue;
     }
-  });
-      function showNotification(message) {
+
+    function showNotification(message) {
       notification.textContent = message;
       notification.classList.add('show');
       setTimeout(() => {
         notification.classList.remove('show');
       }, 3000);
     }
-    // redirect to /books
-    </script>
+  });
+</script>
 </body>
 </html>

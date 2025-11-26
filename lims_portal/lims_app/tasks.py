@@ -1,34 +1,29 @@
-from django.core.management.base import BaseCommand
+from celery import shared_task
 from django.utils import timezone
 from django.core.mail import send_mail
-from lims_app.models import BorrowHistory, grade_Seven, grade_Eight, grade_Nine, grade_Ten, grade_Eleven, grade_Twelve
+from .models import BorrowHistory, grade_Seven, grade_Eight, grade_Nine, grade_Ten, grade_Eleven, grade_Twelve
 from django.conf import settings
-import time
+import logging
+
+logger = logging.getLogger(__name__)
 
 
-class Command(BaseCommand):
-    help = "Send reminders for due or overdue books at 9:00 AM daily."
-
-    def handle(self, *args, **kwargs):
-        # start time
-        self.stdout.write(self.style.NOTICE(f"[{timezone.localtime()}] Command started."))
-
-        # target time
-        now = timezone.localtime()
-        target_time = now.replace(hour=9, minute=0, second=0, microsecond=0)
-
-        # function to wait until target time
-        if now < target_time:
-            wait_seconds = (target_time - now).total_seconds()
-            wait_minutes = wait_seconds / 60
-            wait_hours = wait_minutes / 60
-            self.stdout.write(f"Waiting {wait_hours:.0f} hours or {wait_minutes:.0f} minutes or {wait_seconds:.0f} seconds until 9:00 AM")
-            time.sleep(wait_seconds)
-
+@shared_task
+def send_due_reminders_task():
+    """
+    Celery task to send reminders for due or overdue books.
+    Scheduled to run daily at 9:00 AM via Celery Beat.
+    """
+    logger.info(f"[{timezone.localtime()}] Task started: send_due_reminders_task")
+    
+    try:
         # fetch current date
         today = timezone.localdate()
         histories = BorrowHistory.objects.filter(returned=False)
-        self.stdout.write(self.style.NOTICE(f"Found {histories.count()} active borrow records."))
+        logger.info(f"Found {histories.count()} active borrow records.")
+
+        sent_count = 0
+        failed_count = 0
 
         # loop for each book due
         for h in histories:
@@ -43,10 +38,10 @@ class Command(BaseCommand):
                         continue
                 
                 if account is None:
-                    self.stdout.write(self.style.WARNING(f"No account found for {h.accountID}"))
+                    logger.warning(f"No account found for {h.accountID}")
                     continue
             except Exception as e:
-                self.stdout.write(self.style.WARNING(f"Error finding account for {h.accountID}: {str(e)}"))
+                logger.warning(f"Error finding account for {h.accountID}: {str(e)}")
                 continue
 
             return_date = h.return_date.date() if hasattr(h.return_date, "date") else h.return_date
@@ -83,12 +78,50 @@ class Command(BaseCommand):
                 send_mail(
                     subject,
                     message,
-                    "mycarbondioxide@gmail.com", 
+                    "mycarbondioxide@gmail.com",
                     [user_email],
                     fail_silently=False,
                 )
-                self.stdout.write(self.style.SUCCESS(f"✅ Sent reminder to {user_email}"))
+                logger.info(f"✅ Sent reminder to {user_email}")
+                sent_count += 1
             except Exception as e:
-                self.stdout.write(self.style.ERROR(f"❌ Failed to send email to {user_email}: {e}"))
+                logger.error(f"❌ Failed to send email to {user_email}: {e}")
+                failed_count += 1
 
-        self.stdout.write(self.style.SUCCESS(f"Reminders finished at {timezone.localtime()}"))
+        logger.info(f"Task completed: {sent_count} sent, {failed_count} failed at {timezone.localtime()}")
+        return {"sent": sent_count, "failed": failed_count}
+
+    except Exception as e:
+        logger.error(f"Error in send_due_reminders_task: {e}")
+        return {"error": str(e)}
+
+
+@shared_task
+def send_otp_email_task(email, otp, student_name):
+    """
+    Celery task to send OTP activation email to students.
+    """
+    logger.info(f"Sending OTP to {email}")
+    
+    subject = "Library Account Activation - OTP"
+    message = (
+        f"Hello {student_name},\n\n"
+        f"Your account activation OTP is: {otp}\n\n"
+        f"This OTP will expire in 10 minutes.\n"
+        f"Do not share this code with anyone.\n\n"
+        f"Thank you,\nLibrary Management System"
+    )
+    
+    try:
+        send_mail(
+            subject,
+            message,
+            "mycarbondioxide@gmail.com",
+            [email],
+            fail_silently=False,
+        )
+        logger.info(f"✅ OTP sent to {email}")
+        return {"status": "success", "email": email}
+    except Exception as e:
+        logger.error(f"❌ Failed to send OTP to {email}: {e}")
+        return {"status": "failed", "email": email, "error": str(e)}

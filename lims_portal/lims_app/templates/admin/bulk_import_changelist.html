@@ -1,0 +1,26 @@
+{% extends "admin/change_list.html" %}
+
+{% block content_title %}
+  {{ block.super }}
+{% endblock %}
+
+{% block search %}
+  {# Keep the default search #}
+  {{ block.super }}
+{% endblock %}
+
+{% block result_list %}
+  <div style="margin-bottom: 20px; padding: 15px; background-color: #2573c2; border-radius: 4px; border-left: 4px solid #417690;">
+    <h3 style="margin-top: 0;">Bulk Import Options</h3>
+    <p>
+      <a href="{{ import_url }}" class="button" style="background-color: #417690; color: white; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; text-decoration: none; display: inline-block;">
+        📤 Import CSV
+      </a>
+      <a href="{{ download_url }}" class="button" style="background-color: #28a745; color: white; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; text-decoration: none; display: inline-block; margin-left: 10px;">
+        📥 Download Template
+      </a>
+    </p>    
+  </div>
+
+  {{ block.super }}
+{% endblock %}

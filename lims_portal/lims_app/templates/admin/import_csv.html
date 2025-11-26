@@ -1,0 +1,55 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block title %}Import Students from CSV{% endblock %}
+
+{% block content %}
+<div style="max-width: 600px; margin: 40px auto; padding: 20px; background: #f8f9fa; border-radius: 8px;">
+    <h1>Import Students from CSV</h1>
+    <p><strong>Expected CSV Format:</strong></p>
+    <table style="width: 100%; border-collapse: collapse; margin: 20px 0; background: white;">
+        <tr style="background: #e9ecef;">
+            <th style="border: 1px solid #dee2e6; padding: 8px;">Column Name</th>
+            <th style="border: 1px solid #dee2e6; padding: 8px;">Example</th>
+            <th style="border: 1px solid #dee2e6; padding: 8px;">Required</th>
+        </tr>
+        <tr>
+            <td style="border: 1px solid #dee2e6; padding: 8px;"><code>name</code></td>
+            <td style="border: 1px solid #dee2e6; padding: 8px;">John Doe</td>
+            <td style="border: 1px solid #dee2e6; padding: 8px;">✓</td>
+        </tr>
+        <tr>
+            <td style="border: 1px solid #dee2e6; padding: 8px;"><code>school_id</code></td>
+            <td style="border: 1px solid #dee2e6; padding: 8px;">S12345</td>
+            <td style="border: 1px solid #dee2e6; padding: 8px;">✓</td>
+        </tr>
+        <tr>
+            <td style="border: 1px solid #dee2e6; padding: 8px;"><code>email</code></td>
+            <td style="border: 1px solid #dee2e6; padding: 8px;">john@example.com</td>
+            <td style="border: 1px solid #dee2e6; padding: 8px;">✓</td>
+        </tr>
+        <tr>
+            <td style="border: 1px solid #dee2e6; padding: 8px;"><code>gender</code></td>
+            <td style="border: 1px solid #dee2e6; padding: 8px;">Male / Female / Other</td>
+            <td style="border: 1px solid #dee2e6; padding: 8px;">Optional</td>
+        </tr>
+    </table>
+
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div style="margin: 20px 0;">
+            <label for="csv_file" style="display: block; margin-bottom: 10px; font-weight: bold;">Select CSV File:</label>
+            <input type="file" id="csv_file" name="csv_file" accept=".csv" required style="padding: 8px; border: 1px solid #ddd; border-radius: 4px; width: 100%; box-sizing: border-box;">
+        </div>
+        <div style="margin: 20px 0; display: flex; gap: 10px;">
+            <button type="submit" class="button" style="background: #417690; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer;">Upload CSV</button>
+            <a href="download-template/" class="button" style="background: #28a745; color: white; padding: 10px 20px; border: none; border-radius: 4px; text-decoration: none; display: inline-block;">📥 Download Template</a>
+            <a href="/admin/{{ app_label }}/{{ model_name }}/" class="button" style="background: #6c757d; color: white; padding: 10px 20px; border: none; border-radius: 4px; text-decoration: none; display: inline-block;">Cancel</a>
+        </div>
+    </form>
+
+    <p style="margin-top: 30px; color: #666; font-size: 13px;">
+        <strong>Note:</strong> Duplicate school_id or name values will cause an error. Please ensure all entries are unique.
+    </p>
+</div>
+{% endblock %}

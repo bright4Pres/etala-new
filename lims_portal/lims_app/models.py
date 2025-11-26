@@ -2,16 +2,192 @@ from django.db import models
 from django.utils import timezone
 from datetime import timedelta, date
 from django.core.exceptions import ValidationError
+import random
+import string
 
 # ---------------------------------
 # ACCOUNT MODEL
 # ---------------------------------
-class Account(models.Model):
+GENDER_CHOICES = (
+    ("  Male", "    Male"),
+    (" Female", " Female"),
+    ("  Other", "    Other"),
+)
+
+class grade_Seven(models.Model):
     name = models.CharField(max_length=100, unique=True,)
     school_id = models.CharField(max_length=50, unique=True)
-    batch = models.TextField(max_length=4, default="e.g. 2026")
+    gender = models.CharField(max_length=10, choices=GENDER_CHOICES, default="Other")
+    email = models.EmailField()
+    is_activated = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    def __str__(self):
+        return f"{self.name} ({self.id})"
+    
+class grade_Eight(models.Model):
+    name = models.CharField(max_length=100, unique=True,)
+    school_id = models.CharField(max_length=50, unique=True)
+    gender = models.CharField(max_length=10, choices=GENDER_CHOICES, default="Other")
+    email = models.EmailField()
+    is_activated = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    def __str__(self):
+        return f"{self.name} ({self.id})"
+    
+class grade_Nine(models.Model):
+    name = models.CharField(max_length=100, unique=True,)
+    school_id = models.CharField(max_length=50, unique=True)
+    gender = models.CharField(max_length=10, choices=GENDER_CHOICES, default="Other")
+    email = models.EmailField()
+    is_activated = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    def __str__(self):
+        return f"{self.name} ({self.id})"
+    
+class grade_Ten(models.Model):
+    name = models.CharField(max_length=100, unique=True,)
+    school_id = models.CharField(max_length=50, unique=True)
+    gender = models.CharField(max_length=10, choices=GENDER_CHOICES, default="Other")
+    email = models.EmailField()
+    is_activated = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    def __str__(self):
+        return f"{self.name} ({self.id})"
+    
+class grade_Eleven(models.Model):
+    name = models.CharField(max_length=100, unique=True,)
+    school_id = models.CharField(max_length=50, unique=True)
+    gender = models.CharField(max_length=10, choices=GENDER_CHOICES, default="Other")
+    email = models.EmailField()
+    is_activated = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    def __str__(self):
+        return f"{self.name} ({self.id})"
+    
+class grade_Twelve(models.Model):
+    name = models.CharField(max_length=100, unique=True,)
+    school_id = models.CharField(max_length=50, unique=True)
+    gender = models.CharField(max_length=10, choices=GENDER_CHOICES, default="Other")
+    email = models.EmailField()
+    is_activated = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    def __str__(self):
+        return f"{self.name} ({self.id})"
+
+class StudentActivation(models.Model):
+    """Model to track OTP-based account activation for students."""
+    GRADE_CHOICES = (
+        (7, "Grade 7"),
+        (8, "Grade 8"),
+        (9, "Grade 9"),
+        (10, "Grade 10"),
+        (11, "Grade 11"),
+        (12, "Grade 12"),
+    )
+    
+    school_id = models.CharField(max_length=50, unique=True)
+    name = models.CharField(max_length=100)
+    email = models.EmailField()
+    grade = models.IntegerField(choices=GRADE_CHOICES)
+    otp = models.CharField(max_length=6, null=True, blank=True)
+    is_activated = models.BooleanField(default=False)
+    otp_created_at = models.DateTimeField(null=True, blank=True)
+    activated_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    def generate_otp(self):
+        """Generate a random 6-digit OTP."""
+        self.otp = ''.join(random.choices(string.digits, k=6))
+        self.otp_created_at = timezone.now()
+        self.save()
+        return self.otp
+    
+    def verify_otp(self, entered_otp):
+        """Verify if the entered OTP is correct and not expired."""
+        if not self.otp_created_at:
+            return False
+        
+        # Check if OTP is expired (10 minutes)
+        expiry_time = self.otp_created_at + timedelta(minutes=10)
+        if timezone.now() > expiry_time:
+            return False
+        
+        # Check if OTP matches
+        if self.otp == entered_otp:
+            self.is_activated = True
+            self.activated_at = timezone.now()
+            self.save()
+            
+            # Also mark the student as activated in their grade model
+            GRADE_MODELS = {
+                7: grade_Seven,
+                8: grade_Eight,
+                9: grade_Nine,
+                10: grade_Ten,
+                11: grade_Eleven,
+                12: grade_Twelve,
+            }
+            
+            grade_model = GRADE_MODELS.get(self.grade)
+            if grade_model:
+                try:
+                    student = grade_model.objects.get(school_id=self.school_id)
+                    student.is_activated = True
+                    student.save()
+                except grade_model.DoesNotExist:
+                    pass
+            
+            return True
+        
+        return False
+    
+    def is_otp_expired(self):
+        """Check if OTP has expired."""
+        if not self.otp_created_at:
+            return True
+        expiry_time = self.otp_created_at + timedelta(minutes=10)
+        return timezone.now() > expiry_time
+    
+    def __str__(self):
+        status = "✓ Activated" if self.is_activated else "⏳ Pending"
+        return f"{self.name} ({self.school_id}) - {status}"
+    
+    class Meta:
+        verbose_name = "Student Activation"
+        verbose_name_plural = "Student Activations"
+    
+class ActiveStudentsManager(models.Manager):
+    """Custom manager to get all students from grades 7-12."""
+    def get_queryset(self):
+        from itertools import chain
+        from django.db.models import QuerySet
+        
+        # Combine all grade-level querysets
+        grade_seven = grade_Seven.objects.all()
+        grade_eight = grade_Eight.objects.all()
+        grade_nine = grade_Nine.objects.all()
+        grade_ten = grade_Ten.objects.all()
+        grade_eleven = grade_Eleven.objects.all()
+        grade_twelve = grade_Twelve.objects.all()
+        
+        # Chain all together
+        all_students = list(chain(
+            grade_seven, grade_eight, grade_nine,
+            grade_ten, grade_eleven, grade_twelve
+        ))
+        return all_students
+
+class activeStudents(models.Model):
+    name = models.CharField(max_length=100, unique=True,)
+    school_id = models.CharField(max_length=50, unique=True)
+    gender = models.CharField(max_length=10, choices=GENDER_CHOICES, default="Other")
     email = models.EmailField()
     created_at = models.DateTimeField(auto_now_add=True)
+    
+    objects = ActiveStudentsManager()
+    class Meta:
+        managed = False  # Don't create a separate table
+    
     def __str__(self):
         return f"{self.name} ({self.id})"
 
@@ -37,7 +213,8 @@ class BorrowHistory(models.Model):
 
     def clean(self):
         """Validate that bookID and accountID exist in their respective models."""
-        from lims_app.models import Book, Account  # adjust app name if needed
+        from lims_app.models import Book  # adjust app name if needed
+        from itertools import chain
 
         # --- Validate Book ---
         try:
@@ -54,13 +231,26 @@ class BorrowHistory(models.Model):
             raise ValidationError({
                 "bookID": f"No book found with accession number '{self.bookID}'."
             })
-        # --- Validate Account ---
-        try:
-            account = Account.objects.get(school_id=self.accountID)
-            self.accountName = account.name
-        except Account.DoesNotExist:
+        
+        # --- Validate Account (search across all grade models) ---
+        account = None
+        for model in [grade_Seven, grade_Eight, grade_Nine, grade_Ten, grade_Eleven, grade_Twelve]:
+            try:
+                account = model.objects.get(school_id=self.accountID)
+                self.accountName = account.name
+                break
+            except model.DoesNotExist:
+                continue
+        
+        if account is None:
             raise ValidationError({
-                "accountID": f"No account found with school ID '{self.accountID}'."
+                "accountID": f"No student found with school ID '{self.accountID}'."
+            })
+        
+        # --- Check if student is activated ---
+        if not account.is_activated:
+            raise ValidationError({
+                "accountID": f"Student '{account.name}' has not been activated yet. Please complete OTP verification to borrow books."
             })
 
     def save(self, *args, **kwargs):

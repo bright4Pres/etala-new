@@ -2,7 +2,7 @@ from django.http import JsonResponse
 from django.utils.dateparse import parse_datetime
 from django.utils import timezone
 from django.shortcuts import render
-from .models import Book, Account, BorrowHistory
+from .models import Book, BorrowHistory, grade_Seven, grade_Eight, grade_Nine, grade_Ten, grade_Eleven, grade_Twelve
 from django.views.decorators.csrf import csrf_protect
 from django.db.models import Count, Q, Avg
 from datetime import datetime, timedelta
@@ -51,21 +51,16 @@ def register_account(request):
         email = data.get('email')
         batch = data.get('batch')
 
-        if Account.objects.filter(school_id=id_number).exists():
-            return JsonResponse({'error': 'ID Number already exists.'}, status=400)
-        if Account.objects.filter(name=name).exists():
-            return JsonResponse({'error': 'Name already exists.'}, status=400)
+        # Check if student already exists in any grade
+        for model in [grade_Seven, grade_Eight, grade_Nine, grade_Ten, grade_Eleven, grade_Twelve]:
+            if model.objects.filter(school_id=id_number).exists():
+                return JsonResponse({'error': 'ID Number already exists.'}, status=400)
+            if model.objects.filter(name=name).exists():
+                return JsonResponse({'error': 'Name already exists.'}, status=400)
 
-        if name and id_number and email and batch:
-            Account.objects.create(
-                name=name,
-                school_id=id_number,
-                email=email,
-                batch=batch
-            )
-            return JsonResponse({'message': 'Account registered successfully!'})
-        else:
-            return JsonResponse({'error': 'Invalid data provided.'}, status=400)
+        # Note: This function is no longer needed with the new OTP registration flow
+        # Students are now created via CSV import and OTP activation
+        return JsonResponse({'error': 'Please use the new registration flow with OTP verification.'}, status=400)
     return JsonResponse({'error': 'Invalid request method.'}, status=405)
 
 def check_duplicate(request):
@@ -74,7 +69,13 @@ def check_duplicate(request):
         id_number = data.get('idNumber')
         name = data.get('name')
 
-        duplicate = Account.objects.filter(school_id=id_number).exists() or Account.objects.filter(name=name).exists()
+        # Check if student exists in any grade
+        duplicate = False
+        for model in [grade_Seven, grade_Eight, grade_Nine, grade_Ten, grade_Eleven, grade_Twelve]:
+            if model.objects.filter(school_id=id_number).exists() or model.objects.filter(name=name).exists():
+                duplicate = True
+                break
+        
         return JsonResponse({'duplicate': duplicate})
     return JsonResponse({'error': 'Invalid request method.'}, status=405)
 
@@ -133,22 +134,20 @@ def records(request):
         "selected_filters": selected_filters,
     })
     
-from django.http import JsonResponse
-from django.utils.dateparse import parse_datetime
-from django.utils import timezone
-from django.shortcuts import render
-from .models import Book, Account, BorrowHistory
-from django.views.decorators.csrf import csrf_protect
-from django.db.models import Count, Q, Avg
-from datetime import datetime, timedelta
-import json
-
 def analytics(request):
     now = timezone.now()
     
     # ========== CORE METRICS ==========
     total_books_count = Book.objects.count()
-    total_accounts = Account.objects.count()
+    # Count all students across all grade models
+    total_accounts = sum([
+        grade_Seven.objects.count(),
+        grade_Eight.objects.count(),
+        grade_Nine.objects.count(),
+        grade_Ten.objects.count(),
+        grade_Eleven.objects.count(),
+        grade_Twelve.objects.count(),
+    ])
     total_borrows_all_time = BorrowHistory.objects.count()
     # count books marked as Borrowed in Book.status
     currently_borrowed = Book.objects.filter(status='Borrowed').count()
@@ -186,7 +185,15 @@ def analytics(request):
     # Period-specific metrics
     period_borrows = BorrowHistory.objects.filter(borrow_date__gte=start_date).count()
     period_returns = BorrowHistory.objects.filter(returned=True, return_date__gte=start_date).count()
-    period_new_accounts = Account.objects.filter(created_at__gte=start_date).count()
+    # Count new students from all grade models in period
+    period_new_accounts = sum([
+        grade_Seven.objects.filter(created_at__gte=start_date).count(),
+        grade_Eight.objects.filter(created_at__gte=start_date).count(),
+        grade_Nine.objects.filter(created_at__gte=start_date).count(),
+        grade_Ten.objects.filter(created_at__gte=start_date).count(),
+        grade_Eleven.objects.filter(created_at__gte=start_date).count(),
+        grade_Twelve.objects.filter(created_at__gte=start_date).count(),
+    ])
     
     # ========== MONTHLY BORROWS (Last 7 months) ==========
     def shift_month(year, month, delta):
@@ -241,9 +248,8 @@ def analytics(request):
     ).order_by('-total')
 
     # ========== BATCH STATISTICS ==========
-    batch_stats = Account.objects.values('batch').annotate(
-        count=Count('id')
-    ).order_by('batch')
+    # Batch statistics removed as Account model no longer exists
+    batch_stats = []
 
     # ========== RECENT ACTIVITY & OVERDUE DETAILS ==========
     recent_activity = BorrowHistory.objects.select_related().order_by('-borrow_date')[:15]

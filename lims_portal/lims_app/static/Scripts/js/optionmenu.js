@@ -1,12 +1,14 @@
 document.addEventListener("DOMContentLoaded", function () {
   const modal = document.getElementById("registerModal");
-  const btn = document.querySelector(".registerAccount");
+  const btn = document.getElementById("registerAccount");  // Changed to getElementById
   const span = document.querySelector(".close");
   const mainContent = document.querySelector("main");
 
   // Only attach modal behavior if modal actually exists
   if (btn && modal && mainContent) {
-    btn.onclick = function () {
+    btn.onclick = function (event) {
+      event.preventDefault();
+      event.stopPropagation();
       modal.style.display = "flex";
       mainContent.classList.add("blurred");
     };
