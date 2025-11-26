@@ -94,9 +94,9 @@ class GradeAdminBase(BulkImportAdmin):
     def activation_status(self, obj):
         """Display activation status with color."""
         if obj.is_activated:
-            return format_html('<span style="color: green; font-weight: bold;">✓ Activated</span>')
+            return format_html('<span style="color: green; font-weight: bold;">Activated</span>')
         else:
-            return format_html('<span style="color: orange; font-weight: bold;">⏳ Pending</span>')
+            return format_html('<span style="color: orange; font-weight: bold;">Pending</span>')
     activation_status.short_description = "Status"
 
 class grade_SevenAdmin(GradeAdminBase):
@@ -116,8 +116,6 @@ class grade_ElevenAdmin(GradeAdminBase):
 
 class grade_TwelveAdmin(GradeAdminBase):
     pass
-    search_fields = ['name', 'email', 'school_id']
-    list_display = ['name', 'school_id', 'email', 'gender', 'created_at']
 
 class historyAdmin(admin.ModelAdmin):
     search_fields = ['bookID', 'accountID', 'bookTitle', 'accountName', 'borrow_date', 'return_date', 'returned']

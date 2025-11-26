@@ -9,9 +9,9 @@ import string
 # ACCOUNT MODEL
 # ---------------------------------
 GENDER_CHOICES = (
-    ("  Male", "    Male"),
-    (" Female", " Female"),
-    ("  Other", "    Other"),
+    ("Male", "Male"),
+    ("Female", "Female"),
+    ("Other", "Other"),
 )
 
 class grade_Seven(models.Model):
