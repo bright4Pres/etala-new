@@ -4,25 +4,35 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Library Analytics Dashboard - eTala</title>
+    
+    <!-- External Dependencies -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="../static/Scripts/css/statistics.css">
     <link rel="icon" href="../static/img/pisaylogo.svg">
     <script src="../static/Scripts/js/chart.js"></script>
 </head>
 <body>
+    <!-- Include navigation/header partial from Django template -->
     {% include 'partials/upbox.html' %}
     
     <main class="container">
-        <!-- Header Section -->
+        <!-- ==========================================
+             HEADER SECTION
+             Contains title and time period selector
+             ========================================== -->
         <div class="container">
             <div class="header-content">
+                <!-- Logo and title area -->
                 <div class="logo-container">
                     <div class="logo-text">
                         <h1>Library Analytics by eTala</h1>
                         <p>Statistical Data for Philippine Science High School Zamboanga Peninsula Region Campus Library</p>
                     </div>
                 </div>
+                
+                <!-- Action buttons and period selector -->
                 <div class="header-actions">
+                    <!-- Time period filter dropdown -->
                     <select id="period-select">
                         <option value="day" {% if request.GET.period == 'day' %}selected{% endif %}>Today</option>
                         <option value="week" {% if request.GET.period == 'week' %}selected{% endif %}>This Week</option>
@@ -30,9 +40,13 @@
                         <option value="quarter" {% if request.GET.period == 'quarter' %}selected{% endif %}>This Quarter</option>
                         <option value="year" {% if request.GET.period == 'year' %}selected{% endif %}>This Year</option>
                     </select>
+                    
+                    <!-- Refresh data button -->
                     <button class="btn-primary" id="refresh-btn">
                         <i class="fas fa-sync-alt"></i> Refresh
                     </button>
+                    
+                    <!-- Export/print button (uses browser print dialog) -->
                     <button class="btn-secondary" onclick="window.print()">
                         <i class="fas fa-download"></i> Export
                     </button>
@@ -40,8 +54,13 @@
             </div>
         </div>
 
-        <!-- Main KPI Cards -->
+        <!-- ==========================================
+             MAIN KPI CARDS
+             Six key performance indicator cards showing
+             primary library statistics
+             ========================================== -->
         <div class="kpi-grid">
+            <!-- Total Books in Library -->
             <div class="kpi-card">
                 <div class="kpi-header">
                     <div class="kpi-info">
@@ -55,6 +74,7 @@
                 </div>
             </div>
             
+            <!-- Currently Borrowed Books -->
             <div class="kpi-card">
                 <div class="kpi-header">
                     <div class="kpi-info">
@@ -68,11 +88,13 @@
                 </div>
             </div>
 
+            <!-- Registered Users with trend indicator -->
             <div class="kpi-card">
                 <div class="kpi-header">
                     <div class="kpi-info">
                         <h3>Registered Users</h3>
                         <div class="kpi-value">{{ total_accounts|default:0 }}</div>
+                        <!-- Shows new accounts in selected period -->
                         <div class="kpi-trend trend-up">
                             <i class="fas fa-arrow-up"></i>
                             <span>+{{ period_new_accounts|default:0 }} in {{ period_label|lower }}</span>
@@ -84,6 +106,7 @@
                 </div>
             </div>
 
+            <!-- Total Borrows (all-time and period-specific) -->
             <div class="kpi-card">
                 <div class="kpi-header">
                     <div class="kpi-info">
@@ -97,10 +120,12 @@
                 </div>
             </div>
             
+            <!-- Overdue Books - changes color based on count -->
             <div class="kpi-card kpi-card-{% if overdue_books > 0 %}danger{% else %}success{% endif %}">
                 <div class="kpi-header">
                     <div class="kpi-info">
                         <h3>Overdue Books</h3>
+                        <!-- Red if overdue books exist, green if none -->
                         <div class="kpi-value kpi-value-{% if overdue_books > 0 %}danger{% else %}success{% endif %}">
                             {{ overdue_books|default:0 }}
                         </div>
@@ -112,6 +137,7 @@
                 </div>
             </div>
             
+            <!-- Return Rate Percentage -->
             <div class="kpi-card">
                 <div class="kpi-header">
                     <div class="kpi-info">
@@ -126,8 +152,12 @@
             </div>
         </div>
 
-        <!-- Main Charts Section -->
+        <!-- ==========================================
+             MAIN CHARTS SECTION
+             Two primary charts for visualizing trends
+             ========================================== -->
         <div class="charts-grid">
+            <!-- Monthly Borrows Line Chart -->
             <div class="chart-card">
                 <div class="chart-header">
                     <h3>Monthly Borrows Trend</h3>
@@ -139,10 +169,12 @@
                     </div>
                 </div>
                 <div class="chart-container">
+                    <!-- Chart.js canvas for monthly trend -->
                     <canvas id="revenueChart"></canvas>
                 </div>
             </div>
     
+            <!-- Daily Activity Bar Chart (Last 7 Days) -->
             <div class="chart-card">
                 <div class="chart-header">
                     <h3>Daily Activity (Last 7 Days)</h3>
@@ -154,44 +186,56 @@
                     </div>
                 </div>
                 <div class="chart-container">
+                    <!-- Chart.js canvas for daily activity -->
                     <canvas id="userChart"></canvas>
                 </div>
             </div>
         </div>
 
-        <!-- Additional Charts and Stats -->
+        <!-- ==========================================
+             ADDITIONAL CHARTS AND STATS
+             Pie charts and performance metrics
+             ========================================== -->
         <div class="additional-charts">
+            <!-- Books by Type Pie Chart -->
             <div class="chart-card">
                 <div class="chart-header">
                     <h3>Books by Type</h3>
                 </div>
                 <div class="pie-chart-container">
+                    <!-- Chart.js pie chart for book types -->
                     <canvas id="salesChart"></canvas>
                 </div>
             </div>
 
+            <!-- Books by Language Pie Chart -->
             <div class="chart-card">
                 <div class="chart-header">
                     <h3>Books by Language</h3>
                 </div>
                 <div class="pie-chart-container">
+                    <!-- Chart.js pie chart for languages -->
                     <canvas id="languageChart"></canvas>
                 </div>
             </div>
             
+            <!-- Library Performance Metrics Card -->
             <div class="metrics-card">
                 <h3>Library Performance</h3>
+                
+                <!-- Book Utilization Progress Bar -->
                 <div class="metric-item">
                     <div class="metric-header">
                         <span>Book Utilization</span>
                         <span>{{ currently_borrowed|default:0 }}/{{ total_books_count|default:1 }}</span>
                     </div>
                     <div class="progress-bar">
-                        <!-- avoid template math inside style to prevent CSS linter errors -->
+                        <!-- Progress bar animated via JavaScript using data-percent attribute -->
                         <div class="progress-fill progress-fill-blue" data-percent="{{ utilization_percent|default:0 }}" style="width: 0%;"></div>
                     </div>
                 </div>
                 
+                <!-- Return Rate Progress Bar -->
                 <div class="metric-item">
                     <div class="metric-header">
                         <span>Return Rate</span>
@@ -202,6 +246,7 @@
                     </div>
                 </div>
                 
+                <!-- Average Borrow Duration Progress Bar -->
                 <div class="metric-item">
                     <div class="metric-header">
                         <span>Avg. Borrow Duration</span>
@@ -212,26 +257,32 @@
                     </div>
                 </div>
                 
+                <!-- Active Period Borrows Progress Bar -->
                 <div class="metric-item">
                     <div class="metric-header">
                         <span>Active Period Borrows</span>
                         <span>{{ period_borrows|default:0 }}</span>
                     </div>
                     <div class="progress-bar">
+                        <!-- Hardcoded width as this is a relative indicator -->
                         <div class="progress-fill progress-fill-orange" style="width: 85%;"></div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Top Stats Grid -->
+        <!-- ==========================================
+             TOP STATS GRID
+             Three cards showing ranked statistics
+             ========================================== -->
         <div class="stats-grid">
-            <!-- Top Borrowers -->
+            <!-- Top Borrowers Leaderboard -->
             <div class="chart-card">
                 <div class="chart-header">
                     <h3><i class="fas fa-star"></i> Top Borrowers</h3>
                 </div>
                 <div class="activity-list">
+                    <!-- Loop through top borrowers from Django context -->
                     {% for borrower in top_borrowers %}
                     <div class="activity-item activity-item-border">
                         <div class="activity-content">
@@ -253,12 +304,13 @@
                 </div>
             </div>
 
-            <!-- Most Borrowed Books -->
+            <!-- Most Borrowed Books List -->
             <div class="chart-card">
                 <div class="chart-header">
                     <h3><i class="fas fa-fire"></i> Most Borrowed Books</h3>
                 </div>
                 <div class="activity-list">
+                    <!-- Loop through most borrowed books -->
                     {% for book in most_borrowed %}
                     <div class="activity-item activity-item-border">
                         <div class="activity-content">
@@ -266,6 +318,7 @@
                                 <i class="fas fa-book"></i>
                             </div>
                             <div class="activity-text">
+                                <!-- Truncate long titles to 5 words -->
                                 <h4>{{ book.bookTitle|truncatewords:5 }}</h4>
                                 <p>Acc: {{ book.bookID }}</p>
                             </div>
@@ -280,12 +333,13 @@
                 </div>
             </div>
 
-            <!-- Location Statistics -->
+            <!-- Location Statistics (Physical library locations) -->
             <div class="chart-card">
                 <div class="chart-header">
                     <h3><i class="fas fa-map-marker-alt"></i> Location Stats</h3>
                 </div>
                 <div class="activity-list">
+                    <!-- Loop through location statistics -->
                     {% for loc in location_stats %}
                     <div class="activity-item activity-item-border">
                         <div class="activity-content">
@@ -294,6 +348,7 @@
                             </div>
                             <div class="activity-text">
                                 <h4>{{ loc.Location|truncatewords:3 }}</h4>
+                                <!-- Show available vs borrowed breakdown -->
                                 <p>Available: {{ loc.available }} | Borrowed: {{ loc.borrowed }}</p>
                             </div>
                         </div>
@@ -308,26 +363,44 @@
             </div>
         </div>
 
-        <!-- Calendar Heatmap -->
+        <!-- ==========================================
+             CALENDAR HEATMAP
+             GitHub-style activity heatmap for borrows
+             ========================================== -->
         <div class="chart-card heatmap-card" style="margin-bottom: 2em;">
             <div class="chart-header">
                 <h3><i class="fas fa-calendar-alt"></i> Borrow Activity Calendar</h3>
+                
+                <!-- Heatmap navigation controls -->
                 <div class="heatmap-controls" style="display: flex; align-items: center; gap: 1em; margin-top: 0.5em;">
+                    <!-- Form to change date range and navigate through time periods -->
                     <form id="heatmap-range-form" method="get" style="display: flex; align-items: center; gap: 0.5em;">
+                        <!-- Preserve current period filter when navigating heatmap -->
                         <input type="hidden" name="period" value="{{ request.GET.period|default_if_none:'' }}">
+                        
+                        <!-- Navigate to previous period -->
                         <button type="submit" name="heatmap_offset" value="{{ heatmap_prev_offset }}" class="heatmap-nav-btn" title="Previous" style="font-size:1.2em;">&#8592;</button>
+                        
+                        <!-- Select time range (week/month/year) -->
                         <select name="heatmap_range" id="heatmap-range-select" style="padding: 2px 6px;">
                             <option value="week" {% if heatmap_range == 'week' %}selected{% endif %}>Week</option>
                             <option value="month" {% if heatmap_range == 'month' %}selected{% endif %}>Month</option>
                             <option value="year" {% if heatmap_range == 'year' %}selected{% endif %}>Year</option>
                         </select>
+                        
+                        <!-- Display current period label (e.g., "November 2025") -->
                         <span style="font-weight: 500;">{{ heatmap_period_label }}</span>
+                        
+                        <!-- Navigate to next period (disabled if viewing current/future) -->
                         <button type="submit" name="heatmap_offset" value="{{ heatmap_next_offset }}" class="heatmap-nav-btn" title="Next" style="font-size:1.2em;" {% if not heatmap_can_go_next %}disabled{% endif %}>&#8594;</button>
                     </form>
                 </div>
+                
+                <!-- Heatmap color intensity legend -->
                 <div class="heatmap-legend">
                     <span class="heatmap-legend-label">Less</span>
                     <div class="heatmap-legend-scale">
+                        <!-- Five intensity levels from 0 (none) to 4 (most) -->
                         <div class="heatmap-legend-box heatmap-level-0"></div>
                         <div class="heatmap-legend-box heatmap-level-1"></div>
                         <div class="heatmap-legend-box heatmap-level-2"></div>
@@ -337,10 +410,14 @@
                     <span class="heatmap-legend-label">More</span>
                 </div>
             </div>
+            <!-- Heatmap rendered by JavaScript -->
             <div id="calendar-heatmap" class="calendar-heatmap-container"></div>
         </div>
 
-        <!-- Overdue Books Alert -->
+        <!-- ==========================================
+             OVERDUE BOOKS ALERT
+             Only shown if there are overdue books
+             ========================================== -->
         {% if overdue_books > 0 %}
         <div class="chart-card chart-card-danger">
             <div class="chart-header">
@@ -349,6 +426,7 @@
                 </h3>
             </div>
             <div class="activity-list">
+                <!-- Loop through overdue books list -->
                 {% for overdue in overdue_list %}
                 <div class="activity-item">
                     <div class="activity-content">
@@ -356,10 +434,12 @@
                             <i class="fas fa-clock"></i>
                         </div>
                         <div class="activity-text">
+                            <!-- Show book title and borrower info -->
                             <h4>{{ overdue.bookTitle|truncatewords:6 }}</h4>
                             <p>{{ overdue.accountName }} ({{ overdue.accountID }})</p>
                         </div>
                     </div>
+                    <!-- Display due date in danger styling -->
                     <div class="activity-time activity-time-danger">
                         Due: {{ overdue.return_date|date:"M d, Y" }}
                     </div>
@@ -369,12 +449,16 @@
         </div>
         {% endif %}
 
-        <!-- Recent Activity -->
+        <!-- ==========================================
+             RECENT ACTIVITY FEED
+             Shows most recent borrow transactions
+             ========================================== -->
         <div class="activity-card">
             <div class="activity-header">
                 <h3><i class="fas fa-history"></i> Recent Activity</h3>
             </div>
             <div class="activity-list">
+                <!-- Loop through recently borrowed books -->
                 {% for activity in borrowed_books %}
                 <div class="activity-item">
                     <div class="activity-content">
@@ -382,10 +466,12 @@
                             <i class="fas fa-book"></i>
                         </div>
                         <div class="activity-text">
+                            <!-- Show book title and borrower -->
                             <h4>{{ activity.bookTitle|truncatewords:8 }} was borrowed</h4>
                             <p>{{ activity.accountName }} ({{ activity.accountID }})</p>
                         </div>
                     </div>
+                    <!-- Display borrow date and time -->
                     <div class="activity-time">{{ activity.borrow_date|date:"M d, Y H:i" }}</div>
                 </div>
                 {% empty %}
@@ -395,10 +481,17 @@
         </div>
     </main>
 
-    <!-- Inject metrics for JS charts (escape to avoid editor parse errors) -->
+    <!-- ==========================================
+         DATA INJECTION FOR JAVASCRIPT
+         Pass Django context data to JS for Chart.js
+         ========================================== -->
     <script>
+        // Inject metrics JSON from Django backend
+        // escapejs filter prevents XSS attacks
         window.analyticsData = JSON.parse('{{ metrics_json|escapejs }}');
     </script>
+    
+    <!-- Main statistics JavaScript file (handles Chart.js rendering and interactions) -->
     <script src="../static/Scripts/js/statistics.js"></script>
 </body>
 </html>

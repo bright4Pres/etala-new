@@ -15,6 +15,14 @@ body::-webkit-scrollbar {
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap');
 @import url('./normalize.css') layer(normalize);
 
+@font-face {
+  font-family: 'Rubik';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('../../fonts/Rubik/Rubik-VariableFont_wght.ttf') format('truetype');
+}
+
 @layer normalize, base, demo, stick, effect, scrollbar, debug;
 
 @layer demo {
