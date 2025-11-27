@@ -10,33 +10,35 @@
 </head>
 <body>
 {% include 'partials/upbox.html' %}
-<header style=" background-image: url('../static/img/zrcpic.png'); background-size: cover; background-position-y: -120px; background-repeat: no-repeat;">
+<!-- Update your header section in home.html with these responsive classes -->
+
+<header style="background-image: url('../static/img/zrcpic.png'); background-size: cover; background-position: center; background-repeat: no-repeat;">
   <div class="container">
-  <div class="row">
-    <div class="col-10 col-md-7">
-      <div class="row">
-        <div class="col-10" >
-          <h1 style="font-size: 4.6em;">A scholar's <br> star map to <br> wisdom.</h1>
-        </div>
-        <div class="col-10">
-          <p> Enter a title, author, or keyword to begin your journey </p>
-          <div id="searchContainer" style="width: 60%;">
-            <form id="globalSearchForm" method="GET" onsubmit="redirectToRecords(event);">
+    <div class="row">
+      <div class="col-12 col-md-7">
+        <div class="row">
+          <div class="col-12" >
+            <h1 style="font-size: 4.6em;">A scholar's <br> star map to <br> wisdom.</h1>
+          </div>
+          <div class="col-12">
+            <p>Enter a title, author, or keyword to begin your journey</p>
+            <div id="searchContainer" style="width: 100%; max-width: 600px;">
+              <form id="globalSearchForm" method="GET" onsubmit="redirectToRecords(event);">
                 {% csrf_token %}
                 <input type="text" id="librarySearch" class="form-control"
                       placeholder="Search the Library"
                       value="{{ request.GET.search|default:'' }}"
-                      style="width: 80%; padding-left: 1em; font-size: 1.4em">
-            </form>
+                      style="width: 100%; padding: 0.8em 1em; font-size: 1.4em; box-sizing: border-box;">
+              </form>
             </div>
+          </div>
         </div>
       </div>
-    </div>
-    <div class="col-10 col-md-3">
-      <div style="background-image: url('../static/img/pisaylogo.svg'); background-size: cover; height:300px; width: 300px; background-repeat: no-repeat;"> </div>  
+      <div class="col-12 col-md-3 d-none d-md-block">
+        <div style="background-image: url('../static/img/pisaylogo.svg'); background-size: contain; background-position: center; height: 300px; width: 100%; max-width: 300px; background-repeat: no-repeat; margin: 0 auto;"></div>  
+      </div>
     </div>
   </div>
-</div>
 </header>
 <main>
   <section class="optionsContainer" id="home" style="height: auto; min-height: 50vh; padding: 2em 0; justify-content: center; align-content: center; align-items: center;">
