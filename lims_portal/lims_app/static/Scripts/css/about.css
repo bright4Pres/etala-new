@@ -1,154 +1,94 @@
-/* Keep scrolling, hide scrollbars everywhere */
-html, body {
-    overflow: auto; /* allow scrolling */
-    -ms-overflow-style: none;  /* IE and Edge */
-    scrollbar-width: none;  /* Firefox */
-}
-
-/* Chrome, Safari, Edge */
-html::-webkit-scrollbar,
-body::-webkit-scrollbar {
-    display: none;  /* hide scrollbar completely */
+body {
+  font-family: 'Montserraf', sans-serif;
 }
 
 * {
+  /* Ensure sane sizing of all elements */
+  box-sizing: border-box; 
+}
+
+.color-list {
+  display: flex;
+  /* 
+    On small displays we want each .color stacked.
+    Flexbox let's us determine stacking direction via
+    flex-direction: column;
+  */
+  flex-direction: column;
+  height: 100vh;
+}
+
+.color {
+  /*
+    Each .color is also a flex item. We do this so that we have reasonable
+    distribution of space between elements. We use flex-direction so that
+    flexbox knows which way to position each element (in this case, vertical).
+  */
+  display: flex;
+  flex-direction: column;
+  
+  /*
+    .color can grow but not shrink (we want space for first three elements).
+    10em is enough space to see name, hsl, and hex values. 
+    Try shrinking vertically on a small display.
+  */
+  flex: 1 0 10em;  
+  box-shadow: 0 0 30px #424242;
+  
+  /* Handles any clipping/overflow issues on transition */
+  overflow: hidden;
+  padding: 1em;
+  color: white;
+  transition: flex-basis 500ms ease-in-out;
+}
+
+.color:hover {
+  /*
+    Change the flex-basis so that we know what
+    size to transition to on hover. Arbitrary,
+    based on our design/content.
+  */
+  flex-basis: 20em;
+}
+
+.color:hover .details {
+  opacity: 1;
+}
+
+.name {
+  font-size: 1.2em;
+  font-weight: 600;
+}
+
+.details {
   margin: 0;
   padding: 0;
-}
-
-*,
-*:after,
-*:before {
-  box-sizing: border-box;
-}
-
-html {
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-rendering: optimizelegibility;
-}
-
-html,
-body {
-  width: 100%;
-  height: 100%;
-}
-
-body {
-  font-family: "Open Sans", sans-serif;
-  font-size: 100%;
-}
-
-ul li {
-  list-style-type: none;
-}
-
-.slider--teams {
-  position: relative;
-  top: 50%;
-  left: 50%;
-  max-width: 750px;
+  list-style: none;
   opacity: 0;
-  transform: translate(-50%, -50%);
-}
-.slider--teams .slider--teams__team {
-  position: relative;
-  overflow: hidden;
+  transition: opacity 500ms ease-in-out;
 }
 
-#list {
-  position: relative;
-  -webkit-backface-visibility: hidden;
-          backface-visibility: hidden;
-  transform: translate3d(0, 0, 0);
-}
-#list li {
-  position: relative;
-  display: inline-block;
-  float: left;
-  text-align: center;
-}
-#list li figure {
-  cursor: pointer;
-  margin: 1em;
-  opacity: 0.5;
-  -webkit-backface-visibility: hidden;
-          backface-visibility: hidden;
-  transition: transform 450ms cubic-bezier(0.445, 0.05, 0.55, 0.95), opacity 450ms ease-in-out;
-  transform: scale(0.5) translateZ(0px);
-}
-#list li figure:hover {
-  opacity: 0.8;
-  transform: scale(0.6) translateZ(0px);
-}
-#list li figure:active {
-  opacity: 1;
-  transform: scale(0.7) translateZ(0px);
-}
-#list li figure > div {
-  border-radius: 5px;
-  position: relative;
-  margin: 2rem auto;
-  width: 120px;
-  height: 120px;
-  overflow: hidden;
-  transform: rotate(45deg) translateZ(0px);
-}
-#list li figure > div > div {
-  background: url(../../img/teamsmyway.png) no-repeat;
-  background-size: cover;
-  background-position: 0px 0px;
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 170px;
-  height: 170px;
-  transform: rotate(-45deg) translate(0%, -70%);
-}
-#list li figure figcaption h2 {
-  color: #333;
-  font-size: 1.6rem;
-  font-weight: 800;
-}
-#list li figure figcaption p {
-  color: #666;
-  font-size: 0.9rem;
-  font-weight: 400;
-}
-#list li:nth-child(1) figure > div > div {
-  background-position: 0px 0px !important;
-}
-#list li:nth-child(2) figure > div > div {
-  background-position: 0px 20% !important;
-}
-#list li:nth-child(3) figure > div > div {
-  background-position: 0px 40% !important;
-}
-#list li:nth-child(4) figure > div > div {
-  background-position: 0px 60% !important;
-}
-#list li:nth-child(5) figure > div > div {
-  background-position: 0px 80% !important;
-}
-#list li:nth-child(6) figure > div > div {
-  background-position: 0px 100% !important;
+.details li {
+  font-size: 1em;
+  line-height: 2em;
 }
 
-.active {
-  opacity: 1 !important;
-  transform: scale(1) translateZ(0px) !important;
+@media (min-width: 600px) {
+  .color-list {
+    /*
+      Change the direction so that each .color
+      aligns horizontally
+    */
+    flex-direction: row;
+  }
+  
+  .color {
+    /*
+      No scrollbars on mobile
+    */
+    flex-shrink: 1;
+  }
 }
 
-.cf:before,
-.cf:after {
-  content: " ";
-  display: table;
-}
-
-.cf:after {
-  clear: both;
-}
-
-.cf {
-  zoom: 1;
-}
+/* Fonts, OK at the end for this demo! */
+@import url(https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,600);

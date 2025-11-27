@@ -1,16 +1,24 @@
+/* Enhanced Notification Styles - Replace in notif.css */
+
 .notification {
   position: fixed;
   bottom: 20px;
   left: 20px;
-  background-color: #090909d7;
+  background-color: #090909;
   color: white;
-  padding: 16px;
-  border-radius: 8px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  padding: 16px 20px;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
   opacity: 0;
   transform: translateY(20px);
   transition: opacity 0.3s ease, transform 0.3s ease;
-  z-index: 1000;
+  z-index: 10000;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 500;
+  font-size: 15px;
+  max-width: 400px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .notification.show {
@@ -20,8 +28,20 @@
 
 .notification.success {
   background-color: #28a745;
+  box-shadow: 0 8px 24px rgba(40, 167, 69, 0.4);
 }
 
 .notification.error {
   background-color: #dc3545;
+  box-shadow: 0 8px 24px rgba(220, 53, 69, 0.4);
+}
+
+/* Mobile responsive */
+@media (max-width: 600px) {
+  .notification {
+    bottom: 15px;
+    left: 15px;
+    right: 15px;
+    max-width: calc(100% - 30px);
+  }
 }

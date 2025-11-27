@@ -1,6 +1,6 @@
 .optionsContainer {
-  overflow-y: hidden;
-  overflow-x: hidden;
+  overflow-y:visible;
+  overflow-x: visible;
   -webkit-overflow-scrolling: touch;
   width: 100%;
   max-width: 100%;
@@ -18,7 +18,7 @@
 }
 
 h1 {
-  font-size: 6em;
+  font-size: 5em;
   font-weight: 700 !important;
   text-shadow: 1px 1px rgba(0, 0, 0, 0.02), 2px 2px rgba(0, 0, 0, 0.02), 3px 3px rgba(0, 0, 0, 0.02), 4px 4px rgba(0, 0, 0, 0.02), 0.125rem 0.125rem rgba(0, 0, 0, 0.02), 6px 6px rgba(0, 0, 0, 0.02), 7px 7px rgba(0, 0, 0, 0.02), 8px 8px rgba(0, 0, 0, 0.02), 9px 9px rgba(0, 0, 0, 0.02), 0.3125rem 0.3125rem rgba(0, 0, 0, 0.02), 11px 11px rgba(0, 0, 0, 0.02), 12px 12px rgba(0, 0, 0, 0.02), 13px 13px rgba(0, 0, 0, 0.02), 14px 14px rgba(0, 0, 0, 0.02), 0.625rem 0.625rem rgba(0, 0, 0, 0.02), 16px 16px rgba(0, 0, 0, 0.02), 17px 17px rgba(0, 0, 0, 0.02), 18px 18px rgba(0, 0, 0, 0.02), 19px 19px rgba(0, 0, 0, 0.02), 1.25rem 1.25rem rgba(0, 0, 0, 0.02);
 }
@@ -82,7 +82,6 @@ p {
   transition-property: background;
   transition-timing-function: cubic-bezier(0.19, 1, 0.22, 1);
   transition-duration: 0.3s;
-  border: 1px solid rgba(255, 255, 255, 0.07);
 }
 .options > .option > input[type=radio],
 .options > .option > input[type=checkbox] {
@@ -102,16 +101,11 @@ p {
 .options > .option > input[type=checkbox]:hover ~ .option-content,
 .options > .option > input[type=checkbox]:checked ~ .option-content {
   width: 100%;
-  transform: scale(1.3, 1.3);
-}
-.options > .option > input[type=radio]:checked ~ .on-checked,
-.options > .option > input[type=checkbox]:checked ~ .on-checked {
-  opacity: 1;
-  box-shadow: inset 0px 0px 3em -1.2em rgba(0, 0, 0, 0.5);
+  transform: scale(1.1, 1.1);
 }
 .options > .option > input[type=radio]:active ~ .option-content,
 .options > .option > input[type=checkbox]:active ~ .option-content {
-  transform: scale(1.15, 1.15);
+  transform: scale(1.05, 1.05);
 }
 .options > .option > .option-content {
   position: relative;
@@ -135,4 +129,7 @@ p {
   transition-property: opacity;
   transition-duration: 0.5s;
   background-color: rgba(0, 0, 0, 0.1);
+}
+.option-content h1 {
+  text-shadow: none !important;
 }
