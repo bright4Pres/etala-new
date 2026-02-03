@@ -115,11 +115,11 @@ class GradeAdminBase(BulkImportAdmin):
                 output_str = output.getvalue()
                 
                 # Display success message with summary
-                messages.success(request, f"✅ Students moved up successfully!\n\n{output_str}")
+                messages.success(request, f"Students moved up successfully!\n\n{output_str}")
                 return redirect(request.get_full_path())
                 
             except Exception as e:
-                messages.error(request, f"❌ Error during move-up: {str(e)}")
+                messages.error(request, f"Error during move-up: {str(e)}")
                 return redirect(request.get_full_path())
         
         # Show confirmation page
@@ -129,7 +129,7 @@ class GradeAdminBase(BulkImportAdmin):
             'opts': self.model._meta,
         })
     
-    move_up_all_students.short_description = "🎓 Move All Students Up One Grade"
+    move_up_all_students.short_description = "Move All Students Up One Grade"
 
 class grade_SevenAdmin(GradeAdminBase):
     pass

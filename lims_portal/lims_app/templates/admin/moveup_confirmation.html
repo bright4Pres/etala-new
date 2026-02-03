@@ -3,151 +3,171 @@
 
 {% block extrahead %}
 <style>
-    .confirmation-box {
+    .confirmation-container {
         max-width: 800px;
         margin: 40px auto;
         padding: 30px;
         background: #fff;
         border-radius: 8px;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        border: 1px solid #e0e0e0;
     }
-    
+
     .warning-header {
-        display: flex;
-        align-items: center;
-        gap: 15px;
-        margin-bottom: 25px;
         padding: 20px;
-        background: #fff3cd;
-        border-left: 5px solid #ffc107;
+        background: #f8f9fa;
+        border-left: 4px solid #ffc107;
         border-radius: 4px;
+        margin-bottom: 25px;
     }
-    
-    .warning-icon {
-        font-size: 48px;
-        color: #ff9800;
+
+    .warning-header h2 {
+        margin: 0 0 8px 0;
+        color: #495057;
+        font-size: 24px;
+        font-weight: 600;
     }
-    
-    .warning-text h2 {
-        margin: 0 0 5px 0;
-        color: #856404;
-    }
-    
-    .warning-text p {
+
+    .warning-header p {
         margin: 0;
-        color: #856404;
+        color: #6c757d;
+        font-size: 16px;
     }
-    
+
     .info-section {
         margin: 25px 0;
         padding: 20px;
-        background: #e7f3ff;
-        border-left: 5px solid #2196F3;
-        border-radius: 4px;
+        background: #f8f9fa;
+        border: 1px solid #e9ecef;
+        border-radius: 6px;
     }
-    
+
     .info-section h3 {
         margin: 0 0 15px 0;
-        color: #1976D2;
+        color: #495057;
+        font-size: 18px;
+        font-weight: 600;
     }
-    
+
     .info-section ul {
-        margin: 10px 0;
+        margin: 0;
         padding-left: 20px;
     }
-    
+
     .info-section li {
         margin: 8px 0;
-        color: #0d47a1;
+        color: #495057;
+        line-height: 1.5;
     }
-    
+
+    .danger-section {
+        margin: 25px 0;
+        padding: 20px;
+        background: #f8f9fa;
+        border: 1px solid #f5c6cb;
+        border-radius: 6px;
+    }
+
+    .danger-section h3 {
+        margin: 0 0 15px 0;
+        color: #721c24;
+        font-size: 18px;
+        font-weight: 600;
+    }
+
+    .danger-section ul {
+        margin: 0;
+        padding-left: 20px;
+    }
+
+    .danger-section li {
+        margin: 8px 0;
+        color: #721c24;
+        line-height: 1.5;
+    }
+
     .action-buttons {
         display: flex;
         gap: 15px;
         justify-content: center;
         margin-top: 30px;
         padding-top: 20px;
-        border-top: 1px solid #ddd;
+        border-top: 1px solid #dee2e6;
     }
-    
+
     .btn {
         padding: 12px 30px;
         font-size: 16px;
-        font-weight: 600;
-        border: none;
+        font-weight: 500;
+        border: 1px solid #dee2e6;
         border-radius: 4px;
         cursor: pointer;
         text-decoration: none;
         display: inline-block;
-        transition: all 0.3s;
+        transition: all 0.2s ease;
+        background: #fff;
+        color: #495057;
     }
-    
+
+    .btn:hover {
+        background: #f8f9fa;
+        border-color: #adb5bd;
+    }
+
     .btn-danger {
         background: #dc3545;
         color: white;
+        border-color: #dc3545;
     }
-    
+
     .btn-danger:hover {
         background: #c82333;
-        transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(220, 53, 69, 0.3);
-    }
-    
-    .btn-secondary {
-        background: #6c757d;
-        color: white;
-    }
-    
-    .btn-secondary:hover {
-        background: #5a6268;
+        border-color: #bd2130;
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="confirmation-box">
+<div class="confirmation-container">
     <div class="warning-header">
-        <div class="warning-icon">⚠️</div>
-        <div class="warning-text">
-            <h2>Confirm Student Grade Move-Up</h2>
-            <p>This action will affect ALL students in the database</p>
-        </div>
+        <h2>Confirm Student Grade Move-Up</h2>
+        <p>This action will affect all students in the database</p>
     </div>
-    
+
     <div class="info-section">
-        <h3>📋 What will happen:</h3>
+        <h3>What will happen:</h3>
         <ul>
             <li><strong>Grade 11 → Grade 12:</strong> All Grade 11 students will be promoted to Grade 12</li>
             <li><strong>Grade 10 → Grade 11:</strong> All Grade 10 students will be promoted to Grade 11</li>
             <li><strong>Grade 9 → Grade 10:</strong> All Grade 9 students will be promoted to Grade 10</li>
             <li><strong>Grade 8 → Grade 9:</strong> All Grade 8 students will be promoted to Grade 9</li>
             <li><strong>Grade 7 → Grade 8:</strong> All Grade 7 students will be promoted to Grade 8</li>
-            <li><strong>Grade 12 Students:</strong> Will be <strong style="color: #d32f2f;">DELETED</strong> (graduated)</li>
+            <li><strong>Grade 12 Students:</strong> Will be <strong style="color: #dc3545;">deleted</strong> (graduated)</li>
         </ul>
     </div>
-    
-    <div class="info-section" style="background: #ffebee; border-left-color: #f44336;">
-        <h3 style="color: #c62828;">⚠️ Important Notes:</h3>
-        <ul style="color: #b71c1c;">
-            <li>This action <strong>CANNOT BE UNDONE</strong></li>
+
+    <div class="danger-section">
+        <h3>Important Notes:</h3>
+        <ul>
+            <li>This action <strong>cannot be undone</strong></li>
             <li>StudentActivation records will also be updated</li>
             <li>All Grade 12 students will be permanently deleted</li>
             <li>Make sure you have removed any students who dropped out before proceeding</li>
             <li>Consider backing up your database before performing this action</li>
         </ul>
     </div>
-    
+
     <form method="post">
         {% csrf_token %}
         <input type="hidden" name="action" value="{{ action }}">
         <input type="hidden" name="confirm" value="yes">
-        
+
         <div class="action-buttons">
-            <a href="{% url 'admin:lims_app_grade_seven_changelist' %}" class="btn btn-secondary">
-                ← Cancel
+            <a href="{% url 'admin:lims_app_grade_seven_changelist' %}" class="btn">
+                Cancel
             </a>
             <button type="submit" class="btn btn-danger">
-                🎓 Confirm Move-Up
+                Confirm Move-Up
             </button>
         </div>
     </form>
