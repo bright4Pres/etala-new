@@ -3,173 +3,223 @@
 
 {% block extrahead %}
 <style>
-    .confirmation-container {
-        max-width: 800px;
-        margin: 40px auto;
-        padding: 30px;
-        background: #fff;
-        border-radius: 8px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        border: 1px solid #e0e0e0;
-    }
+  :root {
+    --surface-color: #f8f9fa;
+    --card-surface: #fff;
+    --border-color: #e8eaed;
+    --text-primary: #202124;
+    --text-secondary: #5f6368;
+    --warning-bg: #fef7e0;
+    --warning-border: #fbbc04;
+    --warning-text: #ea8600;
+    --danger-bg: #fce8e6;
+    --danger-border: #ea4335;
+    --danger-text: #d93025;
+    --primary-color: #1a73e8;
+    --cancel-bg: #f8f9fa;
+    --cancel-border: #dadce0;
+    --cancel-text: #3c4043;
+  }
 
-    .warning-header {
-        padding: 20px;
-        background: #f8f9fa;
-        border-left: 4px solid #ffc107;
-        border-radius: 4px;
-        margin-bottom: 25px;
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --surface-color: #1f1f1f;
+      --card-surface: #292a2d;
+      --border-color: #3c4043;
+      --text-primary: #e8eaed;
+      --text-secondary: #9aa0a6;
+      --warning-bg: #2d2e30;
+      --warning-border: #fbbc04;
+      --warning-text: #fbbc04;
+      --danger-bg: #2d2e30;
+      --danger-border: #ea4335;
+      --danger-text: #f28b82;
+      --primary-color: #8ab4f8;
+      --cancel-bg: #3c4043;
+      --cancel-border: #5f6368;
+      --cancel-text: #e8eaed;
     }
+  }
 
-    .warning-header h2 {
-        margin: 0 0 8px 0;
-        color: #495057;
-        font-size: 24px;
-        font-weight: 600;
-    }
+  .confirmation-container {
+    max-width: 800px;
+    margin: 40px auto;
+    padding: 24px;
+    background: var(--card-surface);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(60, 64, 67, 0.08);
+  }
 
-    .warning-header p {
-        margin: 0;
-        color: #6c757d;
-        font-size: 16px;
-    }
+  .warning-header {
+    padding: 20px;
+    background: var(--warning-bg);
+    border: 1px solid var(--warning-border);
+    border-radius: 12px;
+    margin-bottom: 24px;
+  }
 
-    .info-section {
-        margin: 25px 0;
-        padding: 20px;
-        background: #f8f9fa;
-        border: 1px solid #e9ecef;
-        border-radius: 6px;
-    }
+  .warning-header h2 {
+    margin: 0 0 8px 0;
+    color: var(--warning-text);
+    font-size: 20px;
+    font-weight: 500;
+    line-height: 1.5;
+  }
 
-    .info-section h3 {
-        margin: 0 0 15px 0;
-        color: #495057;
-        font-size: 18px;
-        font-weight: 600;
-    }
+  .warning-header p {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 14px;
+    line-height: 1.5;
+  }
 
-    .info-section ul {
-        margin: 0;
-        padding-left: 20px;
-    }
+  .info-section {
+    margin: 24px 0;
+    padding: 20px;
+    background: var(--surface-color);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(60, 64, 67, 0.08);
+  }
 
-    .info-section li {
-        margin: 8px 0;
-        color: #495057;
-        line-height: 1.5;
-    }
+  .info-section h3 {
+    margin: 0 0 16px 0;
+    color: var(--text-primary);
+    font-size: 16px;
+    font-weight: 500;
+    line-height: 1.5;
+  }
 
-    .danger-section {
-        margin: 25px 0;
-        padding: 20px;
-        background: #f8f9fa;
-        border: 1px solid #f5c6cb;
-        border-radius: 6px;
-    }
+  .info-section ul {
+    margin: 0;
+    padding-left: 20px;
+  }
 
-    .danger-section h3 {
-        margin: 0 0 15px 0;
-        color: #721c24;
-        font-size: 18px;
-        font-weight: 600;
-    }
+  .info-section li {
+    margin: 8px 0;
+    color: var(--text-primary);
+    line-height: 1.5;
+    font-size: 14px;
+  }
 
-    .danger-section ul {
-        margin: 0;
-        padding-left: 20px;
-    }
+  .danger-section {
+    margin: 24px 0;
+    padding: 20px;
+    background: var(--danger-bg);
+    border: 1px solid var(--danger-border);
+    border-radius: 12px;
+  }
 
-    .danger-section li {
-        margin: 8px 0;
-        color: #721c24;
-        line-height: 1.5;
-    }
+  .danger-section h3 {
+    margin: 0 0 16px 0;
+    color: var(--danger-text);
+    font-size: 16px;
+    font-weight: 500;
+    line-height: 1.5;
+  }
 
-    .action-buttons {
-        display: flex;
-        gap: 15px;
-        justify-content: center;
-        margin-top: 30px;
-        padding-top: 20px;
-        border-top: 1px solid #dee2e6;
-    }
+  .danger-section ul {
+    margin: 0;
+    padding-left: 20px;
+  }
 
-    .btn {
-        padding: 12px 30px;
-        font-size: 16px;
-        font-weight: 500;
-        border: 1px solid #dee2e6;
-        border-radius: 4px;
-        cursor: pointer;
-        text-decoration: none;
-        display: inline-block;
-        transition: all 0.2s ease;
-        background: #fff;
-        color: #495057;
-    }
+  .danger-section li {
+    margin: 8px 0;
+    color: var(--danger-text);
+    line-height: 1.5;
+    font-size: 14px;
+  }
 
-    .btn:hover {
-        background: #f8f9fa;
-        border-color: #adb5bd;
-    }
+  .action-buttons {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    margin-top: 32px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border-color);
+  }
 
-    .btn-danger {
-        background: #dc3545;
-        color: white;
-        border-color: #dc3545;
-    }
+  .btn {
+    padding: 10px 24px;
+    font-size: 14px;
+    font-weight: 500;
+    border: 1px solid var(--cancel-border);
+    border-radius: 6px;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 40px;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    background: var(--cancel-bg);
+    color: var(--cancel-text);
+  }
 
-    .btn-danger:hover {
-        background: #c82333;
-        border-color: #bd2130;
-    }
+  .btn:hover {
+    background: var(--surface-color);
+    border-color: var(--border-color);
+    box-shadow: 0 1px 3px rgba(60, 64, 67, 0.3);
+  }
+
+  .btn-danger {
+    background: var(--danger-text);
+    color: #fff;
+    border-color: var(--danger-text);
+  }
+
+  .btn-danger:hover {
+    background: #b3261e;
+    border-color: #b3261e;
+    box-shadow: 0 2px 6px rgba(217, 48, 37, 0.4);
+  }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="confirmation-container">
-    <div class="warning-header">
-        <h2>Confirm Student Grade Move-Up</h2>
-        <p>This action will affect all students in the database</p>
+  <div class="warning-header">
+    <h2>Confirm Student Grade Move-Up</h2>
+    <p>This action will affect all students in the database</p>
+  </div>
+
+  <div class="info-section">
+    <h3>What will happen:</h3>
+    <ul>
+      <li><strong>Grade 11 → Grade 12:</strong> All Grade 11 students will be promoted to Grade 12</li>
+      <li><strong>Grade 10 → Grade 11:</strong> All Grade 10 students will be promoted to Grade 11</li>
+      <li><strong>Grade 9 → Grade 10:</strong> All Grade 9 students will be promoted to Grade 10</li>
+      <li><strong>Grade 8 → Grade 9:</strong> All Grade 8 students will be promoted to Grade 9</li>
+      <li><strong>Grade 7 → Grade 8:</strong> All Grade 7 students will be promoted to Grade 8</li>
+      <li><strong>Grade 12 Students:</strong> Will be <strong style="color: var(--danger-text);">deleted</strong> (graduated)</li>
+    </ul>
+  </div>
+
+  <div class="danger-section">
+    <h3>Important Notes:</h3>
+    <ul>
+      <li>This action <strong>cannot be undone</strong></li>
+      <li>StudentActivation records will also be updated</li>
+      <li>All Grade 12 students will be permanently deleted</li>
+      <li>Make sure you have removed any students who dropped out before proceeding</li>
+      <li>Consider backing up your database before performing this action</li>
+    </ul>
+  </div>
+
+  <form method="post">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="{{ action }}">
+    <input type="hidden" name="confirm" value="yes">
+
+    <div class="action-buttons">
+      <a href="{% url 'admin:lims_app_grade_seven_changelist' %}" class="btn">
+        Cancel
+      </a>
+      <button type="submit" class="btn btn-danger">
+        Confirm Move-Up
+      </button>
     </div>
-
-    <div class="info-section">
-        <h3>What will happen:</h3>
-        <ul>
-            <li><strong>Grade 11 → Grade 12:</strong> All Grade 11 students will be promoted to Grade 12</li>
-            <li><strong>Grade 10 → Grade 11:</strong> All Grade 10 students will be promoted to Grade 11</li>
-            <li><strong>Grade 9 → Grade 10:</strong> All Grade 9 students will be promoted to Grade 10</li>
-            <li><strong>Grade 8 → Grade 9:</strong> All Grade 8 students will be promoted to Grade 9</li>
-            <li><strong>Grade 7 → Grade 8:</strong> All Grade 7 students will be promoted to Grade 8</li>
-            <li><strong>Grade 12 Students:</strong> Will be <strong style="color: #dc3545;">deleted</strong> (graduated)</li>
-        </ul>
-    </div>
-
-    <div class="danger-section">
-        <h3>Important Notes:</h3>
-        <ul>
-            <li>This action <strong>cannot be undone</strong></li>
-            <li>StudentActivation records will also be updated</li>
-            <li>All Grade 12 students will be permanently deleted</li>
-            <li>Make sure you have removed any students who dropped out before proceeding</li>
-            <li>Consider backing up your database before performing this action</li>
-        </ul>
-    </div>
-
-    <form method="post">
-        {% csrf_token %}
-        <input type="hidden" name="action" value="{{ action }}">
-        <input type="hidden" name="confirm" value="yes">
-
-        <div class="action-buttons">
-            <a href="{% url 'admin:lims_app_grade_seven_changelist' %}" class="btn">
-                Cancel
-            </a>
-            <button type="submit" class="btn btn-danger">
-                Confirm Move-Up
-            </button>
-        </div>
-    </form>
+  </form>
 </div>
 {% endblock %}

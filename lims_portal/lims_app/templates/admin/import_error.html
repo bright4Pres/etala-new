@@ -2,17 +2,133 @@
 
 {% block title %}Import Error{% endblock %}
 
-{% block content %}
-<div style="max-width: 600px; margin: 40px auto; padding: 30px; background: #fff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border: 1px solid #e0e0e0;">
-    <h1 style="margin: 0 0 25px 0; color: #495057; font-size: 28px; font-weight: 600;">Import Error</h1>
+{% block extrahead %}
+<style>
+    :root {
+        --surface: #fff;
+        --surface-variant: #f8f9fa;
+        --on-surface: #202124;
+        --on-surface-variant: #5f6368;
+        --outline: #e8eaed;
+        --primary: #1a73e8;
+        --on-primary: #fff;
+        --error: #ea4335;
+        --on-error: #fff;
+        --error-container: #fce8e6;
+        --shadow: rgba(60,64,67,.08);
+        --shadow-hover: rgba(60,64,67,.16);
+    }
 
-    <div style="padding: 20px; background: #f8d7da; border: 1px solid #f5c6cb; border-radius: 6px; margin: 20px 0;">
-        <h3 style="margin: 0 0 15px 0; color: #721c24; font-size: 18px; font-weight: 600;">Error Occurred</h3>
-        <p style="margin: 0; color: #721c24; font-size: 16px; line-height: 1.5;">{{ error }}</p>
-    </div>
+    @media (prefers-color-scheme: dark) {
+        :root {
+            --surface: #1f1f1f;
+            --surface-variant: #2d2d2d;
+            --on-surface: #e8eaed;
+            --on-surface-variant: #9aa0a6;
+            --outline: #3c4043;
+            --error-container: #b3261e;
+        }
+    }
 
-    <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #dee2e6; text-align: center;">
-        <a href="javascript:history.back();" style="display: inline-block; padding: 12px 24px; background: #6c757d; color: white; text-decoration: none; border-radius: 4px; font-weight: 500; transition: background-color 0.2s;">Try Again</a>
-    </div>
-</div>
+    .error-container {
+        max-width: 720px;
+        margin: 48px auto;
+        background: var(--surface);
+        border-radius: 12px;
+        box-shadow: 0 1px 3px var(--shadow), 0 4px 8px 3px rgba(60,64,67,.06);
+        overflow: hidden;
+    }
+
+    .header-section {
+        padding: 32px 32px 24px;
+        border-bottom: 1px solid var(--outline);
+    }
+
+    .header-section h1 {
+        margin: 0;
+        color: var(--on-surface);
+        font-size: 24px;
+        font-weight: 400;
+        line-height: 1.25;
+    }
+
+    .error-section {
+        margin: 0;
+        padding: 24px 32px;
+        border-bottom: 1px solid var(--outline);
+    }
+
+    .error-card {
+        padding: 16px;
+        background: var(--error-container);
+        border-radius: 8px;
+        border-left: 4px solid var(--error);
+    }
+
+    .error-card h3 {
+        margin: 0 0 8px 0;
+        color: var(--error);
+        font-size: 16px;
+        font-weight: 500;
+    }
+
+    .error-card p {
+        margin: 0;
+        color: var(--error);
+        font-size: 14px;
+        line-height: 1.5;
+    }
+
+    .action-section {
+        padding: 24px 32px 32px;
+        background: var(--surface);
+        text-align: center;
+    }
+
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        padding: 8px 24px;
+        font-size: 14px;
+        font-weight: 500;
+        border: 1px solid #dadce0;
+        border-radius: 6px;
+        text-decoration: none;
+        background: var(--surface);
+        color: var(--on-surface);
+        min-height: 36px;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        cursor: pointer;
+    }
+
+    .btn:hover {
+        background: var(--surface-variant);
+        border-color: #c4c7c5;
+        box-shadow: 0 1px 3px var(--shadow);
+    }
+
+    .btn:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 1px var(--primary);
+    }
+</style>
 {% endblock %}
+
+{% block content %}
+<div class="error-container">
+    <div class="header-section">
+        <h1>Import Error</h1>
+    </div>
+
+    <div class="error-section">
+        <div class="error-card">
+            <h3>Error Occurred</h3>
+            <p>{{ error }}</p>
+        </div>
+    </div>
+
+    <div class="action-section">
+        <a href="javascript:history.back();" class="btn">
+            Try Again
+        </a>
