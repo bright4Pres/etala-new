@@ -1,0 +1,205 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block extrahead %}
+<style>
+    .confirmation-container {
+        max-width: 720px;
+        margin: 48px auto;
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 1px 3px rgba(60,64,67,.08), 0 4px 8px 3px rgba(60,64,67,.06);
+        overflow: hidden;
+    }
+
+    .warning-header {
+        padding: 32px 32px 24px;
+        background: #fff;
+        border-bottom: 1px solid #e8eaed;
+    }
+
+    .warning-header h2 {
+        margin: 0 0 8px 0;
+        color: #202124;
+        font-size: 24px;
+        font-weight: 400;
+        line-height: 1.25;
+    }
+
+    .warning-header p {
+        margin: 0;
+        color: #5f6368;
+        font-size: 14px;
+        line-height: 1.5;
+    }
+
+    .info-section {
+        margin: 0;
+        padding: 24px 32px;
+        background: #f8f9fa;
+        border-bottom: 1px solid #e8eaed;
+    }
+
+    .info-section h3 {
+        margin: 0 0 16px 0;
+        color: #202124;
+        font-size: 16px;
+        font-weight: 500;
+        line-height: 1.5;
+    }
+
+    .info-section ul {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+
+    .info-section li {
+        margin: 8px 0;
+        color: #3c4043;
+        font-size: 14px;
+        line-height: 1.5;
+        padding-left: 16px;
+        position: relative;
+    }
+
+    .info-section li:before {
+        content: "•";
+        color: #5f6368;
+        position: absolute;
+        left: 0;
+    }
+
+    .danger-section {
+        margin: 0;
+        padding: 24px 32px;
+        background: #fef7e0;
+        border-bottom: 1px solid #e8eaed;
+    }
+
+    .danger-section h3 {
+        margin: 0 0 16px 0;
+        color: #ea8600;
+        font-size: 16px;
+        font-weight: 500;
+        line-height: 1.5;
+    }
+
+    .danger-section ul {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+
+    .danger-section li {
+        margin: 8px 0;
+        color: #ea8600;
+        font-size: 14px;
+        line-height: 1.5;
+        padding-left: 16px;
+        position: relative;
+    }
+
+    .danger-section li:before {
+        content: "•";
+        color: #ea8600;
+        position: absolute;
+        left: 0;
+    }
+
+    .action-buttons {
+        padding: 24px 32px 32px;
+        display: flex;
+        gap: 12px;
+        justify-content: flex-end;
+        background: #fff;
+    }
+
+    .btn {
+        padding: 8px 24px;
+        font-size: 14px;
+        font-weight: 500;
+        border: 1px solid #dadce0;
+        border-radius: 6px;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-block;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        background: #fff;
+        color: #3c4043;
+        min-height: 36px;
+        text-align: center;
+        line-height: 20px;
+    }
+
+    .btn:hover {
+        background: #f8f9fa;
+        border-color: #c4c7c5;
+        box-shadow: 0 1px 3px rgba(60,64,67,.08);
+    }
+
+    .btn:focus {
+        outline: none;
+        border-color: #1a73e8;
+        box-shadow: 0 0 0 1px #1a73e8;
+    }
+
+    .btn-danger {
+        background: #ea4335;
+        color: #fff;
+        border-color: #ea4335;
+    }
+
+    .btn-danger:hover {
+        background: #d93025;
+        border-color: #d93025;
+        box-shadow: 0 1px 3px rgba(60,64,67,.08);
+    }
+
+    .btn-danger:focus {
+        border-color: #ea4335;
+        box-shadow: 0 0 0 1px #ea4335;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="confirmation-container">
+    <div class="warning-header">
+        <h2>Confirm Student Grade Move-Up</h2>
+        <p>This action will affect all students in the database</p>
+    </div>
+
+    <div class="info-section">
+        <h3>What will happen</h3>
+        <ul>
+            <li><strong>Grade 11 → Grade 12:</strong> All Grade 11 students will be promoted to Grade 12</li>
+            <li><strong>Grade 10 → Grade 11:</strong> All Grade 10 students will be promoted to Grade 11</li>
+            <li><strong>Grade 9 → Grade 10:</strong> All Grade 9 students will be promoted to Grade 10</li>
+            <li><strong>Grade 8 → Grade 9:</strong> All Grade 8 students will be promoted to Grade 9</li>
+            <li><strong>Grade 7 → Grade 8:</strong> All Grade 7 students will be promoted to Grade 8</li>
+            <li><strong>Grade 12 Students:</strong> Will be <strong style="color: #ea4335;">deleted</strong> (graduated)</li>
+        </ul>
+    </div>
+
+    <div class="danger-section">
+        <h3>Important Notes</h3>
+        <ul>
+            <li>This action <strong>cannot be undone</strong></li>
+            <li>StudentActivation records will also be updated</li>
+            <li>All Grade 12 students will be permanently deleted</li>
+            <li>Make sure you have removed any students who dropped out before proceeding</li>
+            <li>Consider backing up your database before performing this action</li>
+        </ul>
+    </div>
+
+    <div class="action-buttons">
+        <a href="{% url 'admin:lims_app_grade_seven_changelist' %}" class="btn">
+            Cancel
+        </a>
+        <button type="submit" class="btn btn-danger">
+            Confirm Move-Up
+        </button>
+    </div>
+</div>
+{% endblock %}
