@@ -113,6 +113,70 @@ Sample of created books:
 
 ---
 
+## 👥 Sample Students Feature
+
+### Overview
+The Sample Students feature generates realistic test data for all grade levels. Creates 30 students per grade (Grade 7-12) with Filipino names, unique school IDs, and email addresses.
+
+### Usage
+
+```bash
+# Navigate to the project directory
+cd lims_portal
+
+# Create 30 sample students per grade level (default)
+python manage.py init_sample_students
+
+# Create custom number of students per grade
+python manage.py init_sample_students --count 50
+
+# Clear existing students and create new samples
+python manage.py init_sample_students --clear --count 25
+```
+
+### Options
+- `--count N`: Generate N sample students per grade level (default: 30)
+- `--clear`: Delete all existing students before creating samples
+
+### Sample Data Includes
+- **Filipino Names**: Common Filipino first names, middle initials, and last names
+- **Unique School IDs**: Format PSHS{YYYY}{Grade}{Number} (e.g., PSHS202607001)
+- **Balanced Gender**: Random distribution of Male/Female
+- **PSHS Email Addresses**: firstname.lastname@pshs.edu.ph format
+- **Not Activated**: All students start with is_activated=False
+- **All Grades**: Grade 7 through Grade 12 (30 students each = 180 total)
+
+### Example Output
+```
+Creating 30 sample students for Grade 7...
+  Created 10 students for Grade 7...
+  Created 20 students for Grade 7...
+  Created 30 students for Grade 7...
+  ✅ Grade 7: 30 created, 0 skipped
+
+Creating 30 sample students for Grade 8...
+  ...
+============================================================
+🎓 Successfully created 180 sample students!
+============================================================
+
+Sample students created:
+
+  Grade 7:
+    • PSHS202607030: Juan A. Santos (Male) - juan.santos@pshs.edu.ph
+    • PSHS202607029: Maria B. Garcia (Female) - maria.garcia@pshs.edu.ph
+
+  Grade 8:
+    • PSHS202608030: Pedro C. Rodriguez (Male) - pedro.rodriguez@pshs.edu.ph
+    • PSHS202608029: Ana D. Martinez (Female) - ana.martinez@pshs.edu.ph
+  ...
+============================================================
+💡 Tip: Students start as "not activated". Use the admin interface to activate them!
+============================================================
+```
+
+---
+
 ## 🔧 Technical Details
 
 ### Student Move-Up Implementation
@@ -126,6 +190,14 @@ Sample of created books:
 - **Model**: Book
 - **Fields Populated**: All fields including Title, authors, Publisher, dates, Location, etc.
 - **Accession Numbers**: Automatically generated with uniqueness checks
+
+### Sample Students Implementation
+- **File**: `lims_portal/lims_app/management/commands/init_sample_students.py`
+- **Models**: grade_Seven through grade_Twelve
+- **Fields Populated**: name, school_id, gender, email, is_activated
+- **School IDs**: Format PSHS{YYYY}{Grade}{Number} with uniqueness checks
+- **Names**: Filipino first names, middle initials, and last names
+- **Emails**: firstname.lastname@pshs.edu.ph format
 
 ---
 
@@ -156,6 +228,31 @@ python manage.py dumpdata > backup_$(date +%Y%m%d).json
 
 ---
 
+## 🧪 Development Setup
+
+### Quick Start with Sample Data
+For development and testing, you can quickly populate your database with sample data:
+
+```bash
+# Create sample students (30 per grade = 180 total)
+python manage.py init_sample_students
+
+# Create sample books (100 books)
+python manage.py init_sample_books
+
+# Clear and recreate all sample data
+python manage.py init_sample_students --clear --count 50
+python manage.py init_sample_books --clear --count 200
+```
+
+### Sample Data Overview
+- **Students**: 30 realistic Filipino students per grade level (Grades 7-12)
+- **Books**: 100 diverse books with local publishers and PSHS-relevant subjects
+- **Activation**: Students start unactivated (use admin to activate)
+- **Status**: Books start as "Available" for borrowing
+
+---
+
 ## ⚠️ Warnings
 
 ### Move-Up
@@ -168,6 +265,12 @@ python manage.py dumpdata > backup_$(date +%Y%m%d).json
 - **--clear DELETES ALL**: Be careful with the --clear flag in production
 - **Development Only**: Intended for testing environments
 - **Check Accession Numbers**: Ensure no conflicts with real books
+
+### Sample Students
+- **--clear DELETES ALL**: Removes all students from all grade levels
+- **Unique Constraints**: Names and school_ids must be unique
+- **Email Format**: Uses @pshs.edu.ph domain
+- **Activation Required**: Students need admin activation before login
 
 ---
 
@@ -185,6 +288,13 @@ python manage.py dumpdata > backup_$(date +%Y%m%d).json
 # If you see "Skipped" messages, it's likely duplicate accession numbers
 # Solution: Run with higher --count to generate unique numbers
 python manage.py init_sample_books --count 150
+```
+
+### Sample Students Duplicate Errors
+```bash
+# If you see "Skipped" messages, it's likely duplicate names or school_ids
+# Solution: Use --clear to start fresh, or run with different --count
+python manage.py init_sample_students --clear --count 25
 ```
 
 ### Permission Errors
