@@ -1,0 +1,210 @@
+# Student Move-Up & Sample Books Guide
+
+## 🎓 Student Move-Up Feature
+
+### Overview
+The Student Move-Up feature allows administrators to automatically promote all students to the next grade level at the end of the school year. This eliminates the need to manually re-upload CSV files and re-activate student accounts.
+
+### How It Works
+- **Grade 7 → Grade 8**
+- **Grade 8 → Grade 9**
+- **Grade 9 → Grade 10**
+- **Grade 10 → Grade 11**
+- **Grade 11 → Grade 12**
+- **Grade 12 → Deleted** (graduated students are removed)
+
+### Usage Methods
+
+#### Method 1: Admin Interface (Recommended for Librarians)
+1. Log in to Django Admin
+2. Go to any Grade section (Grade Seven, Grade Eight, etc.)
+3. Select the **Action dropdown** at the top of the list
+4. Choose **"🎓 Move All Students Up One Grade"**
+5. Click **Go**
+6. Review the confirmation page carefully
+7. Click **"Confirm Move-Up"** to execute
+
+⚠️ **Important**: The action affects ALL students across ALL grades, not just the selected items.
+
+#### Method 2: Management Command (For Developers/Admins)
+```bash
+# Navigate to the project directory
+cd lims_portal
+
+# Preview the changes without executing (dry-run)
+python manage.py moveup_students --dry-run
+
+# Execute the actual move-up
+python manage.py moveup_students
+```
+
+### Best Practices
+1. **Before Move-Up:**
+   - Remove students who dropped out or transferred
+   - Verify Grade 12 students are ready to graduate
+   - Consider backing up the database
+
+2. **After Move-Up:**
+   - Verify student counts in each grade
+   - Check StudentActivation records
+   - Notify students about their new grade status
+
+### Safety Features
+- **Transaction Safety**: All operations are wrapped in a database transaction
+- **Dry-Run Mode**: Preview changes before committing (command-line only)
+- **Confirmation Page**: Prevents accidental clicks in admin interface
+- **Error Handling**: Detailed error messages if something goes wrong
+- **Logging**: Complete summary of moved/deleted students
+
+---
+
+## 📚 Sample Books Feature
+
+### Overview
+The Sample Books feature generates realistic test data for the library system. Useful for development, testing, and training purposes.
+
+### Usage
+
+```bash
+# Navigate to the project directory
+cd lims_portal
+
+# Create 100 sample books (default)
+python manage.py init_sample_books
+
+# Create custom number of books
+python manage.py init_sample_books --count 50
+
+# Clear existing books and create new samples
+python manage.py init_sample_books --clear --count 200
+```
+
+### Options
+- `--count N`: Generate N sample books (default: 100)
+- `--clear`: Delete all existing books before creating samples
+
+### Sample Data Includes
+- **Realistic Titles**: Physics, Chemistry, Biology, Mathematics, Literature, etc.
+- **Filipino Names**: Authors with common Filipino first and last names
+- **Local Publishers**: Rex Bookstore, NBS, Anvil, UP Press, Ateneo Press, etc.
+- **Multiple Types**: Books, Analytics, Articles, Thesis
+- **Multiple Languages**: English, Filipino, Spanish, French
+- **Organized Locations**: Science Section, Math Section, Literature Section, etc.
+- **Unique Accession Numbers**: Format BK{YEAR}-{NUMBER}
+- **All Available**: All books start with status='Available'
+
+### Example Output
+```
+Creating 100 sample books...
+  Created 10 books...
+  Created 20 books...
+  ...
+==================================================
+✅ Successfully created 100 sample books!
+==================================================
+
+Sample of created books:
+  • BK2023-00100: Advanced Mathematics Vol. II (3rd Edition) by Sofia Reyes (Books)
+  • BK2021-00099: Chemistry Fundamentals by Miguel Santos (Books)
+  • BK2024-00098: Research Methods (Revised Edition) by Isabel Garcia (Article)
+  • BK2022-00097: Filipino Panitikan Vol. I by Carlos Cruz (Books)
+  • BK2019-00096: Data Analysis by Ana Flores (Analytics)
+```
+
+---
+
+## 🔧 Technical Details
+
+### Student Move-Up Implementation
+- **File**: `lims_portal/lims_app/management/commands/moveup_students.py`
+- **Models Updated**: grade_Seven through grade_Twelve, StudentActivation
+- **Processing Order**: Grade 11→12, 10→11, 9→10, 8→9, 7→8 (prevents conflicts)
+- **Transaction Handling**: Atomic operations ensure data consistency
+
+### Sample Books Implementation
+- **File**: `lims_portal/lims_app/management/commands/init_sample_books.py`
+- **Model**: Book
+- **Fields Populated**: All fields including Title, authors, Publisher, dates, Location, etc.
+- **Accession Numbers**: Automatically generated with uniqueness checks
+
+---
+
+## 📋 Workflow Example: End of School Year
+
+### Week 1: Cleanup
+1. Review all grade levels
+2. Remove dropped students manually
+3. Verify Grade 12 graduation list
+
+### Week 2: Database Backup
+```bash
+# Backup database before major changes
+python manage.py dumpdata > backup_$(date +%Y%m%d).json
+```
+
+### Week 3: Move-Up
+1. Go to Admin → Grade Seven (or any grade page)
+2. Actions → "🎓 Move All Students Up One Grade"
+3. Review confirmation page
+4. Click "Confirm Move-Up"
+5. Verify success message with statistics
+
+### Week 4: Verification
+1. Check student counts in each grade
+2. Verify no duplicate records
+3. Test student login with new grade levels
+
+---
+
+## ⚠️ Warnings
+
+### Move-Up
+- **IRREVERSIBLE**: Cannot undo after execution
+- **DELETES Grade 12**: All graduating students are permanently removed
+- **AFFECTS ALL STUDENTS**: Not just selected items in admin
+- **BACKUP FIRST**: Always backup before running
+
+### Sample Books
+- **--clear DELETES ALL**: Be careful with the --clear flag in production
+- **Development Only**: Intended for testing environments
+- **Check Accession Numbers**: Ensure no conflicts with real books
+
+---
+
+## 🆘 Troubleshooting
+
+### Move-Up Fails
+```python
+# Check for errors in the admin messages
+# Review the output for specific error messages
+# Verify all grade models exist and are accessible
+```
+
+### Sample Books Duplicate Errors
+```bash
+# If you see "Skipped" messages, it's likely duplicate accession numbers
+# Solution: Run with higher --count to generate unique numbers
+python manage.py init_sample_books --count 150
+```
+
+### Permission Errors
+```bash
+# Ensure you have superuser access
+python manage.py createsuperuser
+```
+
+---
+
+## 📞 Support
+
+For issues or questions:
+1. Check Django admin error messages
+2. Review command output for detailed errors
+3. Verify database integrity
+4. Check logs for transaction failures
+
+---
+
+**Last Updated**: 2024
+**Version**: 1.0
+**Maintainer**: PSHS LIMS Development Team

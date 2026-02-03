@@ -1,33 +1,37 @@
 /* ==========================================
-   SCHOLARLY LIBRARY AESTHETIC
-   Inspired by vintage library cards, aged paper, 
-   and academic typography
+   PSHS SCIENCE ANALYTICS THEME
+   Clean, modern, scientific - inspired by 
+   laboratory interfaces and data visualization
    ========================================== */
 
 :root {
-    --parchment: #faf8f5;
-    --aged-paper: #f5f2eb;
-    --ink-dark: #2c2416;
-    --ink-medium: #4a4035;
-    --ink-light: #7a7265;
-    --library-gold: #b8956e;
-    --library-burgundy: #7c3238;
-    --library-green: #3d5a47;
-    --card-cream: #fffef9;
-    --ruled-line: #e8e4da;
-    --stamp-red: #c44536;
+    --bg-primary: #f8fafc;
+    --bg-secondary: #ffffff;
+    --bg-accent: #f1f5f9;
+    --text-primary: #1e293b;
+    --text-secondary: #475569;
+    --text-muted: #64748b;
+    --pshs-blue: #2563eb;
+    --pshs-blue-light: #3b82f6;
+    --pshs-blue-dark: #1d4ed8;
+    --accent-teal: #0d9488;
+    --accent-green: #059669;
+    --border-light: #e2e8f0;
+    --border-medium: #cbd5e1;
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
 body {
-    background-color: var(--parchment);
-    color: var(--ink-dark);
-    line-height: 1.7;
-    font-family: 'Crimson Text', 'Garamond', 'Georgia', serif;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    line-height: 1.6;
+    font-family: 'Inter', 'Montserrat', -apple-system, BlinkMacSystemFont, sans-serif;
     margin: 0;
     padding: 0;
 }
 
-/* Subtle paper texture overlay */
+/* Subtle grid pattern overlay - scientific graph paper feel */
 body::before {
     content: '';
     position: fixed;
@@ -36,14 +40,9 @@ body::before {
     right: 0;
     bottom: 0;
     background-image: 
-        repeating-linear-gradient(
-            0deg,
-            transparent,
-            transparent 28px,
-            var(--ruled-line) 28px,
-            var(--ruled-line) 29px
-        );
-    opacity: 0.3;
+        linear-gradient(rgba(37, 99, 235, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(37, 99, 235, 0.03) 1px, transparent 1px);
+    background-size: 20px 20px;
     pointer-events: none;
     z-index: -1;
 }
@@ -173,41 +172,41 @@ select:focus, button:focus {
 }
 
 .btn-primary {
-    background: var(--library-burgundy);
-    color: var(--card-cream);
-    border: 1px solid var(--library-burgundy);
+    background: var(--pshs-blue);
+    color: white;
+    border: 1px solid var(--pshs-blue);
 }
 
 .btn-primary:hover {
-    background: #5a2328;
-    border-color: #5a2328;
+    background: var(--pshs-blue-dark);
+    border-color: var(--pshs-blue-dark);
 }
 
 .btn-secondary {
-    background: var(--card-cream);
-    color: var(--ink-medium);
-    border: 1px solid var(--ruled-line);
+    background: var(--bg-secondary);
+    color: var(--text-secondary);
+    border: 1px solid var(--border-medium);
 }
 
 .btn-secondary:hover {
-    background: var(--aged-paper);
-    color: var(--ink-dark);
-    border-color: var(--library-gold);
+    background: var(--bg-accent);
+    color: var(--text-primary);
+    border-color: var(--pshs-blue-light);
 }
     gap: 8px;
     transition: all 0.2s;
 }
 
 .btn-primary {
-    background: var(--library-burgundy);
-    color: var(--card-cream);
+    background: var(--pshs-blue);
+    color: white;
     border: none;
 }
 
 .btn-primary:hover {
-    background: #5a2328;
+    background: var(--pshs-blue-dark);
     transform: translateY(-1px);
-    box-shadow: 0 4px 8px rgba(124, 50, 56, 0.25);
+    box-shadow: 0 4px 8px rgba(37, 99, 235, 0.25);
 }
 
 .btn-primary:active {
@@ -239,35 +238,30 @@ main {
 }
 
 .kpi-card {
-    background: var(--card-cream);
-    border-radius: 4px;
-    box-shadow: 
-        0 1px 3px rgba(0, 0, 0, 0.08),
-        inset 0 0 0 1px var(--ruled-line);
-    border: none;
-    border-left: 4px solid var(--library-burgundy);
+    background: var(--bg-secondary);
+    border-radius: 12px;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border-light);
     padding: 24px;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
     position: relative;
+    overflow: hidden;
 }
 
 .kpi-card::before {
     content: '';
     position: absolute;
-    top: 8px;
-    right: 8px;
-    width: 20px;
-    height: 20px;
-    border: 2px solid var(--ruled-line);
-    border-radius: 50%;
-    opacity: 0.5;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--pshs-blue), var(--accent-teal));
 }
 
 .kpi-card:hover {
     transform: translateY(-2px);
-    box-shadow: 
-        0 8px 24px rgba(44, 36, 22, 0.12),
-        inset 0 0 0 1px var(--library-gold);
+    box-shadow: var(--shadow-md);
+    border-color: var(--pshs-blue-light);
 }
 
 .kpi-header {
@@ -288,21 +282,20 @@ main {
 }
 
 .kpi-value {
-    font-size: 36px;
+    font-size: 32px;
     font-weight: 700;
-    color: var(--ink-dark);
+    color: var(--text-primary);
     margin: 0;
-    font-family: 'Crimson Text', Georgia, serif;
+    font-family: 'Inter', 'Montserrat', sans-serif;
     letter-spacing: -0.02em;
 }
 
 .kpi-subtitle {
     font-size: 13px;
-    color: var(--ink-light);
+    color: var(--text-muted);
     margin: 4px 0 0 0;
     font-weight: 400;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    font-style: italic;
 }
 
 .kpi-trend {
@@ -330,17 +323,17 @@ main {
 .kpi-icon {
     width: 48px;
     height: 48px;
-    border-radius: 50%;
-    background: var(--aged-paper);
+    border-radius: 10px;
+    background: linear-gradient(135deg, rgba(37, 99, 235, 0.1), rgba(13, 148, 136, 0.1));
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    border: 2px solid var(--ruled-line);
+    border: none;
 }
 
 .kpi-icon i {
-    color: var(--library-burgundy);
+    color: var(--pshs-blue);
     font-size: 20px;
 }
 
@@ -353,27 +346,17 @@ main {
 }
 
 .chart-card {
-    background: var(--card-cream);
-    border-radius: 4px;
-    box-shadow: 0 2px 8px rgba(44, 36, 22, 0.08);
-    border: 1px solid var(--ruled-line);
-    padding: 28px;
-    transition: all 0.3s ease;
+    background: var(--bg-secondary);
+    border-radius: 12px;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border-light);
+    padding: 24px;
+    transition: all 0.2s ease;
     position: relative;
 }
 
-.chart-card::after {
-    content: '§';
-    position: absolute;
-    top: 20px;
-    right: 24px;
-    font-size: 24px;
-    color: var(--ruled-line);
-    font-family: 'Crimson Text', Georgia, serif;
-}
-
 .chart-card:hover {
-    box-shadow: 0 4px 16px rgba(44, 36, 22, 0.12);
+    box-shadow: var(--shadow-md);
 }
 
 .chart-header {
@@ -384,20 +367,20 @@ main {
 }
 
 .chart-header h3 {
-    font-size: 20px;
+    font-size: 16px;
     font-weight: 600;
-    color: var(--ink-dark);
+    color: var(--text-primary);
     margin: 0;
     display: flex;
     align-items: center;
     gap: 10px;
-    font-family: 'Crimson Text', Georgia, serif;
-    letter-spacing: -0.02em;
+    font-family: 'Inter', 'Montserrat', sans-serif;
+    letter-spacing: -0.01em;
 }
 
 .chart-header h3 i {
-    color: var(--library-burgundy);
-    font-size: 18px;
+    color: var(--pshs-blue);
+    font-size: 16px;
 }
 
 .chart-legend {
@@ -439,21 +422,21 @@ main {
 }
 
 .metrics-card {
-    background: var(--card-cream);
-    border-radius: 4px;
-    box-shadow: 0 2px 8px rgba(44, 36, 22, 0.08);
-    border: 1px solid var(--ruled-line);
+    background: var(--bg-secondary);
+    border-radius: 12px;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border-light);
     padding: 24px;
 }
 
 .metrics-card h3 {
-    font-size: 20px;
+    font-size: 16px;
     font-weight: 600;
-    color: var(--ink-dark);
-    margin: 0 0 24px 0;
-    font-family: 'Crimson Text', Georgia, serif;
-    border-bottom: 2px solid var(--ruled-line);
+    color: var(--text-primary);
+    margin: 0 0 20px 0;
+    font-family: 'Inter', 'Montserrat', sans-serif;
     padding-bottom: 12px;
+    border-bottom: 1px solid var(--border-light);
 }
 
 .metric-item {
@@ -483,7 +466,7 @@ main {
 .progress-bar {
     width: 100%;
     height: 6px;
-    background: var(--ruled-line);
+    background: var(--bg-accent);
     border-radius: 3px;
     overflow: hidden;
 }
@@ -504,46 +487,43 @@ main {
 
 /* Recent Activity */
 .activity-card {
-    background: var(--card-cream);
-    border-radius: 4px;
-    box-shadow: 0 2px 8px rgba(44, 36, 22, 0.08);
-    border: 1px solid var(--ruled-line);
+    background: var(--bg-secondary);
+    border-radius: 12px;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border-light);
     margin-top: 40px;
     position: relative;
+    overflow: hidden;
 }
 
 .activity-card::before {
-    content: 'Recent Circulation Records';
+    content: '';
     position: absolute;
-    top: -12px;
-    left: 24px;
-    background: var(--parchment);
-    padding: 0 12px;
-    font-size: 12px;
-    color: var(--ink-light);
-    font-family: 'Inter', sans-serif;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--pshs-blue), var(--accent-teal), var(--accent-green));
 }
 
 .activity-header {
-    padding: 24px 24px 16px;
-    border-bottom: 2px solid var(--ruled-line);
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border-light);
 }
 
 .activity-header h3 {
-    font-size: 20px;
+    font-size: 16px;
     font-weight: 600;
-    color: var(--ink-dark);
+    color: var(--text-primary);
     margin: 0;
     display: flex;
     align-items: center;
     gap: 10px;
-    font-family: 'Crimson Text', Georgia, serif;
+    font-family: 'Inter', 'Montserrat', sans-serif;
 }
 
 .activity-header h3 i {
-    color: var(--library-burgundy);
+    color: var(--pshs-blue);
 }
 
 .activity-list {
@@ -582,7 +562,7 @@ main {
 }
 
 .activity-item:hover {
-    background: rgba(184, 149, 110, 0.08);
+    background: rgba(37, 99, 235, 0.04);
     transform: translateX(4px);
     padding-left: 16px;
     margin-left: -16px;
@@ -619,23 +599,23 @@ main {
 }
 
 .icon-blue {
-    background: rgba(124, 50, 56, 0.1);
-    color: var(--library-burgundy);
+    background: rgba(37, 99, 235, 0.1);
+    color: var(--pshs-blue);
 }
 
 .icon-green {
-    background: rgba(61, 90, 71, 0.1);
-    color: var(--library-green);
+    background: rgba(5, 150, 105, 0.1);
+    color: var(--accent-green);
 }
 
 .icon-purple {
-    background: rgba(107, 91, 122, 0.1);
-    color: #6b5b7a;
+    background: rgba(124, 58, 237, 0.1);
+    color: #7c3aed;
 }
 
 .icon-orange {
-    background: rgba(184, 149, 110, 0.15);
-    color: #8b6f4e;
+    background: rgba(245, 158, 11, 0.1);
+    color: #f59e0b;
 }
 
 .icon-red {
@@ -675,28 +655,28 @@ main {
 
 /* Legend Colors */
 .legend-color-blue {
-    background: var(--library-burgundy);
+    background: var(--pshs-blue);
 }
 
 .legend-color-purple {
-    background: #6b5b7a;
+    background: #7c3aed;
 }
 
 /* Progress Fill Colors */
 .progress-fill-blue {
-    background: var(--library-burgundy);
+    background: var(--pshs-blue);
 }
 
 .progress-fill-green {
-    background: var(--library-green);
+    background: var(--accent-green);
 }
 
 .progress-fill-purple {
-    background: #6b5b7a;
+    background: #7c3aed;
 }
 
 .progress-fill-orange {
-    background: var(--library-gold);
+    background: #f59e0b;
 }
 
 /* Activity Item Variations */
@@ -718,17 +698,17 @@ main {
 
 .activity-count-blue {
     font-weight: 600;
-    color: var(--library-burgundy);
+    color: var(--pshs-blue);
 }
 
 .activity-count-purple {
     font-weight: 600;
-    color: #6b5b7a;
+    color: #7c3aed;
 }
 
 .activity-count-green {
     font-weight: 600;
-    color: var(--library-green);
+    color: var(--accent-green);
 }
 
 .activity-time-danger {
@@ -829,36 +809,27 @@ main {
     flex-direction: column;
     align-items: center;
     padding: 24px;
-    background: var(--card-cream);
-    border-radius: 4px;
+    background: var(--bg-secondary);
+    border-radius: 12px;
     margin: 20px 0;
-    box-shadow: 0 2px 8px rgba(44, 36, 22, 0.08);
-    border: 1px solid var(--ruled-line);
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border-light);
     overflow-x: auto;
     position: relative;
 }
 
-.calendar-heatmap-container::before {
-    content: '❧';
-    position: absolute;
-    top: 12px;
-    left: 20px;
-    font-size: 18px;
-    color: var(--library-gold);
-}
-
 .heatday {
     position: relative;
-    border-radius: 2px;
-    box-shadow: inset 0 0 0 1px rgba(0,0,0,0.05);
-    transition: all 0.2s ease;
+    border-radius: 3px;
+    box-shadow: inset 0 0 0 1px rgba(0,0,0,0.06);
+    transition: all 0.15s ease;
     cursor: pointer;
     border: none;
 }
 
 .heatday:hover {
-    transform: scale(1.2);
-    box-shadow: 0 2px 8px rgba(44, 36, 22, 0.2);
+    transform: scale(1.15);
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.25);
     z-index: 10;
 }
 

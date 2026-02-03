@@ -5,6 +5,8 @@ from django.shortcuts import redirect, get_object_or_404, render
 from django.utils import timezone
 from django.utils.html import format_html
 from django.http import HttpResponse
+from django.core.management import call_command
+from django.contrib import messages
 import csv
 from io import StringIO
 
@@ -90,6 +92,7 @@ class GradeAdminBase(BulkImportAdmin):
     """Base class for grade admins with activation status display."""
     search_fields = ['name', 'email', 'school_id']
     list_display = ['name', 'school_id', 'email', 'gender', 'activation_status', 'created_at']
+    actions = ['move_up_all_students']
     
     def activation_status(self, obj):
         """Display activation status with color."""
@@ -98,6 +101,35 @@ class GradeAdminBase(BulkImportAdmin):
         else:
             return format_html('<span style="color: orange; font-weight: bold;">Pending</span>')
     activation_status.short_description = "Status"
+    
+    def move_up_all_students(self, request, queryset):
+        """Admin action to move all students up one grade level."""
+        if 'confirm' in request.POST:
+            # User confirmed - execute the move-up
+            from io import StringIO
+            output = StringIO()
+            
+            try:
+                # Call the management command
+                call_command('moveup_students', stdout=output)
+                output_str = output.getvalue()
+                
+                # Display success message with summary
+                messages.success(request, f"✅ Students moved up successfully!\n\n{output_str}")
+                return redirect(request.get_full_path())
+                
+            except Exception as e:
+                messages.error(request, f"❌ Error during move-up: {str(e)}")
+                return redirect(request.get_full_path())
+        
+        # Show confirmation page
+        return render(request, 'admin/moveup_confirmation.html', {
+            'title': 'Confirm Student Grade Move-Up',
+            'action': 'move_up_all_students',
+            'opts': self.model._meta,
+        })
+    
+    move_up_all_students.short_description = "🎓 Move All Students Up One Grade"
 
 class grade_SevenAdmin(GradeAdminBase):
     pass

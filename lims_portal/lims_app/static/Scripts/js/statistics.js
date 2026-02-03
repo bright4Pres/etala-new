@@ -496,14 +496,14 @@ document.addEventListener('DOMContentLoaded', function() {
         const isSmall = window.innerWidth <= 480;
         
         if (isSmall) {
-            cellSize = days <= 14 ? 24 : days <= 31 ? 16 : 10;
+            cellSize = days <= 14 ? 24 : days <= 31 ? 16 : 14;
         } else if (isMobile) {
-            cellSize = days <= 14 ? 28 : days <= 31 ? 20 : 12;
+            cellSize = days <= 14 ? 28 : days <= 31 ? 20 : 16;
         } else {
             if (days <= 14) cellSize = 32;        // Large cells for week view
             else if (days <= 31) cellSize = 22;   // Medium cells for month view
-            else if (days <= 62) cellSize = 16;   // Smaller for 2 months
-            else cellSize = 14;                   // Compact for year view (horizontal)
+            else if (days <= 62) cellSize = 18;   // Smaller for 2 months
+            else cellSize = 18;                   // Larger cells for year view
         }
 
         // Center grid if not filling full width
@@ -511,15 +511,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
         /* ------------------------------------------
            ENHANCED COLOR PALETTE
-           Scholarly, warm library tones
+           PSHS Science theme - blue/teal gradient
            ------------------------------------------ */
         const colors = [
-            '#f5f2eb',  // Aged paper - no activity
-            '#e8e4da',  // Light ruled line
-            '#d4c9b5',  // Warm tan
-            '#b8956e',  // Library gold
-            '#8b6f4e',  // Warm brown
-            '#5c4530'   // Deep library brown for max activity
+            '#f0f4f8',  // Light gray - no activity
+            '#d0e1f9',  // Very light blue
+            '#a3c4f3',  // Light blue
+            '#5b9bd5',  // Medium blue (PSHS blue)
+            '#2e75b6',  // Strong blue
+            '#1a4f7a'   // Deep blue for max activity
         ];
 
         /**
@@ -558,9 +558,9 @@ document.addEventListener('DOMContentLoaded', function() {
             labelsContainer.style.gap = `${Math.max(2, Math.round(cellSize / 7))}px`;
             labelsContainer.style.marginRight = '8px';
             labelsContainer.style.fontSize = '11px';
-            labelsContainer.style.fontWeight = '600';
-            labelsContainer.style.color = 'var(--ink-light, #7a7265)';
-            labelsContainer.style.fontFamily = "'Crimson Text', Georgia, serif";
+            labelsContainer.style.fontWeight = '500';
+            labelsContainer.style.color = 'var(--text-muted, #64748b)';
+            labelsContainer.style.fontFamily = "'Inter', 'Montserrat', sans-serif";
             
             for (let i = 0; i < 7; i++) {
                 const label = document.createElement('div');
@@ -618,10 +618,10 @@ document.addEventListener('DOMContentLoaded', function() {
             labelsContainer.style.gap = `${Math.max(2, Math.round(cellSize / 7))}px`;
             labelsContainer.style.marginBottom = '8px';
             labelsContainer.style.fontSize = '12px';
-            labelsContainer.style.fontWeight = '600';
-            labelsContainer.style.color = 'var(--ink-light, #7a7265)';
+            labelsContainer.style.fontWeight = '500';
+            labelsContainer.style.color = 'var(--text-muted, #64748b)';
             labelsContainer.style.textAlign = 'center';
-            labelsContainer.style.fontFamily = "'Crimson Text', Georgia, serif";
+            labelsContainer.style.fontFamily = "'Inter', 'Montserrat', sans-serif";
 
             for (let i = 0; i < 7; i++) {
                 const label = document.createElement('div');
@@ -693,10 +693,9 @@ document.addEventListener('DOMContentLoaded', function() {
            ------------------------------------------ */
         const caption = document.createElement('div');
         caption.style.fontSize = '12px';
-        caption.style.color = 'var(--ink-light, #7a7265)';
+        caption.style.color = 'var(--text-muted, #64748b)';
         caption.style.marginTop = '12px';
-        caption.style.fontFamily = "'Crimson Text', Georgia, serif";
-        caption.style.fontStyle = 'italic';
+        caption.style.fontFamily = "'Inter', 'Montserrat', sans-serif";
         const startLabel = data[0].date;
         const endLabel = data[data.length - 1].date;
         caption.textContent = `Activity from ${startLabel} to ${endLabel} — peak: ${maxCount} borrows/day`;
