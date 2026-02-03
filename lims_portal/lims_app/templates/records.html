@@ -24,6 +24,7 @@
   </style>
 </head>
 <body>
+  <div class="loading-overlay" id="loading-overlay">Loading <span class="loading-counter" id="loading-counter">[00]</span></div>
 {% include 'partials/upbox.html' %}
 <div id="recordsContainer" style="margin-top: 5em;">
   <div class="container" style="color: black">
@@ -218,6 +219,14 @@ function generatePDF(button) {
     alert("Failed to generate PDF. Please try again.");
   }
 }
+</script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const overlay = document.getElementById('loading-overlay');
+    if (overlay) {
+      overlay.style.display = 'none';
+    }
+  });
 </script>
 </body>
 </html>

@@ -483,119 +483,207 @@ document.addEventListener('DOMContentLoaded', function() {
         const firstDate = new Date(data[0].date + 'T00:00:00');
         const startDow = firstDate.getDay();  // Day of week (0=Sunday, 6=Saturday)
         const days = data.length;
-        const weeks = Math.ceil((startDow + days) / 7);  // Number of week columns needed
+        // Use more columns for year view to make it horizontal like GitHub
+        const columns = days > 62 ? Math.min(53, Math.ceil(days / 7)) : 7;  // ~53 weeks for year, 7 for month/week
+        const rows = days > 62 ? 7 : Math.ceil((startDow + days) / 7);  // 7 rows (days) for year, weeks for month
 
         /* ------------------------------------------
            RESPONSIVE CELL SIZING
-           Adjust cell size based on date range
+           Adjust cell size based on date range and screen size
            ------------------------------------------ */
         let cellSize = 14;  // Default size
-        if (days <= 14) cellSize = 32;        // Large cells for week view
-        else if (days <= 31) cellSize = 22;   // Medium cells for month view
-        else if (days <= 62) cellSize = 16;   // Smaller for 2 months
-        else if (days <= 366) cellSize = 20;  // Comfortable for year view
+        const isMobile = window.innerWidth <= 768;
+        const isSmall = window.innerWidth <= 480;
+        
+        if (isSmall) {
+            cellSize = days <= 14 ? 24 : days <= 31 ? 16 : 10;
+        } else if (isMobile) {
+            cellSize = days <= 14 ? 28 : days <= 31 ? 20 : 12;
+        } else {
+            if (days <= 14) cellSize = 32;        // Large cells for week view
+            else if (days <= 31) cellSize = 22;   // Medium cells for month view
+            else if (days <= 62) cellSize = 16;   // Smaller for 2 months
+            else cellSize = 14;                   // Compact for year view (horizontal)
+        }
 
         // Center grid if not filling full width
         let gridJustify = 'center';
 
         /* ------------------------------------------
-           COLOR SCALING CALCULATION
-           Find max count for relative intensity scaling
+           ENHANCED COLOR PALETTE
+           Scholarly, warm library tones
            ------------------------------------------ */
-        const maxCount = data.reduce((m, d) => Math.max(m, d.count || 0), 0);
-
-        // Color palette: 5 intensity levels (0=none, 4=most activity)
-        const colors = ['#a8a8a8ff', '#c6e48b', '#7bc96f', '#239a3b', '#196127'];
+        const colors = [
+            '#f5f2eb',  // Aged paper - no activity
+            '#e8e4da',  // Light ruled line
+            '#d4c9b5',  // Warm tan
+            '#b8956e',  // Library gold
+            '#8b6f4e',  // Warm brown
+            '#5c4530'   // Deep library brown for max activity
+        ];
 
         /**
-         * Determine color intensity level based on count
+         * Enhanced color intensity with more levels
          * @param {number} count - Number of borrows on this day
-         * @returns {number} Level from 0-4
+         * @returns {number} Level from 0-5
          */
         function getLevel(count) {
             if (!count || maxCount === 0) return 0;
             const ratio = count / maxCount;
-            if (ratio <= 0.2) return 1;
-            if (ratio <= 0.4) return 2;
-            if (ratio <= 0.7) return 3;
-            return 4;
+            if (ratio <= 0.1) return 1;
+            if (ratio <= 0.25) return 2;
+            if (ratio <= 0.5) return 3;
+            if (ratio <= 0.75) return 4;
+            return 5;
         }
 
         /* ------------------------------------------
-           BUILD GRID CONTAINER
+           BUILD GRID CONTAINER WITH DAY LABELS
            ------------------------------------------ */
         container.innerHTML = '';  // Clear any existing content
-        container.style.display = 'grid';
-        container.style.gridTemplateRows = `repeat(7, ${cellSize}px)`;      // 7 rows (days of week)
-        container.style.gridTemplateColumns = `repeat(${weeks}, ${cellSize}px)`;  // N columns (weeks)
-        container.style.gap = `${Math.max(2, Math.round(cellSize / 7))}px`;  // Proportional gap
-        container.style.alignItems = 'center';
-        container.style.justifyItems = 'center';
-        container.style.justifyContent = gridJustify;
-        container.style.padding = '12px 0';
 
-        /* ------------------------------------------
-           CREATE DAY CELLS
-           Fill grid week by week, row by row
-           ------------------------------------------ */
-        for (let w = 0; w < weeks; w++) {           // For each week column
-            for (let d = 0; d < 7; d++) {           // For each day row (0-6)
-                // Calculate which day in our data array this represents
-                const globalIndex = w * 7 + d - startDow;
-                
-                // Create cell element
+        // Add day labels - vertical for year view (horizontal layout), horizontal for week/month
+        const isYearView = days > 62;
+        if (isYearView) {
+            // Year view: Day labels on the left side (vertical)
+            const dayLabels = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+            const wrapper = document.createElement('div');
+            wrapper.style.display = 'flex';
+            wrapper.style.gap = '4px';
+            wrapper.style.alignItems = 'flex-start';
+            
+            const labelsContainer = document.createElement('div');
+            labelsContainer.style.display = 'flex';
+            labelsContainer.style.flexDirection = 'column';
+            labelsContainer.style.gap = `${Math.max(2, Math.round(cellSize / 7))}px`;
+            labelsContainer.style.marginRight = '8px';
+            labelsContainer.style.fontSize = '11px';
+            labelsContainer.style.fontWeight = '600';
+            labelsContainer.style.color = 'var(--ink-light, #7a7265)';
+            labelsContainer.style.fontFamily = "'Crimson Text', Georgia, serif";
+            
+            for (let i = 0; i < 7; i++) {
+                const label = document.createElement('div');
+                label.textContent = dayLabels[i];
+                label.style.height = `${cellSize}px`;
+                label.style.display = 'flex';
+                label.style.alignItems = 'center';
+                labelsContainer.appendChild(label);
+            }
+            
+            // Main grid container for year view
+            const gridContainer = document.createElement('div');
+            gridContainer.style.display = 'grid';
+            gridContainer.style.gridTemplateRows = `repeat(7, ${cellSize}px)`;  // 7 rows (days of week)
+            gridContainer.style.gridTemplateColumns = `repeat(${columns}, ${cellSize}px)`;  // ~53 columns (weeks)
+            gridContainer.style.gridAutoFlow = 'column';  // Fill columns first
+            gridContainer.style.gap = `${Math.max(2, Math.round(cellSize / 7))}px`;
+            gridContainer.style.padding = '12px 0';
+            
+            // Fill cells for year view
+            for (let i = 0; i < days + startDow; i++) {
                 const cell = document.createElement('div');
                 cell.className = 'heatday';
                 cell.style.width = `${cellSize}px`;
                 cell.style.height = `${cellSize}px`;
-                cell.style.borderRadius = `${Math.round(cellSize/4)}px`;
+                cell.style.borderRadius = `${Math.round(cellSize/6)}px`;
                 cell.style.boxSizing = 'border-box';
-                cell.style.background = colors[0];  // Default to gray (no data)
-                cell.style.cursor = 'default';
-                cell.style.transition = 'transform 120ms ease';
-
-                // If this cell represents a valid data day
-                if (globalIndex >= 0 && globalIndex < days) {
-                    const item = data[globalIndex];
+                cell.style.background = colors[0];
+                cell.style.position = 'relative';
+                
+                if (i >= startDow && i - startDow < days) {
+                    const dataIndex = i - startDow;
+                    const item = data[dataIndex];
                     const cnt = item.count || 0;
                     const lvl = getLevel(cnt);
-                    
-                    // Apply color based on activity level
                     cell.style.background = colors[lvl];
-                    cell.title = `${item.date}: ${cnt} borrows`;
                     cell.setAttribute('data-count', cnt);
                     cell.setAttribute('data-date', item.date);
-                    
-                    // Hover effect - slight scale up
-                    cell.addEventListener('mouseenter', () => { 
-                        cell.style.transform = 'scale(1.15)'; 
-                    });
-                    cell.addEventListener('mouseleave', () => { 
-                        cell.style.transform = 'scale(1)'; 
-                    });
+                    cell.title = `${item.date}: ${cnt} borrows`;
                 } else {
-                    // Empty cell (before first date or after last date)
-                    cell.title = '';
-                    cell.setAttribute('aria-hidden', 'true');
                     cell.style.opacity = '0.3';
                 }
-
-                container.appendChild(cell);
+                gridContainer.appendChild(cell);
             }
+            
+            wrapper.appendChild(labelsContainer);
+            wrapper.appendChild(gridContainer);
+            container.appendChild(wrapper);
+        } else {
+            // Week/Month view: Day labels on top (horizontal)
+            const dayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            const labelsContainer = document.createElement('div');
+            labelsContainer.style.display = 'grid';
+            labelsContainer.style.gridTemplateColumns = `repeat(7, ${cellSize}px)`;
+            labelsContainer.style.gap = `${Math.max(2, Math.round(cellSize / 7))}px`;
+            labelsContainer.style.marginBottom = '8px';
+            labelsContainer.style.fontSize = '12px';
+            labelsContainer.style.fontWeight = '600';
+            labelsContainer.style.color = 'var(--ink-light, #7a7265)';
+            labelsContainer.style.textAlign = 'center';
+            labelsContainer.style.fontFamily = "'Crimson Text', Georgia, serif";
+
+            for (let i = 0; i < 7; i++) {
+                const label = document.createElement('div');
+                label.textContent = dayLabels[i];
+                label.style.padding = '4px 0';
+                labelsContainer.appendChild(label);
+            }
+            container.appendChild(labelsContainer);
+
+            // Main grid container for week/month
+            const gridContainer = document.createElement('div');
+            gridContainer.style.display = 'grid';
+            gridContainer.style.gridTemplateColumns = `repeat(7, ${cellSize}px)`;
+            gridContainer.style.gridTemplateRows = `repeat(${rows}, ${cellSize}px)`;
+            gridContainer.style.gap = `${Math.max(2, Math.round(cellSize / 7))}px`;
+            gridContainer.style.alignItems = 'center';
+            gridContainer.style.justifyItems = 'center';
+            gridContainer.style.justifyContent = gridJustify;
+            gridContainer.style.padding = '12px 0';
+
+            for (let w = 0; w < rows; w++) {
+                for (let d = 0; d < 7; d++) {
+                    const globalIndex = w * 7 + d - startDow;
+                    const cell = document.createElement('div');
+                    cell.className = 'heatday';
+                    cell.style.width = `${cellSize}px`;
+                    cell.style.height = `${cellSize}px`;
+                    cell.style.borderRadius = `${Math.round(cellSize/6)}px`;
+                    cell.style.boxSizing = 'border-box';
+                    cell.style.background = colors[0];
+                    cell.style.position = 'relative';
+                    
+                    if (globalIndex >= 0 && globalIndex < days) {
+                        const item = data[globalIndex];
+                        const cnt = item.count || 0;
+                        const lvl = getLevel(cnt);
+                        cell.style.background = colors[lvl];
+                        cell.setAttribute('data-count', cnt);
+                        cell.setAttribute('data-date', item.date);
+                        cell.title = `${item.date}: ${cnt} borrows`;
+                    } else {
+                        cell.style.opacity = '0.3';
+                    }
+                    gridContainer.appendChild(cell);
+                }
+            }
+            container.appendChild(gridContainer);
         }
 
         /* ------------------------------------------
            SYNCHRONIZE LEGEND COLORS
-           Update legend boxes to match actual colors used
+           Update legend boxes to match actual colors used (now 6 levels)
            ------------------------------------------ */
         const legendBoxes = document.querySelectorAll('.heatmap-legend-box');
-        if (legendBoxes && legendBoxes.length >= 5) {
-            for (let i = 0; i < 5 && i < legendBoxes.length; i++) {
+        if (legendBoxes && legendBoxes.length >= 6) {
+            for (let i = 0; i < 6 && i < legendBoxes.length; i++) {
                 legendBoxes[i].style.background = colors[i];
                 legendBoxes[i].style.width = `${Math.max(18, cellSize)}px`;
                 legendBoxes[i].style.height = `${Math.max(12, Math.round(cellSize * 0.7))}px`;
                 legendBoxes[i].style.borderRadius = `${Math.round(cellSize/4)}px`;
                 legendBoxes[i].style.display = 'inline-block';
+                legendBoxes[i].style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.1)';
             }
         }
 
@@ -605,12 +693,14 @@ document.addEventListener('DOMContentLoaded', function() {
            ------------------------------------------ */
         const caption = document.createElement('div');
         caption.style.fontSize = '12px';
-        caption.style.color = '#6b7280';
-        caption.style.marginTop = '8px';
+        caption.style.color = 'var(--ink-light, #7a7265)';
+        caption.style.marginTop = '12px';
+        caption.style.fontFamily = "'Crimson Text', Georgia, serif";
+        caption.style.fontStyle = 'italic';
         const startLabel = data[0].date;
         const endLabel = data[data.length - 1].date;
-        caption.textContent = `Showing ${startLabel} → ${endLabel} — max ${maxCount} borrows/day`;
-        container.parentNode.appendChild(caption);
+        caption.textContent = `Activity from ${startLabel} to ${endLabel} — peak: ${maxCount} borrows/day`;
+        container.appendChild(caption);
     })();
 
     /* ==========================================

@@ -7,11 +7,15 @@
     
     <!-- External Dependencies -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Crimson+Text:ital,wght@0,400;0,600;0,700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../static/Scripts/css/statistics.css">
     <link rel="icon" href="../static/img/pisaylogo.svg">
     <script src="../static/Scripts/js/chart.js"></script>
 </head>
 <body>
+    <div class="loading-overlay" id="loading-overlay">Loading <span class="loading-counter" id="loading-counter">[00]</span></div>
     <!-- Include navigation/header partial from Django template -->
     {% include 'partials/upbox.html' %}
     
@@ -25,8 +29,8 @@
                 <!-- Logo and title area -->
                 <div class="logo-container">
                     <div class="logo-text">
-                        <h1>Library Analytics by eTala</h1>
-                        <p>Statistical Data for Philippine Science High School Zamboanga Peninsula Region Campus Library</p>
+                        <h1>Library Analytics Dashboard</h1>
+                        <p>Philippine Science High School Zamboanga Peninsula Region Campus</p>
                     </div>
                 </div>
                 
@@ -56,8 +60,7 @@
 
         <!-- ==========================================
              MAIN KPI CARDS
-             Six key performance indicator cards showing
-             primary library statistics
+             Key performance indicators at a glance
              ========================================== -->
         <div class="kpi-grid">
             <!-- Total Books in Library -->
@@ -66,7 +69,7 @@
                     <div class="kpi-info">
                         <h3>Total Books</h3>
                         <div class="kpi-value">{{ total_books_count|default:0 }}</div>
-                        <div class="kpi-subtitle">in library collection</div>
+                        <div class="kpi-subtitle">in collection</div>
                     </div>
                     <div class="kpi-icon">
                         <i class="fas fa-book"></i>
@@ -400,12 +403,13 @@
                 <div class="heatmap-legend">
                     <span class="heatmap-legend-label">Less</span>
                     <div class="heatmap-legend-scale">
-                        <!-- Five intensity levels from 0 (none) to 4 (most) -->
+                        <!-- Six intensity levels from 0 (none) to 5 (most) -->
                         <div class="heatmap-legend-box heatmap-level-0"></div>
                         <div class="heatmap-legend-box heatmap-level-1"></div>
                         <div class="heatmap-legend-box heatmap-level-2"></div>
                         <div class="heatmap-legend-box heatmap-level-3"></div>
                         <div class="heatmap-legend-box heatmap-level-4"></div>
+                        <div class="heatmap-legend-box heatmap-level-5"></div>
                     </div>
                     <span class="heatmap-legend-label">More</span>
                 </div>
@@ -493,5 +497,13 @@
     
     <!-- Main statistics JavaScript file (handles Chart.js rendering and interactions) -->
     <script src="../static/Scripts/js/statistics.js"></script>
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        const overlay = document.getElementById('loading-overlay');
+        if (overlay) {
+          overlay.style.display = 'none';
+        }
+      });
+    </script>
 </body>
 </html>

@@ -9,6 +9,7 @@
   <link rel="icon" href="../static/img/pisay.png">
 </head>
 <body>
+  <div class="loading-overlay" id="loading-overlay">Loading <span class="loading-counter" id="loading-counter">[00]</span></div>
 {% include 'partials/upbox.html' %}
 <!-- Update your header section in home.html with these responsive classes -->
 
@@ -381,6 +382,14 @@
       setTimeout(() => {
         notification.classList.remove('show');
       }, 3000);
+    }
+  });
+</script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const overlay = document.getElementById('loading-overlay');
+    if (overlay) {
+      overlay.style.display = 'none';
     }
   });
 </script>
