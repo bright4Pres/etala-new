@@ -307,6 +307,9 @@ type_CHOICES = (
     ("Article", "Article"),
     ("Books", "Books"),
     ("Thesis", "Thesis"),
+    ("DOST Resources", "DOST Resources"),
+    ("Journal", "Journal"),
+    ("Other", "Other"),
 )
 
 STATUS_CHOICES = [
@@ -314,6 +317,10 @@ STATUS_CHOICES = [
     ('Borrowed', 'Borrowed'),
 ]
 
+acquisition_STATUS = [
+    ('Donated', 'Donated'),
+    ('Acquired', 'Acquired'),
+]
 
 class Book(models.Model):
     Title = models.CharField(max_length=255)
@@ -331,6 +338,7 @@ class Book(models.Model):
     borrowed_by = models.CharField(max_length=255, null=True, blank=True)
     student_id = models.CharField(max_length=50, null=True, blank=True)
     borrow_date = models.DateField(null=True, blank=True)
+    acquisitionStatus = models.CharField(max_length=255, choices=acquisition_STATUS, null=True, blank=True)
     return_date = models.DateField(null=True, blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Available')
 

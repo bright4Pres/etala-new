@@ -89,6 +89,7 @@ def records(request):
     main_author = request.GET.get('main_author')
     co_author = request.GET.get('co_author')
     location = request.GET.get('location')
+    search_query = request.GET.get('search')
 
     # Apply filters dynamically
     if book_type:
@@ -103,13 +104,18 @@ def records(request):
         all_books = all_books.filter(coAuthor=co_author)
     if location:
         all_books = all_books.filter(Location=location)
+    if search_query:
+        all_books = all_books.filter(
+            Q(Title__icontains=search_query) | Q(mainAuthor__icontains=search_query) | Q(coAuthor__icontains=search_query)
+        )
 
-    # values based on filtered queryset
-    distinct_languages = all_books.values_list("Language", flat=True).distinct()
-    distinct_publishers = all_books.values_list("Publisher", flat=True).distinct()
-    distinct_authors = all_books.values_list("mainAuthor", flat=True).distinct()
-    distinct_coauthors = all_books.values_list("coAuthor", flat=True).distinct()
-    distinct_locations = all_books.values_list("Location", flat=True).distinct()
+    # values based on all books for filter options
+    all_books_for_filters = Book.objects.all()
+    distinct_languages = all_books_for_filters.values_list("Language", flat=True).distinct()
+    distinct_publishers = all_books_for_filters.values_list("Publisher", flat=True).distinct()
+    distinct_authors = all_books_for_filters.values_list("mainAuthor", flat=True).distinct()
+    distinct_coauthors = all_books_for_filters.values_list("coAuthor", flat=True).distinct()
+    distinct_locations = all_books_for_filters.values_list("Location", flat=True).distinct()
 
     selected_filters = {
         "book_type": book_type,
@@ -118,6 +124,7 @@ def records(request):
         "main_author": main_author,
         "co_author": co_author,
         "location": location,
+        "search": search_query,
     }
 
     if request.headers.get("X-Requested-With") == "XMLHttpRequest":
