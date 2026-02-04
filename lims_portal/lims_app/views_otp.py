@@ -76,7 +76,11 @@ def verify_student_email(request):
         otp = activation.generate_otp()
         
         # Send OTP via Celery task (async)
-        send_otp_email_task.delay(activation.email, otp, activation.name)
+        # send_otp_email_task.delay(activation.email, otp, activation.name)
+        
+        # For now, send synchronously since Celery broker is not available
+        from .tasks import send_otp_email_task
+        send_otp_email_task(activation.email, otp, activation.name)
         
         return JsonResponse({
             'success': True,
