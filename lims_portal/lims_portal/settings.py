@@ -30,8 +30,8 @@ EMAIL_HOST_USER = env('EMAIL_USER')       # Your Gmail address
 EMAIL_HOST_PASSWORD = env('EMAIL_PASS')   # Your app password
 
 # ============ CELERY CONFIGURATION ============
-CELERY_BROKER_URL = 'redis://localhost:6379/0'
-CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
+CELERY_BROKER_URL = 'db+sqlite:///celery.db'
+CELERY_RESULT_BACKEND = 'db+sqlite:///celery.db'
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
