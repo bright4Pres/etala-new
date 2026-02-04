@@ -309,6 +309,7 @@ type_CHOICES = (
     ("Thesis", "Thesis"),
     ("DOST Resources", "DOST Resources"),
     ("Journal", "Journal"),
+    ("US Reference Materials", "US Reference Materials"),
     ("Other", "Other"),
 )
 
