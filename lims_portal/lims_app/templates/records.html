@@ -104,6 +104,7 @@
       align-items: center;
       gap: 1rem;
       width: 300px;
+      margin-left: -8px;
     }
     .app-header-right {
       width: 80px;
@@ -406,74 +407,6 @@
       </div>
     </div>
     
-    <!-- Filter Sidebar -->
-    <div class="messages-section" id="filter-section">
-      <button class="messages-close" onclick="toggleFilters()">
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-x-circle">
-          <circle cx="12" cy="12" r="10" />
-          <line x1="15" y1="9" x2="9" y2="15" />
-          <line x1="9" y1="9" x2="15" y2="15" /></svg>
-      </button>
-      <div class="projects-section-header">
-        <p>Filter Books</p>
-      </div>
-      <form method="GET" action="{% url 'records' %}" style="padding: 1rem;">
-        {% csrf_token %}
-        <div style="margin-bottom: 1rem;">
-          <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Book Type</label>
-          <select name="book_type" style="width: 100%; padding: 0.5rem; border-radius: 6px; background: var(--search-area-bg); color: var(--main-color); border: 2px solid var(--message-box-border);">
-            <option value="">All Types</option>
-            <option value="Fiction">Fiction</option>
-            <option value="Non-Fiction">Non-Fiction</option>
-            <option value="Reference">Reference</option>
-          </select>
-        </div>
-
-        <div style="margin-bottom: 1rem;">
-          <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Language</label>
-          <select name="language" style="width: 100%; padding: 0.5rem; border-radius: 6px; background: var(--search-area-bg); color: var(--main-color); border: 2px solid var(--message-box-border);">
-            <option value="">All Languages</option>
-            {% for lang in distinct_languages %}
-            <option value="{{ lang }}" {% if request.GET.language == lang %}selected{% endif %}>{{ lang }}</option>
-            {% endfor %}
-          </select>
-        </div>
-
-        <div style="margin-bottom: 1rem;">
-          <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Publisher</label>
-          <select name="publisher" style="width: 100%; padding: 0.5rem; border-radius: 6px; background: var(--search-area-bg); color: var(--main-color); border: 2px solid var(--message-box-border);">
-            <option value="">All Publishers</option>
-            {% for pub in distinct_publishers %}
-            <option value="{{ pub }}" {% if request.GET.publisher == pub %}selected{% endif %}>{{ pub }}</option>
-            {% endfor %}
-          </select>
-        </div>
-
-        <div style="margin-bottom: 1rem;">
-          <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Main Author</label>
-          <select name="main_author" style="width: 100%; padding: 0.5rem; border-radius: 6px; background: var(--search-area-bg); color: var(--main-color); border: 2px solid var(--message-box-border);">
-            <option value="">All Authors</option>
-            {% for author in distinct_authors %}
-            <option value="{{ author }}" {% if request.GET.main_author == author %}selected{% endif %}>{{ author }}</option>
-            {% endfor %}
-          </select>
-        </div>
-
-        <div style="margin-bottom: 1rem;">
-          <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Location</label>
-          <select name="location" style="width: 100%; padding: 0.5rem; border-radius: 6px; background: var(--search-area-bg); color: var(--main-color); border: 2px solid var(--message-box-border);">
-            <option value="">All Locations</option>
-            {% for loc in distinct_locations %}
-            <option value="{{ loc }}" {% if request.GET.location == loc %}selected{% endif %}>{{ loc }}</option>
-            {% endfor %}
-          </select>
-        </div>
-
-        <button type="submit" style="width: 100%; padding: 0.75rem; background: #3368a4; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">Apply Filters</button>
-      </form>
-    </div>
-  </div>
-
   <script src="../static/Scripts/js/jquery-3.6.0.min.js"></script>
   <script src="../static/Scripts/js/bootstrap.bundle.min.js"></script>
   <script src="../static/Scripts/js/jquery.dataTables.min.js"></script>
