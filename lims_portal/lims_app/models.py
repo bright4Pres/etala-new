@@ -19,6 +19,7 @@ class grade_Seven(models.Model):
     school_id = models.CharField(max_length=50, unique=True)
     gender = models.CharField(max_length=10, choices=GENDER_CHOICES, default="Other")
     email = models.EmailField()
+    batch = models.CharField(max_length=50, null=True, blank=True, help_text="Student batch/cohort (e.g., Antuilan, Bakunawa)")
     is_activated = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     def __str__(self):
@@ -29,6 +30,7 @@ class grade_Eight(models.Model):
     school_id = models.CharField(max_length=50, unique=True)
     gender = models.CharField(max_length=10, choices=GENDER_CHOICES, default="Other")
     email = models.EmailField()
+    batch = models.CharField(max_length=50, null=True, blank=True, help_text="Student batch/cohort (e.g., Antuilan, Bakunawa)")
     is_activated = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     def __str__(self):
@@ -39,6 +41,7 @@ class grade_Nine(models.Model):
     school_id = models.CharField(max_length=50, unique=True)
     gender = models.CharField(max_length=10, choices=GENDER_CHOICES, default="Other")
     email = models.EmailField()
+    batch = models.CharField(max_length=50, null=True, blank=True, help_text="Student batch/cohort (e.g., Antuilan, Bakunawa)")
     is_activated = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     def __str__(self):
@@ -49,6 +52,7 @@ class grade_Ten(models.Model):
     school_id = models.CharField(max_length=50, unique=True)
     gender = models.CharField(max_length=10, choices=GENDER_CHOICES, default="Other")
     email = models.EmailField()
+    batch = models.CharField(max_length=50, null=True, blank=True, help_text="Student batch/cohort (e.g., Antuilan, Bakunawa)")
     is_activated = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     def __str__(self):
@@ -59,6 +63,7 @@ class grade_Eleven(models.Model):
     school_id = models.CharField(max_length=50, unique=True)
     gender = models.CharField(max_length=10, choices=GENDER_CHOICES, default="Other")
     email = models.EmailField()
+    batch = models.CharField(max_length=50, null=True, blank=True, help_text="Student batch/cohort (e.g., Antuilan, Bakunawa)")
     is_activated = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     def __str__(self):
@@ -69,6 +74,7 @@ class grade_Twelve(models.Model):
     school_id = models.CharField(max_length=50, unique=True)
     gender = models.CharField(max_length=10, choices=GENDER_CHOICES, default="Other")
     email = models.EmailField()
+    batch = models.CharField(max_length=50, null=True, blank=True, help_text="Student batch/cohort (e.g., Antuilan, Bakunawa)")
     is_activated = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     def __str__(self):
@@ -88,6 +94,7 @@ class StudentActivation(models.Model):
     school_id = models.CharField(max_length=50, unique=True)
     name = models.CharField(max_length=100)
     email = models.EmailField()
+    batch = models.CharField(max_length=4, null=True, blank=True)
     grade = models.IntegerField(choices=GRADE_CHOICES)
     otp = models.CharField(max_length=6, null=True, blank=True)
     is_activated = models.BooleanField(default=False)
@@ -294,7 +301,7 @@ class BorrowHistory(models.Model):
         return (
             not self.returned
             and self.return_date
-            and self.return_date < timezone.now().date()
+            and self.return_date.date() < timezone.now().date()
         )
 
     def __str__(self):
@@ -316,6 +323,7 @@ type_CHOICES = (
 STATUS_CHOICES = [
     ('Available', 'Available'),
     ('Borrowed', 'Borrowed'),
+    ('Lost', 'Lost'),
 ]
 
 acquisition_STATUS = [
@@ -328,11 +336,13 @@ class Book(models.Model):
     mainAuthor = models.CharField(max_length=255)
     coAuthor = models.CharField(max_length=255, null=True, blank=True)
     Publisher = models.CharField(max_length=255, null=True, blank=True)
+    Edition = models.CharField(max_length=50, null=True, blank=True)
     placeofPublication = models.CharField(max_length=255, null=True, blank=True)
     copyrightDate = models.DateField(null=True, blank=True)
     publicationDate = models.DateField(null=True, blank=True)
     Editors = models.CharField(max_length=255, null=True, blank=True)
     accessionNumber = models.CharField(max_length=50, unique=True)
+    callNumber = models.CharField(max_length=50, unique=True)
     Location = models.CharField(max_length=255)
     Language = models.CharField(max_length=255)
     Type = models.CharField(max_length=50, choices=type_CHOICES, default="Other")

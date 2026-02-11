@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>All Books - Library Admin</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="{% static 'Scripts/css/cadmin.css' %}">
+  <link rel="icon" href="{% static 'img/pisay.png' %}">
+  <style>
+    body {
+      font-family: 'Geist', sans-serif;
+      background: #f5f6fa;
+      padding: 2rem;
+    }
+    .books-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      background: white;
+      padding: 2rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    h1 {
+      margin-bottom: 1.5rem;
+      color: #333;
+    }
+    .search-box {
+      margin-bottom: 1.5rem;
+    }
+    .search-box input {
+      width: 100%;
+      padding: 0.75rem;
+      border: 2px solid #e0e0e0;
+      border-radius: 6px;
+      font-size: 1rem;
+      box-sizing: border-box;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    th, td {
+      padding: 0.75rem;
+      text-align: left;
+      border-bottom: 1px solid #e0e0e0;
+    }
+    th {
+      background: #f8f9fa;
+      font-weight: 600;
+    }
+    .btn {
+      padding: 0.5rem 1rem;
+      background: #3368a4;
+      color: white;
+      text-decoration: none;
+      border-radius: 4px;
+      font-size: 0.9rem;
+      display: inline-block;
+    }
+    .btn:hover {
+      background: #2a5785;
+    }
+    .btn-secondary {
+      background: #6c757d;
+      margin-right: 1rem;
+    }
+    .status-available {
+      color: #28a745;
+      font-weight: 600;
+    }
+    .status-borrowed {
+      color: #dc3545;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <div class="books-container">
+    <h1>All Books</h1>
+    <a href="{% url 'admin_dashboard' %}" class="btn btn-secondary">Back to Dashboard</a>
+    
+    <div class="search-box">
+      <form method="get">
+        <input type="text" name="search" placeholder="Search books by title, accession number, or author..." value="{{ search_query }}" id="search-input">
+      </form>
+    </div>
+
+    <table id="books-table">
+      <thead>
+        <tr>
+          <th>Title</th>
+          <th>Accession #</th>
+          <th>Author</th>
+          <th>Location</th>
+          <th>Status</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for book in books %}
+          <tr>
+            <td>{{ book.Title }}</td>
+            <td>{{ book.accessionNumber }}</td>
+            <td>{{ book.mainAuthor }}</td>
+            <td>{{ book.Location }}</td>
+            <td class="{% if book.status == 'Available' %}status-available{% else %}status-borrowed{% endif %}">
+              {{ book.status }}
+            </td>
+            <td>
+              <a href="{% url 'admin_edit_book' book.id %}" class="btn">Edit</a>
+            </td>
+          </tr>
+        {% empty %}
+          <tr>
+            <td colspan="6" style="text-align: center; padding: 2rem;">No books found.</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <script>
+    // Real-time search filter
+    document.getElementById('search-input').addEventListener('input', function(e) {
+      const searchTerm = e.target.value.toLowerCase();
+      const rows = document.querySelectorAll('#books-table tbody tr');
+      
+      rows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        row.style.display = text.includes(searchTerm) ? '' : 'none';
+      });
+    });
+  </script>
+</body>
+</html>

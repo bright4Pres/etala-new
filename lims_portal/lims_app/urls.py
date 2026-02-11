@@ -15,7 +15,7 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.urls import path
-from .views import home, books, about, register_account, check_duplicate, records, analytics
+from .views import home, books, about, register_account, check_duplicate, records, analytics, admin_login, admin_logout, admin_dashboard, admin_checkout, admin_return, admin_accounts, admin_books, admin_edit_book
 from .views_otp import get_students_by_grade, verify_student_email, verify_otp, resend_otp
 
 urlpatterns = [
@@ -33,6 +33,16 @@ urlpatterns = [
     path('api/verify-email/', verify_student_email, name='verify_student_email'),
     path('api/verify-otp/', verify_otp, name='verify_otp'),
     path('api/resend-otp/', resend_otp, name='resend_otp'),
+    
+    # Library Admin Dashboard
+    path('library-admin/login/', admin_login, name='admin_login'),
+    path('library-admin/logout/', admin_logout, name='admin_logout'),
+    path('library-admin/', admin_dashboard, name='admin_dashboard'),
+    path('library-admin/checkout/', admin_checkout, name='admin_checkout'),
+    path('library-admin/return/', admin_return, name='admin_return'),
+    path('library-admin/accounts/', admin_accounts, name='admin_accounts'),
+    path('library-admin/books/', admin_books, name='admin_books'),
+    path('library-admin/books/<int:book_id>/edit/', admin_edit_book, name='admin_edit_book'),
 ]
 
 

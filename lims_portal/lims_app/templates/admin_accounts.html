@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Active Accounts - Library Admin</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="{% static 'Scripts/css/cadmin.css' %}">
+  <link rel="icon" href="{% static 'img/pisay.png' %}">
+  <style>
+    body {
+      font-family: 'Geist', sans-serif;
+      background: #f5f6fa;
+      padding: 2rem;
+    }
+    .accounts-container {
+      max-width: 1400px;
+      margin: 0 auto;
+      background: white;
+      padding: 2rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    h1 {
+      margin-bottom: 1.5rem;
+      color: #333;
+    }
+    .search-box {
+      margin-bottom: 1.5rem;
+    }
+    .search-box input {
+      width: 100%;
+      padding: 0.75rem;
+      border: 2px solid #e0e0e0;
+      border-radius: 6px;
+      font-size: 1rem;
+      box-sizing: border-box;
+    }
+    .grade-section {
+      margin-bottom: 2rem;
+    }
+    .grade-section h2 {
+      color: #3368a4;
+      font-size: 1.3rem;
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 2px solid #3368a4;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 2rem;
+    }
+    th, td {
+      padding: 0.75rem;
+      text-align: left;
+      border-bottom: 1px solid #e0e0e0;
+    }
+    th {
+      background: #f8f9fa;
+      font-weight: 600;
+    }
+    .btn {
+      padding: 0.5rem 1rem;
+      background: #3368a4;
+      color: white;
+      text-decoration: none;
+      border-radius: 4px;
+      font-size: 0.9rem;
+      display: inline-block;
+    }
+    .btn:hover {
+      background: #2a5785;
+    }
+    .btn-secondary {
+      background: #6c757d;
+      margin-right: 1rem;
+    }
+    .status-active {
+      color: #28a745;
+      font-weight: 600;
+    }
+    .status-inactive {
+      color: #dc3545;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <div class="accounts-container">
+    <h1>Active Accounts</h1>
+    <a href="{% url 'admin_dashboard' %}" class="btn btn-secondary">Back to Dashboard</a>
+    
+    <div class="search-box">
+      <input type="text" placeholder="Search accounts by name, email, or school ID..." id="search-input">
+    </div>
+
+    {% for grade, students in all_students.items %}
+    <div class="grade-section" data-grade="{{ grade }}">
+      <h2>Grade {{ grade }}</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>School ID</th>
+            <th>Email</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for student in students %}
+            <tr>
+              <td>{{ student.name }}</td>
+              <td>{{ student.school_id }}</td>
+              <td>{{ student.email }}</td>
+              <td class="{% if student.is_activated %}status-active{% else %}status-inactive{% endif %}">
+                {% if student.is_activated %}Active{% else %}Inactive{% endif %}
+              </td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="4" style="text-align: center; padding: 2rem;">No students in this grade.</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% endfor %}
+  </div>
+
+  <script>
+    // Real-time search filter
+    document.getElementById('search-input').addEventListener('input', function(e) {
+      const searchTerm = e.target.value.toLowerCase();
+      const sections = document.querySelectorAll('.grade-section');
+      
+      sections.forEach(section => {
+        const rows = section.querySelectorAll('tbody tr');
+        let visibleRows = 0;
+        
+        rows.forEach(row => {
+          const text = row.textContent.toLowerCase();
+          if (text.includes(searchTerm)) {
+            row.style.display = '';
+            visibleRows++;
+          } else {
+            row.style.display = 'none';
+          }
+        });
+        
+        // Hide entire grade section if no visible rows
+        if (visibleRows === 0) {
+          section.style.display = 'none';
+        } else {
+          section.style.display = '';
+        }
+      });
+    });
+  </script>
+</body>
+</html>

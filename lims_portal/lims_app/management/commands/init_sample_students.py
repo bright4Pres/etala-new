@@ -70,6 +70,14 @@ class Command(BaseCommand):
         
         middle_initials = ["A.", "B.", "C.", "D.", "E.", "F.", "G.", "H.", "I.", "J."]
         
+        # Sample batch names (PSHS-ZRC traditional batch names)
+        batch_names = [
+            "Antuilan", "Bakunawa", "Calipayan", "Dalisay", "Estrellas",
+            "Fernandez", "Galura", "Himigsugan", "Ignatius", "Jaime",
+            "Kasaysayan", "Lakandula", "Maharlika", "Narra", "Obrero",
+            "Pagkakaisa", "Quezon", "Rizal", "Sikatuna", "Tuason"
+        ]
+        
         total_created = 0
         total_skipped = 0
         
@@ -112,12 +120,16 @@ class Command(BaseCommand):
                     suffix = random.randint(1, 999)
                     full_name = f"{first_name} {middle_initial} {last_name} {suffix}"
                 
+                # Assign batch - each grade gets a random batch name
+                batch = random.choice(batch_names)
+                
                 try:
                     student = model.objects.create(
                         name=full_name,
                         school_id=school_id,
                         gender=gender,
                         email=email,
+                        batch=batch,
                         is_activated=False  # Start as not activated
                     )
                     created_count += 1

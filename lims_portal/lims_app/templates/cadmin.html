@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <meta charset="UTF-8">
+    <title>Library Admin Dashboard - eTala</title>
+    <link rel="stylesheet" href="https://public.codepenassets.com/css/normalize-5.0.0.min.css">
+<link rel="stylesheet" href="../static/Scripts/css/cadmin.css">
+
+  </head>
+    
+  <body>
+  <div class="app-container">
+  <div class="app-header">
+    <div class="app-header-left">
+      <span class="app-icon"></span>
+      <p class="app-name">Library Admin</p>
+      <div class="search-wrapper">
+        <input class="search-input" type="text" placeholder="Search">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="feather feather-search" viewBox="0 0 24 24">
+          <defs></defs>
+          <circle cx="11" cy="11" r="8"></circle>
+          <path d="M21 21l-4.35-4.35"></path>
+        </svg>
+      </div>
+    </div>
+    <div class="app-header-right">
+      <button class="mode-switch" title="Switch Theme">
+        <svg class="moon" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" width="24" height="24" viewBox="0 0 24 24">
+          <defs></defs>
+          <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"></path>
+        </svg>
+      </button>
+      <button class="add-btn" title="Add New Project">
+        <svg class="btn-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="feather feather-plus">
+          <line x1="12" y1="5" x2="12" y2="19" />
+          <line x1="5" y1="12" x2="19" y2="12" /></svg>
+      </button>
+      <button class="notification-btn">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-bell">
+          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+          <path d="M13.73 21a2 2 0 0 1-3.46 0" /></svg>
+      </button>
+    </div>
+    <button class="messages-btn">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-message-circle">
+        <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" /></svg>
+    </button>
+  </div>
+  <div class="app-content">
+    <div class="app-sidebar">
+      <a href="{% url 'admin_dashboard' %}" class="app-sidebar-link active" data-view="borrowed">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-home">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+          <polyline points="9 22 9 12 15 12 15 22" /></svg>
+      </a>
+      <a href="#" class="app-sidebar-link" data-view="checkout" onclick="showView('checkout'); return false;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="feather feather-plus-circle" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="10" />
+          <path d="M12 8v8M8 12h8" />
+        </svg>
+      </a>
+      <a href="#" class="app-sidebar-link" data-view="return" onclick="showView('return'); return false;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-left-circle">
+          <circle cx="12" cy="12" r="10" />
+          <path d="M12 8l-4 4 4 4M16 12H8" /></svg>
+      </a>
+      <a href="#" class="app-sidebar-link" onclick="toggleSidebarSection('books'); return false;" title="Books">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-book">
+          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+        </svg>
+      </a>
+      <a href="#" class="app-sidebar-link" onclick="toggleSidebarSection('users'); return false;" title="Users">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-users">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+          <circle cx="9" cy="7" r="4"></circle>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+          <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+        </svg>
+      </a>
+      <a href="{% url 'admin_logout' %}" class="app-sidebar-link" title="Logout">
+        <svg class="link-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="feather feather-log-out" viewBox="0 0 24 24">
+          <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" />
+          <polyline points="16 17 21 12 16 7" />
+          <line x1="21" y1="12" x2="9" y2="12" />
+        </svg>
+      </a>
+    </div>
+    
+    <!-- Books Sidebar Section -->
+    <div id="sidebar-books" class="sidebar-section" style="display: none;">
+      <div style="padding: 12px; border-bottom: 1px solid var(--message-box-border);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <h3 style="margin: 0; font-size: 0.9rem; color: var(--main-color); font-weight: 600;">Books</h3>
+          <button onclick="toggleSidebarSection('books'); return false;" style="background: none; border: none; cursor: pointer; color: var(--main-color); font-size: 1.2rem; padding: 0; width: 24px; height: 24px;">&times;</button>
+        </div>
+        <span style="background: #3368a4; color: white; padding: 2px 8px; border-radius: 10px; font-size: 0.75rem; display: inline-block;">{{ total_books_count }} Books</span>
+      </div>
+      <div style="max-height: calc(100vh - 180px); overflow-y: auto; padding: 12px;">
+        {% for book in all_books %}
+        <div style="padding: 10px; margin-bottom: 8px; background: var(--message-box-hover); border-radius: 8px; border-left: 3px solid {% if book.status == 'Available' %}#28a745{% else %}#dc3545{% endif %};">
+          <div style="font-weight: 600; font-size: 0.85rem; color: var(--main-color); margin-bottom: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ book.Title }}</div>
+          <div style="font-size: 0.75rem; color: var(--secondary-color); margin-bottom: 4px;">{{ book.mainAuthor }}</div>
+          <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.7rem;">
+            <span style="color: var(--secondary-color);">{{ book.accessionNumber }}</span>
+            <span style="padding: 2px 6px; border-radius: 6px; {% if book.status == 'Available' %}background: #d4edda; color: #155724;{% else %}background: #f8d7da; color: #721c24;{% endif %}">{{ book.status }}</span>
+          </div>
+        </div>
+        {% empty %}
+        <p style="text-align: center; color: var(--secondary-color); padding: 20px; font-size: 0.8rem;">No books</p>
+        {% endfor %}
+      </div>
+    </div>
+    
+    <!-- Users Sidebar Section -->
+    <div id="sidebar-users" class="sidebar-section" style="display: none;">
+      <div style="padding: 12px; border-bottom: 1px solid var(--message-box-border);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <h3 style="margin: 0; font-size: 0.9rem; color: var(--main-color); font-weight: 600;">Registered Users</h3>
+          <button onclick="toggleSidebarSection('users'); return false;" style="background: none; border: none; cursor: pointer; color: var(--main-color); font-size: 1.2rem; padding: 0; width: 24px; height: 24px;">&times;</button>
+        </div>
+        <span style="background: #28a745; color: white; padding: 2px 8px; border-radius: 10px; font-size: 0.75rem; display: inline-block;">{{ total_users_count }} Users</span>
+      </div>
+      <div style="max-height: calc(100vh - 180px); overflow-y: auto; padding: 12px;">
+        {% for user in all_users %}
+        <div style="padding: 10px; margin-bottom: 8px; background: var(--message-box-hover); border-radius: 8px; border-left: 3px solid {% if user.is_activated %}#28a745{% else %}#ffc107{% endif %};">
+          <div style="font-weight: 600; font-size: 0.85rem; color: var(--main-color); margin-bottom: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ user.name }}</div>
+          <div style="font-size: 0.75rem; color: var(--secondary-color); margin-bottom: 4px;">{{ user.school_id }} • {{ user.grade }}</div>
+          <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.7rem;">
+            <span style="color: var(--secondary-color);">{{ user.batch }}</span>
+            <span style="padding: 2px 6px; border-radius: 6px; {% if user.is_activated %}background: #d4edda; color: #155724;{% else %}background: #fff3cd; color: #856404;{% endif %}">{% if user.is_activated %}Active{% else %}Inactive{% endif %}</span>
+          </div>
+        </div>
+        {% empty %}
+        <p style="text-align: center; color: var(--secondary-color); padding: 20px; font-size: 0.8rem;">No users</p>
+        {% endfor %}
+      </div>
+    </div>
+    
+    <div class="projects-section">
+      <!-- Borrowed Books View -->
+      <div id="borrowed-view" class="view-section">
+        <div class="projects-section-header">
+          <p>Borrowed Books</p>
+          <p class="time">{{ borrowed_books|length }} Total</p>
+        </div>
+        <div class="projects-section-line">
+          <div class="projects-status">
+            <div class="item-status">
+              <span class="status-number">{{ borrowed_books|length }}</span>
+              <span class="status-type">Borrowed</span>
+            </div>
+            <div class="item-status">
+              <span class="status-number">{{ overdue_books|length }}</span>
+              <span class="status-type">Overdue</span>
+            </div>
+            <div class="item-status">
+              <span class="status-number">{{ available_books_count }}</span>
+              <span class="status-type">Available</span>
+            </div>
+            <div class="item-status">
+              <span class="status-number">{{ total_books_count }}</span>
+              <span class="status-type">Total Books</span>
+            </div>
+            <div class="item-status">
+              <span class="status-number">{{ total_users_count }}</span>
+              <span class="status-type">Registered Users</span>
+            </div>
+          </div>
+          <div class="view-actions">
+            <button class="view-btn list-view" title="List View">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-list">
+                <line x1="8" y1="6" x2="21" y2="6" />
+                <line x1="8" y1="12" x2="21" y2="12" />
+                <line x1="8" y1="18" x2="21" y2="18" />
+                <line x1="3" y1="6" x2="3.01" y2="6" />
+                <line x1="3" y1="12" x2="3.01" y2="12" />
+                <line x1="3" y1="18" x2="3.01" y2="18" /></svg>
+            </button>
+            <button class="view-btn grid-view active" title="Grid View">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-grid">
+                <rect x="3" y="3" width="7" height="7" />
+                <rect x="14" y="3" width="7" height="7" />
+                <rect x="14" y="14" width="7" height="7" />
+                <rect x="3" y="14" width="7" height="7" /></svg>
+            </button>
+          </div>
+        </div>
+        <div class="project-boxes jsGridView">
+          {% for borrow in borrowed_books %}
+          <div class="project-box-wrapper">
+            <div class="project-box" style="background-color: {% if borrow.is_overdue %}#f8d7da{% else %}#d4edda{% endif %}">
+              <div class="project-box-header">
+                <span>{{ borrow.borrow_date|date:"M d, Y" }}</span>
+                <div class="more-wrapper">
+                  <button class="project-btn-more">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-more-vertical">
+                      <circle cx="12" cy="12" r="1" />
+                      <circle cx="12" cy="5" r="1" />
+                      <circle cx="12" cy="19" r="1" /></svg>
+                  </button>
+                </div>
+              </div>
+              <div class="project-box-content-header">
+                <p class="box-content-header">{{ borrow.bookTitle }}</p>
+                <p class="box-content-subheader">{{ borrow.accountName }} ({{ borrow.accountID }})</p>
+              </div>
+              <div class="box-progress-wrapper">
+                <p class="box-progress-header">Due Date</p>
+                <div class="box-progress-bar">
+                  <span class="box-progress" style="width: {% if borrow.is_overdue %}100{% else %}50{% endif %}%; background-color: {% if borrow.is_overdue %}#dc3545{% else %}#28a745{% endif %}"></span>
+                </div>
+                <p class="box-progress-percentage">{{ borrow.return_date|date:"M d" }}</p>
+              </div>
+              <div class="project-box-footer">
+                <div class="participants">
+                  <span style="font-size: 12px;">Accession: {{ borrow.bookID }}</span>
+                </div>
+                <div class="days-left" style="color: {% if borrow.is_overdue %}#dc3545{% else %}#28a745{% endif %}">
+                  {% if borrow.is_overdue %}Overdue{% else %}On Time{% endif %}
+                </div>
+              </div>
+            </div>
+          </div>
+          {% empty %}
+          <p>No books are currently borrowed.</p>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- Checkout View -->
+      <div id="checkout-view" class="view-section" style="display: none;">
+        <div class="projects-section-header">
+          <p>Checkout Book</p>
+        </div>
+        {% if messages %}
+          <div class="messages" style="margin: 1rem 0;">
+            {% for message in messages %}
+              {% if message.tags == 'success' %}
+                <div style="color: #155724; background: #d4edda; padding: 0.75rem; border-radius: 6px; border-left: 4px solid #28a745;">{{ message }}</div>
+              {% else %}
+                <div style="color: #721c24; background: #f8d7da; padding: 0.75rem; border-radius: 6px; border-left: 4px solid #dc3545;">{{ message }}</div>
+              {% endif %}
+            {% endfor %}
+          </div>
+        {% endif %}
+        <form method="post" action="{% url 'admin_dashboard' %}" style="background: white; padding: 2rem; border-radius: 8px; border: 2px solid #3368a4;">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="checkout">
+          <div style="margin-bottom: 1.5rem;">
+            <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Scan Barcode</label>
+            <input 
+              type="text" 
+              name="book_id" 
+              id="checkout-barcode-input"
+              placeholder="Scan book barcode (accession number)..." 
+              required 
+              style="width: 100%; padding: 0.75rem; border: 2px solid #e0e0e0; border-radius: 6px; font-size: 1rem; box-sizing: border-box; font-family: monospace;">
+          </div>
+          <div style="margin-bottom: 1.5rem;">
+            <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Student School ID</label>
+            <input type="text" name="student_id" id="checkout-student-input" placeholder="Enter student ID" required style="width: 100%; padding: 0.75rem; border: 2px solid #e0e0e0; border-radius: 6px; font-size: 1rem; box-sizing: border-box;">
+          </div>
+          <button type="submit" style="padding: 0.75rem 1.5rem; background: #3368a4; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 1rem; font-weight: 600;">Checkout Book</button>
+        </form>
+      </div>
+
+      <!-- Return View -->
+      <div id="return-view" class="view-section" style="display: none;">
+        <div class="projects-section-header">
+          <p>Return Book</p>
+        </div>
+        
+        <!-- Barcode Scanner Section -->
+        <div style="background: white; padding: 1.5rem; border-radius: 8px; margin-bottom: 1.5rem; border: 2px solid #3368a4;">
+          <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#3368a4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+              <line x1="9" y1="3" x2="9" y2="21"/>
+              <line x1="15" y1="3" x2="15" y2="21"/>
+            </svg>
+            <div>
+              <h3 style="margin: 0; color: #333; font-size: 1.1rem;">Barcode Scanner</h3>
+              <p style="margin: 0.25rem 0 0 0; color: #666; font-size: 0.9rem;">Scan book barcode or enter accession number</p>
+            </div>
+          </div>
+          <form method="post" action="{% url 'admin_dashboard' %}" id="barcode-return-form">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="return_barcode">
+            <div style="display: flex; gap: 1rem;">
+              <input 
+                type="text" 
+                name="accession_number" 
+                id="barcode-input"
+                placeholder="Scan or type accession number..." 
+                autofocus
+                style="flex: 1; padding: 0.75rem; border: 2px solid #e0e0e0; border-radius: 6px; font-size: 1rem; box-sizing: border-box; font-family: monospace;">
+              <button type="submit" style="padding: 0.75rem 1.5rem; background: #dc3545; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 1rem; font-weight: 600; white-space: nowrap;">Return Book</button>
+            </div>
+          </form>
+          <div id="barcode-status" style="margin-top: 0.75rem; padding: 0.5rem; border-radius: 4px; display: none;"></div>
+        </div>
+
+        {% if messages %}
+          <div class="messages" style="margin: 1rem 0;">
+            {% for message in messages %}
+              {% if message.tags == 'success' %}
+                <div style="color: #155724; background: #d4edda; padding: 0.75rem; border-radius: 6px; border-left: 4px solid #28a745;">{{ message }}</div>
+              {% else %}
+                <div style="color: #721c24; background: #f8d7da; padding: 0.75rem; border-radius: 6px; border-left: 4px solid #dc3545;">{{ message }}</div>
+              {% endif %}
+            {% endfor %}
+          </div>
+        {% endif %}
+
+        <div class="projects-section-header" style="margin-top: 2rem;">
+          <p>Currently Borrowed Books</p>
+          <p class="time">{{ borrowed_books|length }} Total</p>
+        </div>
+        <div class="project-boxes jsGridView">
+          {% for borrow in borrowed_books %}
+          <div class="project-box-wrapper">
+            <div class="project-box" style="background-color: {% if borrow.is_overdue %}#fff3cd{% else %}#e7f1ff{% endif %}">
+              <div class="project-box-header">
+                <span>{{ borrow.borrow_date|date:"M d, Y" }}</span>
+              </div>
+              <div class="project-box-content-header">
+                <p class="box-content-header">{{ borrow.bookTitle }}</p>
+                <p class="box-content-subheader">{{ borrow.accountName }} ({{ borrow.accountID }})</p>
+              </div>
+              <div class="box-progress-wrapper">
+                <p class="box-progress-header">Status</p>
+                <p class="box-progress-percentage" style="color: {% if borrow.is_overdue %}#dc3545{% else %}#28a745{% endif %}">
+                  {% if borrow.is_overdue %}Overdue{% else %}On Time{% endif %}
+                </p>
+              </div>
+              <div class="project-box-footer">
+                <div class="participants">
+                  <span style="font-size: 12px;">Due: {{ borrow.return_date|date:"M d" }}</span>
+                </div>
+                <form method="post" action="{% url 'admin_dashboard' %}" style="display: inline;">
+                  {% csrf_token %}
+                  <input type="hidden" name="action" value="return">
+                  <input type="hidden" name="borrow_id" value="{{ borrow.id }}">
+                  <button type="submit" style="padding: 0.5rem 1rem; background: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.9rem;">Return</button>
+                </form>
+              </div>
+            </div>
+          </div>
+          {% empty %}
+          <p>No books are currently borrowed.</p>
+          {% endfor %}
+        </div>
+      </div>
+</div>
+<div class="messages-section">
+  <button class="messages-close">
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-x-circle">
+      <circle cx="12" cy="12" r="10" />
+      <line x1="15" y1="9" x2="9" y2="15" />
+      <line x1="9" y1="9" x2="15" y2="15" /></svg>
+  </button>
+  <div class="projects-section-header">
+    <p>Recent Activity</p>
+  </div>
+  <div class="messages">
+    {% for activity in recent_activity %}
+    <div class="message-box">
+      <div class="message-content">
+        <div class="message-header">
+          <div class="name">{{ activity.accountName }}</div>
+        </div>
+        <p class="message-line">
+          {% if activity.returned %}
+            Returned "{{ activity.bookTitle }}"
+          {% else %}
+            Borrowed "{{ activity.bookTitle }}"
+          {% endif %}
+        </p>
+        <p class="message-line time">
+          {{ activity.borrow_date|date:"M d, Y" }}
+        </p>
+      </div>
+    </div>
+    {% empty %}
+    <p style="padding: 1rem;">No recent activity.</p>
+    {% endfor %}
+  </div>
+</div>
+</div>
+</div>
+    <script  src="../static/Scripts/js/cadmin.js"></script>
+    <script>
+      function showView(viewName) {
+        // Hide all views
+        document.getElementById('borrowed-view').style.display = 'none';
+        document.getElementById('checkout-view').style.display = 'none';
+        document.getElementById('return-view').style.display = 'none';
+        
+        // Hide sidebar sections
+        document.getElementById('sidebar-books').style.display = 'none';
+        document.getElementById('sidebar-users').style.display = 'none';
+        
+        // Show selected view
+        document.getElementById(viewName + '-view').style.display = 'block';
+        
+        // Update sidebar active state
+        document.querySelectorAll('.app-sidebar-link').forEach(link => {
+          link.classList.remove('active');
+        });
+        document.querySelector('[data-view="' + viewName + '"]').classList.add('active');
+        
+        // Auto-focus barcode input when checkout or return view is shown
+        if (viewName === 'checkout') {
+          setTimeout(() => {
+            const checkoutInput = document.getElementById('checkout-barcode-input');
+            if (checkoutInput) {
+              checkoutInput.focus();
+              checkoutInput.select();
+            }
+          }, 100);
+        } else if (viewName === 'return') {
+          setTimeout(() => {
+            const barcodeInput = document.getElementById('barcode-input');
+            if (barcodeInput) {
+              barcodeInput.focus();
+              barcodeInput.select();
+            }
+          }, 100);
+        }
+      }
+      
+      function toggleSidebarSection(sectionName) {
+        const booksSection = document.getElementById('sidebar-books');
+        const usersSection = document.getElementById('sidebar-users');
+        
+        if (sectionName === 'books') {
+          if (booksSection.style.display === 'none' || booksSection.style.display === '') {
+            booksSection.style.display = 'block';
+            usersSection.style.display = 'none';
+          } else {
+            booksSection.style.display = 'none';
+          }
+        } else if (sectionName === 'users') {
+          if (usersSection.style.display === 'none' || usersSection.style.display === '') {
+            usersSection.style.display = 'block';
+            booksSection.style.display = 'none';
+          } else {
+            usersSection.style.display = 'none';
+          }
+        }
+      }
+
+      // Barcode scanner handler
+      document.addEventListener('DOMContentLoaded', function() {
+        const barcodeForm = document.getElementById('barcode-return-form');
+        const barcodeInput = document.getElementById('barcode-input');
+        const statusDiv = document.getElementById('barcode-status');
+
+        if (barcodeForm && barcodeInput) {
+          // Clear input and refocus after submission
+          barcodeForm.addEventListener('submit', function(e) {
+            const accessionNumber = barcodeInput.value.trim();
+            if (!accessionNumber) {
+              e.preventDefault();
+              showStatus('Please enter or scan a barcode', 'error');
+              return;
+            }
+          });
+
+          // Auto-clear status message after successful scan
+          barcodeInput.addEventListener('input', function() {
+            if (statusDiv.style.display === 'block') {
+              statusDiv.style.display = 'none';
+            }
+          });
+        }
+
+        function showStatus(message, type) {
+          statusDiv.textContent = message;
+          statusDiv.style.display = 'block';
+          if (type === 'success') {
+            statusDiv.style.background = '#d4edda';
+            statusDiv.style.color = '#155724';
+            statusDiv.style.borderLeft = '4px solid #28a745';
+          } else {
+            statusDiv.style.background = '#f8d7da';
+            statusDiv.style.color = '#721c24';
+            statusDiv.style.borderLeft = '4px solid #dc3545';
+          }
+        }
+      });
+    </script>
+  </body>
+</html>

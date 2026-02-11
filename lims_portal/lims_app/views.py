@@ -1,12 +1,15 @@
 from django.http import JsonResponse
 from django.utils.dateparse import parse_datetime
 from django.utils import timezone
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from .models import Book, BorrowHistory, grade_Seven, grade_Eight, grade_Nine, grade_Ten, grade_Eleven, grade_Twelve
 from django.views.decorators.csrf import csrf_protect
 from django.db.models import Count, Q, Avg
 from datetime import datetime, timedelta
 import json
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
 
 def home(request):
     return render(request, "home.html", context={"current_tab": "home"})
@@ -390,3 +393,211 @@ def analytics(request):
     }
 
     return render(request, "analytics.html", context)
+
+
+# Admin Views
+def admin_login(request):
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+        user = authenticate(request, username=username, password=password)
+        if user is not None and user.is_staff:
+            login(request, user)
+            return redirect('admin_dashboard')
+        else:
+            messages.error(request, 'Invalid credentials or not authorized.')
+    return render(request, 'admin_login.html')
+
+@login_required
+def admin_logout(request):
+    logout(request)
+    return redirect('admin_login')
+
+@login_required
+def admin_dashboard(request):
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        
+        if action == 'checkout':
+            book_id = request.POST.get('book_id', '').strip()
+            student_id = request.POST.get('student_id', '').strip()
+            try:
+                # Verify book exists and is available
+                book = Book.objects.get(accessionNumber=book_id)
+                if book.status != 'Available':
+                    messages.error(request, f'Book "{book.Title}" is not available for checkout.')
+                else:
+                    borrow = BorrowHistory(bookID=book_id, accountID=student_id)
+                    borrow.save()
+                    messages.success(request, f'Book "{book.Title}" (#{book_id}) checked out to student {student_id}.')
+            except Book.DoesNotExist:
+                messages.error(request, f'Book with accession number {book_id} not found.')
+            except Exception as e:
+                messages.error(request, f'Error checking out book: {str(e)}')
+                
+        elif action == 'return':
+            borrow_id = request.POST.get('borrow_id')
+            try:
+                borrow = BorrowHistory.objects.get(id=borrow_id, returned=False)
+                borrow.returned = True
+                borrow.save()
+                # Update book status
+                book = Book.objects.get(accessionNumber=borrow.bookID)
+                book.status = 'Available'
+                book.borrowed_by = None
+                book.student_id = None
+                book.borrow_date = None
+                book.return_date = None
+                book.save()
+                messages.success(request, 'Book returned successfully.')
+            except BorrowHistory.DoesNotExist:
+                messages.error(request, 'Borrow record not found.')
+            except Exception as e:
+                messages.error(request, str(e))
+        
+        elif action == 'return_barcode':
+            accession_number = request.POST.get('accession_number', '').strip()
+            try:
+                # Find the active borrow record for this book
+                borrow = BorrowHistory.objects.get(bookID=accession_number, returned=False)
+                borrow.returned = True
+                borrow.save()
+                # Update book status
+                book = Book.objects.get(accessionNumber=accession_number)
+                book.status = 'Available'
+                book.borrowed_by = None
+                book.student_id = None
+                book.borrow_date = None
+                book.return_date = None
+                book.save()
+                messages.success(request, f'Book "{book.Title}" (#{accession_number}) returned successfully.')
+            except BorrowHistory.DoesNotExist:
+                messages.error(request, f'No active borrow record found for accession number: {accession_number}')
+            except Book.DoesNotExist:
+                messages.error(request, f'Book with accession number {accession_number} not found.')
+            except Exception as e:
+                messages.error(request, f'Error returning book: {str(e)}')
+        
+        return redirect('admin_dashboard')
+    
+    borrowed_books = BorrowHistory.objects.filter(returned=False).select_related()
+    overdue_books = [b for b in borrowed_books if b.is_overdue()]
+    available_books_count = Book.objects.filter(status='Available').count()
+    available_books = Book.objects.filter(status='Available')
+    recent_activity = BorrowHistory.objects.all().order_by('-borrow_date')[:10]
+    
+    # Get total books and users
+    total_books_count = Book.objects.count()
+    all_books = Book.objects.all().order_by('-id')[:50]  # Get recent 50 books
+    
+    # Get all users from all grade models
+    all_users = []
+    for model in [grade_Seven, grade_Eight, grade_Nine, grade_Ten, grade_Eleven, grade_Twelve]:
+        for user in model.objects.all()[:20]:  # Get up to 20 from each grade
+            all_users.append({
+                'name': user.name,
+                'school_id': user.school_id,
+                'email': user.email,
+                'grade': model.__name__.replace('grade_', 'Grade '),
+                'batch': getattr(user, 'batch', 'N/A'),
+                'is_activated': user.is_activated,
+            })
+    
+    total_users_count = (
+        grade_Seven.objects.count() + 
+        grade_Eight.objects.count() + 
+        grade_Nine.objects.count() + 
+        grade_Ten.objects.count() + 
+        grade_Eleven.objects.count() + 
+        grade_Twelve.objects.count()
+    )
+    
+    return render(request, 'cadmin.html', {
+        'borrowed_books': borrowed_books,
+        'overdue_books': overdue_books,
+        'available_books_count': available_books_count,
+        'available_books': available_books,
+        'recent_activity': recent_activity,
+        'total_books_count': total_books_count,
+        'all_books': all_books,
+        'total_users_count': total_users_count,
+        'all_users': all_users,
+    })
+
+@login_required
+def admin_checkout(request):
+    if request.method == 'POST':
+        book_id = request.POST.get('book_id')
+        student_id = request.POST.get('student_id')
+        try:
+            borrow = BorrowHistory(bookID=book_id, accountID=student_id)
+            borrow.save()
+            messages.success(request, 'Book checked out successfully.')
+            return redirect('admin_dashboard')
+        except Exception as e:
+            messages.error(request, str(e))
+    books = Book.objects.filter(status='Available')
+    return render(request, 'admin_checkout.html', {'books': books})
+
+@login_required
+def admin_return(request):
+    if request.method == 'POST':
+        borrow_id = request.POST.get('borrow_id')
+        try:
+            borrow = BorrowHistory.objects.get(id=borrow_id, returned=False)
+            borrow.returned = True
+            borrow.save()
+            # Update book status
+            book = Book.objects.get(accessionNumber=borrow.bookID)
+            book.status = 'Available'
+            book.borrowed_by = None
+            book.student_id = None
+            book.borrow_date = None
+            book.return_date = None
+            book.save()
+            messages.success(request, 'Book returned successfully.')
+        except BorrowHistory.DoesNotExist:
+            messages.error(request, 'Borrow record not found.')
+        except Exception as e:
+            messages.error(request, str(e))
+        return redirect('admin_dashboard')
+    borrowed_books = BorrowHistory.objects.filter(returned=False)
+    return render(request, 'admin_return.html', {'borrowed_books': borrowed_books})
+
+@login_required
+def admin_accounts(request):
+    # Get all students grouped by grade
+    all_students = {}
+    for grade_num, model in [(7, grade_Seven), (8, grade_Eight), (9, grade_Nine), 
+                              (10, grade_Ten), (11, grade_Eleven), (12, grade_Twelve)]:
+        students = model.objects.all()
+        all_students[grade_num] = students
+    return render(request, 'admin_accounts.html', {'all_students': all_students})
+
+@login_required
+def admin_books(request):
+    search_query = request.GET.get('search', '')
+    books = Book.objects.all()
+    if search_query:
+        books = books.filter(
+            Q(Title__icontains=search_query) | 
+            Q(accessionNumber__icontains=search_query) |
+            Q(mainAuthor__icontains=search_query)
+        )
+    return render(request, 'admin_books.html', {'books': books, 'search_query': search_query})
+
+@login_required
+def admin_edit_book(request, book_id):
+    book = Book.objects.get(id=book_id)
+    if request.method == 'POST':
+        book.Title = request.POST.get('Title')
+        book.mainAuthor = request.POST.get('mainAuthor')
+        book.Publisher = request.POST.get('Publisher', '')
+        book.Location = request.POST.get('Location', '')
+        book.Language = request.POST.get('Language', '')
+        book.Type = request.POST.get('Type', '')
+        book.status = request.POST.get('status')
+        book.save()
+        messages.success(request, 'Book updated successfully.')
+        return redirect('admin_books')
+    return render(request, 'admin_edit_book.html', {'book': book})

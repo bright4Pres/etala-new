@@ -113,6 +113,7 @@
               <strong>Title:</strong> {{ book.Title|default:'-' }}<br>
               <strong>Main Author:</strong> {{ book.mainAuthor|default:'-' }}<br>
               <strong>Co-Author:</strong> {{ book.coAuthor|default:'-' }}<br>
+              <strong>Edition:</strong> {{ book.Edition|default:'-' }}<br>
               <strong>Acquisition Status:</strong> {{ book.acquisitionStatus|default:'-' }}<br>
               <strong>Editors:</strong> {{ book.Editors|default:'-' }}<br>
               <strong>Publisher:</strong> {{ book.Publisher|default:'-' }}<br>
@@ -122,6 +123,7 @@
               <strong>Language:</strong> {{ book.Language }}<br>
               <strong>Type:</strong> {{ book.Type }}<br>
               <strong>Accession Number:</strong> {{ book.accessionNumber }}<br>
+              <strong>Call Number:</strong> {{ book.callNumber }}<br>
               {% if book.status == 'Borrowed' %}
                 <hr>
                 <strong>Borrowed By:</strong> {{ book.borrowed_by }}<br>

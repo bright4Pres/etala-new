@@ -107,12 +107,34 @@ class Command(BaseCommand):
             # Random book details
             title_base = random.choice(book_titles)
             volume = random.choice(["", " Vol. I", " Vol. II", " Vol. III", ""])
-            edition = random.choice(["", " (2nd Edition)", " (3rd Edition)", " (Revised Edition)", ""])
-            title = f"{title_base}{volume}{edition}"
+            edition_suffix = random.choice(["", " (2nd Edition)", " (3rd Edition)", " (Revised Edition)", ""])
+            title = f"{title_base}{volume}{edition_suffix}"
+            
+            # Edition field (separate from title)
+            edition = random.choice([
+                "1st Edition", "2nd Edition", "3rd Edition", "4th Edition", 
+                "Revised Edition", "Special Edition", None
+            ])
             
             author_first = random.choice(authors_first)
             author_last = random.choice(authors_last)
             main_author = f"{author_first} {author_last}"
+            
+            # Generate call number (Library classification)
+            # Format: Dewey Decimal-like or Library of Congress-like
+            call_prefix = random.choice([
+                "QC", "QD", "QH", "QA", "PE", "PL", "HT", "HD", "LB", "Z",  # LC style
+                "500", "540", "570", "510", "420", "800", "300", "370", "000"  # Dewey style
+            ])
+            call_year = str(random.randint(2000, 2025))[-2:]
+            call_suffix = random.choice(["A", "B", "C", "D", "E", "F", "G", "H"])
+            call_number = f"{call_prefix}{random.randint(1, 999)}.{call_suffix}{call_year}"
+            
+            # Ensure call_number is unique
+            attempt = 0
+            while Book.objects.filter(callNumber=call_number).exists() and attempt < 10:
+                call_number = f"{call_prefix}{random.randint(1, 999)}.{call_suffix}{random.randint(10, 99)}"
+                attempt += 1
             
             # Sometimes add co-author
             co_author = None
@@ -138,11 +160,13 @@ class Command(BaseCommand):
                     mainAuthor=main_author,
                     coAuthor=co_author,
                     Publisher=publisher,
+                    Edition=edition,
                     placeofPublication=random.choice(["Manila", "Quezon City", "Makati", "Cebu City", "Davao City"]),
                     copyrightDate=copyright_date.date(),
                     publicationDate=publication_date.date(),
                     Editors=f"Editorial Board of {publisher}" if random.random() > 0.7 else None,
                     accessionNumber=accession_num,
+                    callNumber=call_number,
                     Location=location,
                     Language=language,
                     Type=book_type,
@@ -176,6 +200,7 @@ class Command(BaseCommand):
         self.stdout.write('\nSample of created books:')
         sample_books = Book.objects.order_by('-id')[:5]
         for book in sample_books:
+            edition_text = f" - {book.Edition}" if book.Edition else ""
             self.stdout.write(
-                f'  • {book.accessionNumber}: {book.Title} by {book.mainAuthor} ({book.Type})'
+                f'  • [{book.callNumber}] {book.accessionNumber}: {book.Title}{edition_text} by {book.mainAuthor} ({book.Type})'
             )
