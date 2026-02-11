@@ -3,11 +3,156 @@
 <head>
   <meta charset="UTF-8">
   <title>Records - eTala Library</title>
+  <script>
+    // Set theme immediately to prevent flash
+    (function() {
+      const theme = localStorage.getItem('theme') || 'light';
+      document.documentElement.classList.add(theme);
+    })();
+  </script>
   <link rel="stylesheet" href="https://public.codepenassets.com/css/normalize-5.0.0.min.css">
   <link rel="stylesheet" href="../static/Scripts/css/cadmin.css">
   <link rel="stylesheet" href="../static/Scripts/css/dataTables.bootstrap5.min.css">
   <link rel="stylesheet" href="../static/Scripts/css/bootstrap.min.css">
   <style>
+    /* Override bootstrap white backgrounds for theme support */
+    html, body {
+      background-color: var(--app-container) !important;
+    }
+    /* Force all table backgrounds and text */
+    .table,
+    .table-striped,
+    .table-bordered,
+    .dataTable,
+    #booksTable {
+      background-color: var(--projects-section) !important;
+      color: var(--main-color) !important;
+    }
+    .table thead,
+    .table-dark,
+    #booksTable thead {
+      background-color: var(--button-bg) !important;
+      color: var(--main-color) !important;
+    }
+    .table thead th,
+    .table-dark th,
+    #booksTable thead th,
+    #booksTable_wrapper .table thead th {
+      background-color: var(--button-bg) !important;
+      color: var(--main-color) !important;
+      border-color: var(--message-box-border) !important;
+    }
+    .table tbody,
+    .table tbody tr,
+    .table tbody td,
+    #booksTable tbody,
+    #booksTable tbody tr,
+    #booksTable tbody td,
+    #booksTable_wrapper tbody tr,
+    #booksTable_wrapper tbody td {
+      background-color: var(--projects-section) !important;
+      color: var(--main-color) !important;
+      border-color: var(--message-box-border) !important;
+    }
+    /* Striped rows with highest specificity */
+    .table-striped tbody tr:nth-of-type(odd) > *,
+    #booksTable.table-striped tbody tr:nth-of-type(odd),
+    #booksTable.table-striped tbody tr:nth-of-type(odd) > * {
+      background-color: var(--projects-section) !important;
+      color: var(--main-color) !important;
+    }
+    .table-striped tbody tr:nth-of-type(even) > *,
+    #booksTable.table-striped tbody tr:nth-of-type(even),
+    #booksTable.table-striped tbody tr:nth-of-type(even) > * {
+      background-color: var(--message-box-hover) !important;
+      color: var(--main-color) !important;
+    }
+    /* DataTables even/odd classes */
+    #booksTable tbody tr.odd,
+    #booksTable tbody tr.odd > * {
+      background-color: var(--projects-section) !important;
+      color: var(--main-color) !important;
+    }
+    #booksTable tbody tr.even,
+    #booksTable tbody tr.even > * {
+      background-color: var(--message-box-hover) !important;
+      color: var(--main-color) !important;
+    }
+    .app-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: relative;
+    }
+    .app-header-left {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      width: 300px;
+    }
+    .app-header-right {
+      width: 80px;
+      display: flex;
+      justify-content: flex-end;
+    }
+    .search-wrapper {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 600px;
+      max-width: 600px;
+    }
+    .search-suggestions {
+      display: none;
+      position: absolute;
+      top: calc(100% + 8px);
+      left: 0;
+      right: 0;
+      background: var(--content-bg);
+      border-radius: 12px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+      max-height: 400px;
+      overflow-y: auto;
+      z-index: 1000;
+    }
+    .search-suggestions.show {
+      display: block;
+    }
+    .search-suggestion-item {
+      padding: 1rem 1.5rem;
+      border-bottom: 1px solid var(--border-color);
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+    .search-suggestion-item:last-child {
+      border-bottom: none;
+    }
+    .search-suggestion-item:hover {
+      background: var(--message-box-hover);
+    }
+    .suggestion-title {
+      font-weight: 600;
+      font-size: 1rem;
+      color: var(--main-color);
+      margin-bottom: 0.3rem;
+    }
+    .suggestion-details {
+      font-size: 0.85rem;
+      color: var(--secondary-color);
+      line-height: 1.4;
+    }
+    .suggestion-match {
+      background: rgba(37, 99, 235, 0.15);
+      padding: 0.1rem 0.3rem;
+      border-radius: 3px;
+      font-weight: 500;
+      color: var(--link-color);
+    }
+    .no-results {
+      padding: 2rem;
+      text-align: center;
+      color: var(--secondary-color);
+    }
     .details-container {
       display: none;
       overflow: hidden;
@@ -23,15 +168,95 @@
     .dataTables_wrapper {
       color: var(--main-color);
     }
-    table.dataTable thead th {
-      background: var(--app-content-headerText);
-      color: white;
+    /* Force override Bootstrap table styles */
+    table.dataTable,
+    table.table,
+    table.table-striped,
+    table.table-bordered {
+      background: var(--projects-section) !important;
+      color: var(--main-color) !important;
     }
-    table.dataTable tbody tr {
+    table.dataTable thead th,
+    table.table thead th {
+      background: var(--button-bg) !important;
+      color: var(--main-color) !important;
+      border-color: var(--message-box-border) !important;
+    }
+    table.dataTable tbody tr,
+    table.table tbody tr {
+      background: var(--projects-section) !important;
+      color: var(--main-color) !important;
+      border-color: var(--message-box-border) !important;
+    }
+    table.dataTable tbody tr:hover,
+    table.table tbody tr:hover {
+      background: var(--message-box-hover) !important;
+    }
+    table.dataTable tbody td,
+    table.table tbody td {
+      color: var(--main-color) !important;
+      border-color: var(--message-box-border) !important;
+    }
+    /* Override striped rows */
+    table.table-striped tbody tr:nth-of-type(odd) {
+      background: var(--projects-section) !important;
+    }
+    table.table-striped tbody tr:nth-of-type(even) {
+      background: var(--message-box-hover) !important;
+    }
+    table.dataTable {
+      border-color: var(--message-box-border);
+    }
+    .dataTables_wrapper .dataTables_length,
+    .dataTables_wrapper .dataTables_filter,
+    .dataTables_wrapper .dataTables_info,
+    .dataTables_wrapper .dataTables_paginate {
+      color: var(--main-color);
+    }
+    .dataTables_wrapper .dataTables_filter input {
+      background: var(--search-area-bg);
+      color: var(--main-color);
+      border: 1px solid var(--message-box-border);
+    }
+    .dataTables_wrapper .dataTables_paginate .paginate_button {
+      color: var(--main-color) !important;
       background: var(--projects-section);
+      border-color: var(--message-box-border);
     }
-    table.dataTable tbody tr:hover {
-      background: var(--message-box-hover);
+    .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+      background: var(--message-box-hover) !important;
+      border-color: var(--message-box-border) !important;
+      color: var(--main-color) !important;
+    }
+    .dataTables_wrapper .dataTables_paginate .paginate_button.current {
+      background: var(--link-color-active-bg) !important;
+      border-color: var(--message-box-border) !important;
+    }
+    /* Force text colors inside table */
+    .table strong,
+    .table small,
+    .table span,
+    .dataTable strong,
+    .dataTable small,
+    .dataTable span,
+    #booksTable strong,
+    #booksTable small,
+    #booksTable span {
+      color: inherit !important;
+    }
+    .table td small,
+    #booksTable td small {
+      color: var(--secondary-color) !important;
+    }
+    /* DataTables sorting headers */
+    table.dataTable thead .sorting,
+    table.dataTable thead .sorting_asc,
+    table.dataTable thead .sorting_desc,
+    #booksTable thead th.sorting,
+    #booksTable thead th.sorting_asc,
+    #booksTable thead th.sorting_desc {
+      background-color: var(--button-bg) !important;
+      color: var(--main-color) !important;
     }
   </style>
 </head>
@@ -42,12 +267,13 @@
         <span class="app-icon"></span>
         <p class="app-name">eTala Library</p>
         <div class="search-wrapper">
-          <input class="search-input" type="text" placeholder="Search books...">
+          <input class="search-input" type="text" id="recordsSearchInput" placeholder="Search books..." autocomplete="off">
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="feather feather-search" viewBox="0 0 24 24">
             <defs></defs>
             <circle cx="11" cy="11" r="8"></circle>
             <path d="M21 21l-4.35-4.35"></path>
           </svg>
+          <div class="search-suggestions" id="searchSuggestions"></div>
         </div>
       </div>
       <div class="app-header-right">
@@ -56,11 +282,6 @@
             <defs></defs>
             <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"></path>
           </svg>
-        </button>
-        <button class="notification-btn">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-bell">
-            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-            <path d="M13.73 21a2 2 0 0 1-3.46 0" /></svg>
         </button>
       </div>
       <button class="messages-btn" onclick="toggleFilters()">
@@ -128,21 +349,26 @@
                     <strong>Co-Author:</strong> {{ book.coAuthor|default:'-' }}<br>
                     <strong>Edition:</strong> {{ book.Edition|default:'-' }}<br>
                     <strong>Publisher:</strong> {{ book.Publisher|default:'-' }}<br>
+                    <strong>Place of Publication:</strong> {{ book.placeofPublication|default:'-' }}<br>
+                    <strong>Publication Date:</strong> {{ book.publicationDate|date:'Y-m-d'|default:'-' }}<br>
+                    <strong>Copyright Date:</strong> {{ book.copyrightDate|date:'Y-m-d'|default:'-' }}<br>
                     <strong>Language:</strong> {{ book.Language }}<br>
                     <strong>Type:</strong> {{ book.Type }}<br>
                     <strong>Call Number:</strong> {{ book.callNumber }}<br>
+                    <strong>Editors:</strong> {{ book.Editors|default:'-' }}<br>
+                    <strong>Acquisition Status:</strong> {{ book.acquisitionStatus|default:'-' }}<br>
                   </div>
-                  <div style='flex: 1; padding: 8px; background: rgba(0,0,0,0.05); border-radius: 4px;'>
+                  <div style='flex: 1; padding: 8px; background: var(--message-box-hover); border-radius: 4px;'>
                     <strong style='display: block; margin-bottom: 10px;'>All Copies ({{ book.total_copies }} total):</strong>
                     {% for copy in book.copies %}
-                      <div style='padding: 6px; margin-bottom: 4px; background: white; border-radius: 4px; border-left: 3px solid {% if copy.status == 'Available' %}#28a745{% else %}#dc3545{% endif %};'>
+                      <div style='padding: 6px; margin-bottom: 4px; background: var(--projects-section); border-radius: 4px; border-left: 3px solid {% if copy.status == 'Available' %}#28a745{% else %}#dc3545{% endif %};'>
                         <div style='display: flex; justify-content: space-between; align-items: center;'>
-                          <span style='font-family: monospace; font-weight: bold;'>{{ copy.accessionNumber }}</span>
+                          <span style='font-family: monospace; font-weight: bold; color: var(--main-color);'>{{ copy.accessionNumber }}</span>
                           <span style='padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; {% if copy.status == 'Available' %}background: #d4edda; color: #155724;{% else %}background: #f8d7da; color: #721c24;{% endif %}'>
                             {{ copy.status }}
                           </span>
                         </div>
-                        <div style='font-size: 0.85rem; color: #666; margin-top: 2px;'>{{ copy.Location }}</div>
+                        <div style='font-size: 0.85rem; color: var(--secondary-color); margin-top: 2px;'>{{ copy.Location }}</div>
                       </div>
                     {% endfor %}
                   </div>
@@ -150,10 +376,10 @@
               ">
                 <td>
                   <strong>{{ book.Title }}</strong> by {{ book.mainAuthor }}<br>
-                  <small style="color: #666;">{{ book.callNumber }}</small>
+                  <small style="color: var(--secondary-color);">{{ book.callNumber }}</small>
                 </td>
                 <td style="text-align:center;">
-                  <strong style="color: {% if book.available_copies > 0 %}green{% else %}red{% endif %};">
+                  <strong style="color: {% if book.available_copies > 0 %}#28a745{% else %}#dc3545{% endif %};">
                     {{ book.available_copies }} / {{ book.total_copies }}
                   </strong>
                 </td>
@@ -239,16 +465,17 @@
   <script src="../static/Scripts/js/dataTables.bootstrap5.min.js"></script>
 
   <script>
-    // Theme switcher
-    var lightTheme = "light";
-    var darkTheme = "dark";
-    var theme = localStorage.getItem("theme") || lightTheme;
-    document.body.classList.add(theme);
-    
+    // Theme switcher (theme already loaded in head)
     document.querySelector(".mode-switch").addEventListener("click", function() {
-      document.body.classList.toggle("light");
-      document.body.classList.toggle("dark");
-      localStorage.setItem("theme", document.body.classList.contains("light") ? "light" : "dark");
+      if (document.documentElement.classList.contains('dark')) {
+        document.documentElement.classList.remove('dark');
+        document.documentElement.classList.add('light');
+        localStorage.setItem('theme', 'light');
+      } else {
+        document.documentElement.classList.remove('light');
+        document.documentElement.classList.add('dark');
+        localStorage.setItem('theme', 'dark');
+      }
     });
     
     // Filter toggle
@@ -256,9 +483,126 @@
       document.getElementById("filter-section").classList.toggle("show");
     }
 
+    // Search functionality with suggestions
+    const searchInput = document.getElementById('recordsSearchInput');
+    const suggestionsContainer = document.getElementById('searchSuggestions');
+    let searchTimeout;
+    let dataTable;
+
+    if (searchInput) {
+      searchInput.addEventListener('input', function() {
+        const query = this.value.trim();
+        
+        clearTimeout(searchTimeout);
+        
+        if (query.length < 2) {
+          suggestionsContainer.classList.remove('show');
+          return;
+        }
+        
+        searchTimeout = setTimeout(() => {
+          fetchSearchSuggestions(query);
+        }, 300);
+      });
+
+      searchInput.addEventListener('keypress', function(event) {
+        if (event.key === 'Enter') {
+          const query = this.value.trim();
+          if (query) {
+            window.location.href = `/records/?search=${encodeURIComponent(query)}`;
+          }
+        }
+      });
+    }
+
+    function fetchSearchSuggestions(query) {
+      fetch(`/records/?search=${encodeURIComponent(query)}`, {
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest'
+        }
+      })
+      .then(response => response.json())
+      .then(data => {
+        displaySuggestions(data.books, query);
+      })
+      .catch(error => {
+        console.error('Search error:', error);
+      });
+    }
+
+    function displaySuggestions(books, query) {
+      if (!books || books.length === 0) {
+        suggestionsContainer.innerHTML = '<div class="no-results">No books found</div>';
+        suggestionsContainer.classList.add('show');
+        return;
+      }
+
+      const queryLower = query.toLowerCase();
+      const html = books.slice(0, 8).map(book => {
+        const matches = [];
+        
+        if (book.Title && book.Title.toLowerCase().includes(queryLower)) {
+          matches.push(`<span class="suggestion-match">Title</span>: ${highlightMatch(book.Title, query)}`);
+        }
+        if (book.mainAuthor && book.mainAuthor.toLowerCase().includes(queryLower)) {
+          matches.push(`<span class="suggestion-match">Author</span>: ${highlightMatch(book.mainAuthor, query)}`);
+        }
+        if (book.coAuthor && book.coAuthor.toLowerCase().includes(queryLower)) {
+          matches.push(`<span class="suggestion-match">Co-Author</span>: ${highlightMatch(book.coAuthor, query)}`);
+        }
+        if (book.callNumber && book.callNumber.toLowerCase().includes(queryLower)) {
+          matches.push(`<span class="suggestion-match">Call Number</span>: ${highlightMatch(book.callNumber, query)}`);
+        }
+        if (book.Publisher && book.Publisher.toLowerCase().includes(queryLower)) {
+          matches.push(`<span class="suggestion-match">Publisher</span>: ${highlightMatch(book.Publisher, query)}`);
+        }
+        
+        const matchDetails = matches.length > 0 ? matches.join(' • ') : 'Match found';
+        
+        return `
+          <div class="search-suggestion-item" onclick="goToRecords('${encodeURIComponent(query)}')">
+            <div class="suggestion-title">${escapeHtml(book.Title)}</div>
+            <div class="suggestion-details">
+              ${matchDetails}<br>
+              Available: <strong>${book.available_copies}/${book.total_copies}</strong> copies
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      suggestionsContainer.innerHTML = html;
+      suggestionsContainer.classList.add('show');
+    }
+
+    function highlightMatch(text, query) {
+      if (!text) return '';
+      const regex = new RegExp(`(${escapeRegex(query)})`, 'gi');
+      return escapeHtml(text).replace(regex, '<span class="suggestion-match">$1</span>');
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function escapeRegex(string) {
+      return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }
+
+    function goToRecords(query) {
+      window.location.href = `/records/?search=${query}`;
+    }
+
+    document.addEventListener('click', function(event) {
+      if (!event.target.closest('.search-wrapper')) {
+        suggestionsContainer.classList.remove('show');
+      }
+    });
+
     // DataTable with expandable rows
     $(document).ready(function() {
-      const table = $('#booksTable').DataTable({
+      dataTable = $('#booksTable').DataTable({
         order: [],
         columnDefs: [{ orderable: false, targets: "_all" }],
         language: {
@@ -269,7 +613,7 @@
 
       $('#booksTable tbody').on('click', 'tr.book-row', function() {
         const tr = $(this);
-        const row = table.row(tr);
+        const row = dataTable.row(tr);
 
         if (row.child.isShown()) {
           $('div.details-container', row.child()).slideUp(250, function() {

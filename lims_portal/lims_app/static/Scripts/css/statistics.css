@@ -22,6 +22,56 @@
     --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
+html.dark {
+    --bg-primary: #111827;
+    --bg-secondary: #1f2937;
+    --bg-accent: #374151;
+    --text-primary: #f9fafb;
+    --text-secondary: #d1d5db;
+    --text-muted: #9ca3af;
+    --border-light: rgba(255,255,255,.1);
+    --border-medium: rgba(255,255,255,.2);
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
+}
+
+/* Custom Webkit Scrollbar Styles */
+::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--bg-primary);
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--border-medium);
+    border-radius: 10px;
+    border: 2px solid var(--bg-primary);
+    transition: background 0.2s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--text-muted);
+}
+
+::-webkit-scrollbar-thumb:active {
+    background: var(--text-secondary);
+}
+
+::-webkit-scrollbar-corner {
+    background: var(--bg-primary);
+}
+
+/* Thin scrollbar for smaller areas */
+.activity-list::-webkit-scrollbar,
+.calendar-heatmap-container::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
 body {
     background-color: var(--bg-primary);
     color: var(--text-primary);
@@ -58,8 +108,8 @@ body::before {
 
 /* Header Styles */
 header {
-    background: #ffffff;
-    border-bottom: 2px solid #e2e8f0;
+    background: var(--bg-secondary);
+    border-bottom: 2px solid var(--border-light);
     position: sticky;
     top: 0;
     z-index: 100;
@@ -101,41 +151,23 @@ header {
 
 .logo-text h1 {
     font-size: 28px;
-    font-weight: 600;
-    color: #1e293b;
+    font-weight: 800;
+    color: var(--text-primary);
     margin: 0;
     letter-spacing: -0.5px;
     font-family: 'Crimson Text', 'Times New Roman', serif;
 }
 
 .logo-text p {
-    font-size: 14px;
-    color: #64748b;
+    font-size: 16px;
+    color: var(--text-muted);
     margin: 4px 0 0 0;
-    font-weight: 400;
+    font-weight: 500;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
 .logo-text {
     margin-left: 20px;
-}
-
-.logo-text h1 {
-    font-size: 28px;
-    font-weight: 800;
-    color:#070c13; 
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    margin: 0;
-    letter-spacing: -0.5px;
-}
-
-.logo-text p {
-    font-size: 16px;
-    color: #64748b;
-    margin: 4px 0 0 0;
-    font-weight: 500;
 }
 
 .header-actions {
@@ -147,19 +179,19 @@ header {
 select, button {
     padding: 10px 16px;
     border-radius: 6px;
-    border: 1px solid #cbd5e1;
+    border: 1px solid var(--border-medium);
     font-size: 14px;
     cursor: pointer;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     font-weight: 500;
     transition: all 0.2s ease;
-    background: #ffffff;
-    color: #475569;
+    background: var(--bg-secondary);
+    color: var(--text-secondary);
 }
 
 select:hover, button:hover {
-    border-color: #94a3b8;
-    background: #f8fafc;
+    border-color: var(--text-muted);
+    background: var(--bg-accent);
 }
 
 select:focus, button:focus {
@@ -208,14 +240,14 @@ select:focus, button:focus {
 }
 
 .btn-secondary {
-    background: #f1f5f9;
-    color: #64748b;
-    border: 1px solid #e2e8f0;
+    background: var(--bg-accent);
+    color: var(--text-muted);
+    border: 1px solid var(--border-light);
 }
 
 .btn-secondary:hover {
-    background: #e2e8f0;
-    color: #475569;
+    background: var(--border-medium);
+    color: var(--text-secondary);
 }
 
 /* Main Content */
@@ -277,7 +309,7 @@ main {
 .kpi-info h3 {
     font-size: 11px;
     font-weight: 600;
-    color: #64748b;
+    color: var(--text-muted);
     margin: 0 0 8px 0;
     text-transform: uppercase;
     letter-spacing: 0.5px;
@@ -410,7 +442,7 @@ main {
     align-items: center;
     gap: 6px;
     font-size: 14px;
-    color: #64748b;
+    color: var(--text-muted);
 }
 
 .legend-color {
@@ -471,12 +503,12 @@ main {
 
 .metric-header span {
     font-size: 14px;
-    color: #64748b;
+    color: var(--text-muted);
 }
 
 .metric-header span:last-child {
     font-weight: 600;
-    color: #1e293b;
+    color: var(--text-primary);
 }
 
 .progress-bar {
@@ -697,7 +729,7 @@ main {
 
 /* Activity Item Variations */
 .activity-item-border {
-    border-bottom: 1px solid #e5e7eb;
+    border-bottom: 1px solid var(--border-light);
     padding: 0.75rem 0;
 }
 
@@ -709,7 +741,7 @@ main {
 .activity-text p {
     margin: 0;
     font-size: 0.85rem;
-    color: #6b7280;
+    color: var(--text-muted);
 }
 
 .activity-count-blue {
@@ -744,13 +776,13 @@ main {
 /* Empty State */
 .empty-state {
     text-align: center;
-    color: #9ca3af;
+    color: var(--text-muted);
     padding: 2rem;
     margin: 0;
 }
 
 .icon-orange {
-    background: #ffedd5;
+    background: rgba(245, 158, 11, 0.1);
     color: #f97316;
 }
 
@@ -771,18 +803,18 @@ main {
 .activity-text h4 {
     font-size: 14px;
     font-weight: 500;
-    color: #1e293b;
+    color: var(--text-primary);
     margin: 0 0 4px 0;
 }
 
 .activity-text p {
     font-size: 13px;
-    color: #94a3b8;
+    color: var(--text-muted);
     margin: 0;
 }
 
 .activity-time {
-    color: #94a3b8;
+    color: var(--text-muted);
     font-size: 13px;
     white-space: nowrap;
     margin-left: 16px;
@@ -871,7 +903,7 @@ main {
     gap: 8px;
     margin-top: 16px;
     font-size: 14px;
-    color: #64748b;
+    color: var(--text-muted);
 }
 
 .heatmap-legend-scale {
@@ -886,19 +918,19 @@ main {
 }
 
 .heatmap-nav-btn {
-    background: #f8fafc;
-    border: 1px solid #cbd5e1;
+    background: var(--bg-accent);
+    border: 1px solid var(--border-medium);
     border-radius: 4px;
     padding: 4px 8px;
     cursor: pointer;
     transition: all 0.2s;
     font-size: 14px;
-    color: #475569;
+    color: var(--text-secondary);
 }
 
 .heatmap-nav-btn:hover:not(:disabled) {
-    background: #e2e8f0;
-    border-color: #94a3b8;
+    background: var(--border-light);
+    border-color: var(--text-muted);
 }
 
 .heatmap-nav-btn:disabled {

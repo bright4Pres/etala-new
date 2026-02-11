@@ -1,8 +1,36 @@
-@import url("https://fonts.cdnfonts.com/css/pp-neue-montreal");
-
 :root {
-  --font-primary: "PP Neue Montreal", sans-serif;
+  --font-primary: "DM Sans", sans-serif;
   --text-color: rgba(245, 245, 245, 0.9);
+}
+
+/* Custom Webkit Scrollbar Styles */
+::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--app-container, #f3f6fd);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--message-box-border, #e9ebf0);
+  border-radius: 10px;
+  border: 2px solid var(--app-container, #f3f6fd);
+  transition: background 0.2s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--secondary-color, #4A4A4A);
+}
+
+::-webkit-scrollbar-thumb:active {
+  background: var(--main-color, #1f1c2e);
+}
+
+::-webkit-scrollbar-corner {
+  background: var(--app-container, #f3f6fd);
 }
 
 * {
@@ -14,30 +42,29 @@
 html {
   overflow-x: hidden;
   width: 100%;
-  background-color: #fff;
+  background-color: var(--app-container, #fff);
 }
 
 body {
   font-family: var(--font-primary);
-  background-color: #fff;
-  color: #000;
+  background-color: var(--app-container, #fff);
+  color: var(--main-color, #000);
   font-weight: 500;
   letter-spacing: -0.02em;
-  text-transform: uppercase;
   overflow-x: hidden;
   width: 100%;
 }
 
 .scroll-container {
   position: relative;
-  background-color: #fff;
+  background-color: var(--app-container, #fff);
 }
 
 .end-section {
   font-size: 2rem;
   height: 100vh;
   position: relative;
-  background-color: #fff;
+  background-color: var(--app-container, #fff);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -47,13 +74,13 @@ body {
   transform: rotate(90deg);
   position: sticky;
   top: 50vh;
-  color: #000;
+  color: var(--main-color, #000);
 }
 
 .fixed-section {
   height: 1100vh;
   position: relative;
-  background-color: #fff;
+  background-color: var(--app-container, #fff);
 }
 
 .fixed-container {
@@ -65,7 +92,7 @@ body {
   overflow: hidden;
   will-change: transform, height;
   transform-origin: top center;
-  background-color: #fff;
+  background-color: var(--app-container, #fff);
 }
 
 .grid-container {
@@ -355,12 +382,12 @@ body {
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: #fff;
+  background-color: var(--app-container, #fff);
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 9999;
-  color: #000;
+  color: var(--main-color, #000);
   font-size: 1.5rem;
   font-family: var(--font-primary);
   text-transform: uppercase;
@@ -375,8 +402,8 @@ body {
   position: fixed;
   bottom: 10px;
   right: 10px;
-  background: rgba(255, 255, 255, 0.7);
-  color: #000;
+  background: var(--projects-section, rgba(255, 255, 255, 0.7));
+  color: var(--main-color, #000);
   padding: 10px;
   font-size: 12px;
   z-index: 9000;

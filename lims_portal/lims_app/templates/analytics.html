@@ -4,6 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Statistics - eTala Library</title>
+    <script>
+      // Set theme immediately to prevent flash
+      (function() {
+        const theme = localStorage.getItem('theme') || 'light';
+        document.documentElement.classList.add(theme);
+      })();
+    </script>
     
     <!-- External Dependencies -->
     <link rel="stylesheet" href="https://public.codepenassets.com/css/normalize-5.0.0.min.css">
@@ -15,6 +22,25 @@
     <link rel="stylesheet" href="../static/Scripts/css/statistics.css">
     <script src="../static/Scripts/js/chart.js"></script>
     <style>
+        .app-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: relative;
+        }
+        .app-header-left {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            width: 300px;
+        }
+        .search-wrapper {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 600px;
+            max-width: 600px;
+        }
         .main-container {
             max-width: 100%;
             padding: 24px;
@@ -34,6 +60,57 @@
         .header-btn:hover {
             background: var(--bg-accent);
         }
+        .search-suggestions {
+            display: none;
+            position: absolute;
+            top: calc(100% + 8px);
+            left: 0;
+            right: 0;
+            background: var(--content-bg);
+            border-radius: 12px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+            max-height: 400px;
+            overflow-y: auto;
+            z-index: 1000;
+        }
+        .search-suggestions.show {
+            display: block;
+        }
+        .search-suggestion-item {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+        .search-suggestion-item:last-child {
+            border-bottom: none;
+        }
+        .search-suggestion-item:hover {
+            background: var(--message-box-hover);
+        }
+        .suggestion-title {
+            font-weight: 600;
+            font-size: 1rem;
+            color: var(--main-color);
+            margin-bottom: 0.3rem;
+        }
+        .suggestion-details {
+            font-size: 0.85rem;
+            color: var(--secondary-color);
+            line-height: 1.4;
+        }
+        .suggestion-match {
+            background: rgba(37, 99, 235, 0.15);
+            padding: 0.1rem 0.3rem;
+            border-radius: 3px;
+            font-weight: 500;
+            color: var(--link-color);
+        }
+        .no-results {
+            padding: 2rem;
+            text-align: center;
+            color: var(--secondary-color);
+        }
     </style>
 </head>
 <body>
@@ -43,12 +120,13 @@
                 <span class="app-icon"></span>
                 <p class="app-name">eTala Library</p>
                 <div class="search-wrapper">
-                    <input class="search-input" type="text" placeholder="Search...">
+                    <input class="search-input" type="text" id="analyticsSearchInput" placeholder="Search..." autocomplete="off">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="feather feather-search" viewBox="0 0 24 24">
                         <defs></defs>
                         <circle cx="11" cy="11" r="8"></circle>
                         <path d="M21 21l-4.35-4.35"></path>
                     </svg>
+                    <div class="search-suggestions" id="analyticsSearchSuggestions"></div>
                 </div>
             </div>
             <div class="app-header-right">
@@ -142,21 +220,6 @@
             </div>
         
             <main class="projects-section main-container">
-        <!-- ==========================================
-             HEADER SECTION
-             Contains title and time period selector
-             ========================================== -->
-        <div class="container">
-            <div class="header-content">
-                <!-- Logo and title area -->
-                <div class="logo-container">
-                    <div class="logo-text">
-                        <h1>Library Analytics Dashboard</h1>
-                        <p>Philippine Science High School Zamboanga Peninsula Region Campus</p>
-                    </div>
-                </div>
-            </div>
-        </div>
 
         <!-- ==========================================
              MAIN KPI CARDS
@@ -717,17 +780,128 @@
         }
     </script>
     <script>
-      // Theme switcher
-      var lightTheme = "light";
-      var darkTheme = "dark";
-      var theme = localStorage.getItem("theme") || lightTheme;
-      document.body.classList.add(theme);
-      
+      // Theme switcher (theme already loaded in head)
       document.querySelector(".mode-switch").addEventListener("click", function() {
-        document.body.classList.toggle("light");
-        document.body.classList.toggle("dark");
-        localStorage.setItem("theme", document.body.classList.contains("light") ? "light" : "dark");
+        if (document.documentElement.classList.contains('dark')) {
+          document.documentElement.classList.remove('dark');
+          document.documentElement.classList.add('light');
+          localStorage.setItem('theme', 'light');
+        } else {
+          document.documentElement.classList.remove('light');
+          document.documentElement.classList.add('dark');
+          localStorage.setItem('theme', 'dark');
+        }
       });
+    </script>
+    <script>
+      // Search functionality with YouTube-style suggestions
+      const analyticsSearchInput = document.getElementById('analyticsSearchInput');
+      const analyticsSuggestionsContainer = document.getElementById('analyticsSearchSuggestions');
+      let analyticsSearchTimeout;
+
+      if (analyticsSearchInput && analyticsSuggestionsContainer) {
+        analyticsSearchInput.addEventListener('input', function() {
+          const query = this.value.trim();
+          clearTimeout(analyticsSearchTimeout);
+          
+          if (query.length < 2) {
+            analyticsSuggestionsContainer.classList.remove('show');
+            return;
+          }
+          
+          analyticsSearchTimeout = setTimeout(() => {
+            fetchSearchSuggestions(query, analyticsSuggestionsContainer);
+          }, 300);
+        });
+
+        analyticsSearchInput.addEventListener('keypress', function(event) {
+          if (event.key === 'Enter') {
+            const query = this.value.trim();
+            if (query) {
+              window.location.href = `/records/?search=${encodeURIComponent(query)}`;
+            }
+          }
+        });
+
+        document.addEventListener('click', function(event) {
+          if (!event.target.closest('.search-wrapper')) {
+            analyticsSuggestionsContainer.classList.remove('show');
+          }
+        });
+      }
+
+      function fetchSearchSuggestions(query, container) {
+        fetch(`/records/?search=${encodeURIComponent(query)}`, {
+          headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+          }
+        })
+        .then(response => response.json())
+        .then(data => {
+          displaySuggestions(data.books, query, container);
+        })
+        .catch(error => {
+          console.error('Search error:', error);
+        });
+      }
+
+      function displaySuggestions(books, query, container) {
+        if (!books || books.length === 0) {
+          container.innerHTML = '<div class="no-results">No books found</div>';
+          container.classList.add('show');
+          return;
+        }
+
+        const queryLower = query.toLowerCase();
+        const html = books.slice(0, 8).map(book => {
+          const matches = [];
+          
+          if (book.Title && book.Title.toLowerCase().includes(queryLower)) {
+            matches.push(`<span class="suggestion-match">Title</span>: ${highlightMatch(book.Title, query)}`);
+          }
+          if (book.mainAuthor && book.mainAuthor.toLowerCase().includes(queryLower)) {
+            matches.push(`<span class="suggestion-match">Author</span>: ${highlightMatch(book.mainAuthor, query)}`);
+          }
+          if (book.callNumber && book.callNumber.toLowerCase().includes(queryLower)) {
+            matches.push(`<span class="suggestion-match">Call Number</span>: ${highlightMatch(book.callNumber, query)}`);
+          }
+          
+          const matchDetails = matches.length > 0 ? matches.join(' • ') : 'Match found';
+          
+          return `
+            <div class="search-suggestion-item" onclick="goToRecords('${encodeURIComponent(query)}')">
+              <div class="suggestion-title">${escapeHtml(book.Title)}</div>
+              <div class="suggestion-details">
+                ${matchDetails}<br>
+                Available: <strong>${book.available_copies}/${book.total_copies}</strong> copies
+              </div>
+            </div>
+          `;
+        }).join('');
+
+        container.innerHTML = html;
+        container.classList.add('show');
+      }
+
+      function highlightMatch(text, query) {
+        if (!text) return '';
+        const regex = new RegExp(`(${escapeRegex(query)})`, 'gi');
+        return escapeHtml(text).replace(regex, '<span class="suggestion-match">$1</span>');
+      }
+
+      function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+      }
+
+      function escapeRegex(string) {
+        return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      }
+
+      function goToRecords(query) {
+        window.location.href = `/records/?search=${query}`;
+      }
     </script>
     </div>
   </div>

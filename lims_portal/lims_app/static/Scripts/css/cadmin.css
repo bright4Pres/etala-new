@@ -22,10 +22,11 @@
   --search-area-bg: #fff;
   --star: #1ff1c2e;
   --message-btn: #fff;
+  --content-bg: #fff;
+  --border-color: #e9ebf0;
 }
 
-.dark:root {
-  --app-container: #1f1d2b;
+html.dark {
   --app-container: #111827;
   --main-color: #fff;
   --secondary-color: rgba(255,255,255,.8);
@@ -43,6 +44,46 @@
   --more-list-bg-hover: rgba(195, 207, 244, 0.1);
   --more-list-shadow: rgba(195, 207, 244, 0.1);
   --message-btn: rgba(195, 207, 244, 0.1);
+  --content-bg: #1f2937;
+  --border-color: rgba(255,255,255,.1);
+}
+
+/* Custom Webkit Scrollbar Styles */
+::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--app-container);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--message-box-border);
+  border-radius: 10px;
+  border: 2px solid var(--app-container);
+  transition: background 0.2s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--secondary-color);
+}
+
+::-webkit-scrollbar-thumb:active {
+  background: var(--main-color);
+}
+
+/* For horizontal scrollbar */
+::-webkit-scrollbar-corner {
+  background: var(--app-container);
+}
+
+/* Thin scrollbar variant for smaller areas */
+.thin-scrollbar::-webkit-scrollbar,
+.search-suggestions::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
 }
 
 html, body {

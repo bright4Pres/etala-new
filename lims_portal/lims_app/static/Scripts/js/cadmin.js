@@ -1,9 +1,20 @@
 document.addEventListener('DOMContentLoaded', function () {
   var modeSwitch = document.querySelector('.mode-switch');
 
-  modeSwitch.addEventListener('click', function () {                     document.documentElement.classList.toggle('dark');
-    modeSwitch.classList.toggle('active');
-  });
+  if (modeSwitch) {
+    modeSwitch.addEventListener('click', function () {
+      if (document.documentElement.classList.contains('dark')) {
+        document.documentElement.classList.remove('dark');
+        document.documentElement.classList.add('light');
+        localStorage.setItem('theme', 'light');
+      } else {
+        document.documentElement.classList.remove('light');
+        document.documentElement.classList.add('dark');
+        localStorage.setItem('theme', 'dark');
+      }
+      modeSwitch.classList.toggle('active');
+    });
+  }
   
   var listView = document.querySelector('.list-view');
   var gridView = document.querySelector('.grid-view');

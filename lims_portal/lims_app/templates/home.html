@@ -4,23 +4,107 @@
   <head>
     <meta charset="UTF-8">
     <title>eTala - Library Portal</title>
+    <script>
+      // Set theme immediately to prevent flash
+      (function() {
+        const theme = localStorage.getItem('theme') || 'light';
+        document.documentElement.classList.add(theme);
+      })();
+    </script>
     <link rel="stylesheet" href="https://public.codepenassets.com/css/normalize-5.0.0.min.css">
     <link rel="stylesheet" href="../static/Scripts/css/cadmin.css">
+    <style>
+      .app-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .app-header-left {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        width: 300px;
+      }
+      .app-header-right {
+        width: 80px;
+        display: flex;
+        justify-content: flex-end;
+      }
+      .search-wrapper {
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 600px;
+        max-width: 600px;
+      }
+      .search-suggestions {
+        display: none;
+        position: absolute;
+        top: calc(100% + 8px);
+        left: 0;
+        right: 0;
+        background: var(--content-bg);
+        border-radius: 12px;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+        max-height: 400px;
+        overflow-y: auto;
+        z-index: 1000;
+      }
+      .search-suggestions.show {
+        display: block;
+      }
+      .search-suggestion-item {
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid var(--border-color);
+        cursor: pointer;
+        transition: background 0.2s ease;
+      }
+      .search-suggestion-item:last-child {
+        border-bottom: none;
+      }
+      .search-suggestion-item:hover {
+        background: var(--message-box-hover);
+      }
+      .suggestion-title {
+        font-weight: 600;
+        font-size: 1rem;
+        color: var(--main-color);
+        margin-bottom: 0.3rem;
+      }
+      .suggestion-details {
+        font-size: 0.85rem;
+        color: var(--secondary-color);
+        line-height: 1.4;
+      }
+      .suggestion-match {
+        background: rgba(37, 99, 235, 0.15);
+        padding: 0.1rem 0.3rem;
+        border-radius: 3px;
+        font-weight: 500;
+        color: var(--link-color);
+      }
+      .no-results {
+        padding: 2rem;
+        text-align: center;
+        color: var(--secondary-color);
+      }
+    </style>
   </head>
     
   <body>
   <div class="app-container">
   <div class="app-header">
     <div class="app-header-left">
-      <span class="app-icon"></span>
+      <img src="../static/img/etalalogo.svg" alt="eTala Logo" class="app-logo" style="width: 40px; height: 40px;">
       <p class="app-name">eTala Library</p>
       <div class="search-wrapper">
-        <input class="search-input" type="text" placeholder="Search books...">
+        <input class="search-input" type="text" id="mainSearchInput" placeholder="Search books..." autocomplete="off">
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="feather feather-search" viewBox="0 0 24 24">
           <defs></defs>
           <circle cx="11" cy="11" r="8"></circle>
           <path d="M21 21l-4.35-4.35"></path>
         </svg>
+        <div class="search-suggestions" id="searchSuggestions"></div>
       </div>
     </div>
     <div class="app-header-right">
@@ -31,11 +115,8 @@
         </svg>
       </button>
     </div>
-    <button class="messages-btn">
-      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-message-circle">
-        <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" /></svg>
-    </button>
   </div>
+  
   <div class="app-content">
     <div class="app-sidebar">
       <a href="{% url 'home' %}" class="app-sidebar-link active" title="Home">
@@ -71,228 +152,143 @@
         </svg>
       </a>
     </div>
-</div>
-</div>
+    
+    <div class="projects-section">
+      <div class="projects-section-header">
+        <p>Welcome to eTala Library</p>
+        <p class="time">Search for books using the search bar above</p>
+      </div>
+      <div class="projects-section-line">
+        <div class="projects-status">
+          <div class="item-status">
+            <span class="status-number">Use the search bar above to find books by:</span>
+            <span class="status-type">• Title • Author • Call Number • Publisher</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
-    <script  src="../static/Scripts/js/cadmin.js"></script>
+    <script src="../static/Scripts/js/cadmin.js"></script>
     <script>
-      function showView(viewName) {
-        // Hide all views
-        document.getElementById('borrowed-view').style.display = 'none';
-        document.getElementById('checkout-view').style.display = 'none';
-        document.getElementById('return-view').style.display = 'none';
+      // Search functionality with YouTube-style suggestions
+      const searchInput = document.getElementById('mainSearchInput');
+      const suggestionsContainer = document.getElementById('searchSuggestions');
+      let searchTimeout;
+
+      // Debounce search to avoid too many requests
+      searchInput.addEventListener('input', function() {
+        const query = this.value.trim();
         
-        // Hide sidebar sections
-        document.getElementById('sidebar-books').style.display = 'none';
-        document.getElementById('sidebar-users').style.display = 'none';
+        clearTimeout(searchTimeout);
         
-        // Show selected view
-        document.getElementById(viewName + '-view').style.display = 'block';
+        if (query.length < 2) {
+          suggestionsContainer.classList.remove('show');
+          return;
+        }
         
-        // Update sidebar active state
-        document.querySelectorAll('.app-sidebar-link').forEach(link => {
-          link.classList.remove('active');
+        searchTimeout = setTimeout(() => {
+          fetchSearchSuggestions(query);
+        }, 300);
+      });
+
+      function fetchSearchSuggestions(query) {
+        fetch(`/records/?search=${encodeURIComponent(query)}`, {
+          headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+          }
+        })
+        .then(response => response.json())
+        .then(data => {
+          displaySuggestions(data.books, query);
+        })
+        .catch(error => {
+          console.error('Search error:', error);
         });
-        document.querySelector('[data-view="' + viewName + '"]').classList.add('active');
-        
-        // Auto-focus barcode input when checkout or return view is shown
-        if (viewName === 'checkout') {
-          setTimeout(() => {
-            const checkoutInput = document.getElementById('checkout-barcode-input');
-            if (checkoutInput) {
-              checkoutInput.focus();
-              checkoutInput.select();
-            }
-          }, 100);
-        } else if (viewName === 'return') {
-          setTimeout(() => {
-            const barcodeInput = document.getElementById('barcode-input');
-            if (barcodeInput) {
-              barcodeInput.focus();
-              barcodeInput.select();
-            }
-          }, 100);
-        }
-      }
-      
-      function toggleSidebarSection(sectionName) {
-        const booksSection = document.getElementById('sidebar-books');
-        const usersSection = document.getElementById('sidebar-users');
-        
-        if (sectionName === 'books') {
-          if (booksSection.style.display === 'none' || booksSection.style.display === '') {
-            booksSection.style.display = 'block';
-            usersSection.style.display = 'none';
-          } else {
-            booksSection.style.display = 'none';
-          }
-        } else if (sectionName === 'users') {
-          if (usersSection.style.display === 'none' || usersSection.style.display === '') {
-            usersSection.style.display = 'block';
-            booksSection.style.display = 'none';
-          } else {
-            usersSection.style.display = 'none';
-          }
-        }
       }
 
-      // Barcode scanner handler
-      document.addEventListener('DOMContentLoaded', function() {
-        const barcodeForm = document.getElementById('barcode-return-form');
-        const barcodeInput = document.getElementById('barcode-input');
-        const statusDiv = document.getElementById('barcode-status');
-
-        if (barcodeForm && barcodeInput) {
-          // Clear input and refocus after submission
-          barcodeForm.addEventListener('submit', function(e) {
-            const accessionNumber = barcodeInput.value.trim();
-            if (!accessionNumber) {
-              e.preventDefault();
-              showStatus('Please enter or scan a barcode', 'error');
-              return;
-            }
-          });
-
-          // Auto-clear status message after successful scan
-          barcodeInput.addEventListener('input', function() {
-            if (statusDiv.style.display === 'block') {
-              statusDiv.style.display = 'none';
-            }
-          });
+      function displaySuggestions(books, query) {
+        if (!books || books.length === 0) {
+          suggestionsContainer.innerHTML = '<div class="no-results">No books found</div>';
+          suggestionsContainer.classList.add('show');
+          return;
         }
 
-        function showStatus(message, type) {
-          statusDiv.textContent = message;
-          statusDiv.style.display = 'block';
-          if (type === 'success') {
-            statusDiv.style.background = '#d4edda';
-            statusDiv.style.color = '#155724';
-            statusDiv.style.borderLeft = '4px solid #28a745';
-          } else {
-            statusDiv.style.background = '#f8d7da';
-            statusDiv.style.color = '#721c24';
-            statusDiv.style.borderLeft = '4px solid #dc3545';
+        const queryLower = query.toLowerCase();
+        const html = books.slice(0, 8).map(book => {
+          // Determine what matched the search
+          const matches = [];
+          
+          if (book.Title && book.Title.toLowerCase().includes(queryLower)) {
+            matches.push(`<span class="suggestion-match">Title</span>: ${highlightMatch(book.Title, query)}`);
+          }
+          if (book.mainAuthor && book.mainAuthor.toLowerCase().includes(queryLower)) {
+            matches.push(`<span class="suggestion-match">Author</span>: ${highlightMatch(book.mainAuthor, query)}`);
+          }
+          if (book.coAuthor && book.coAuthor.toLowerCase().includes(queryLower)) {
+            matches.push(`<span class="suggestion-match">Co-Author</span>: ${highlightMatch(book.coAuthor, query)}`);
+          }
+          if (book.callNumber && book.callNumber.toLowerCase().includes(queryLower)) {
+            matches.push(`<span class="suggestion-match">Call Number</span>: ${highlightMatch(book.callNumber, query)}`);
+          }
+          if (book.Publisher && book.Publisher.toLowerCase().includes(queryLower)) {
+            matches.push(`<span class="suggestion-match">Publisher</span>: ${highlightMatch(book.Publisher, query)}`);
+          }
+          
+          const matchDetails = matches.length > 0 ? matches.join(' • ') : 'Match found';
+          
+          return `
+            <div class="search-suggestion-item" onclick="goToRecords('${encodeURIComponent(query)}')">
+              <div class="suggestion-title">${escapeHtml(book.Title)}</div>
+              <div class="suggestion-details">
+                ${matchDetails}<br>
+                Available: <strong>${book.available_copies}/${book.total_copies}</strong> copies
+              </div>
+            </div>
+          `;
+        }).join('');
+
+        suggestionsContainer.innerHTML = html;
+        suggestionsContainer.classList.add('show');
+      }
+
+      function highlightMatch(text, query) {
+        if (!text) return '';
+        const regex = new RegExp(`(${escapeRegex(query)})`, 'gi');
+        return escapeHtml(text).replace(regex, '<span class="suggestion-match">$1</span>');
+      }
+
+      function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+      }
+
+      function escapeRegex(string) {
+        return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      }
+
+      function goToRecords(query) {
+        window.location.href = `/records/?search=${query}`;
+      }
+
+      // Close suggestions when clicking outside
+      document.addEventListener('click', function(event) {
+        if (!event.target.closest('.centered-search-box')) {
+          suggestionsContainer.classList.remove('show');
+        }
+      });
+
+      // Handle Enter key to go to fsearch-wrapper
+      searchInput.addEventListener('keypress', function(event) {
+        if (event.key === 'Enter') {
+          const query = this.value.trim();
+          if (query) {
+            goToRecords(encodeURIComponent(query));
           }
         }
       });
-      
-      // Modal functions
-      function openBookEditModal(id, title, mainAuthor, coAuthor, publisher, edition, callNumber, language, type) {
-        document.getElementById('editBookId').value = id;
-        document.getElementById('editBookTitle').value = title;
-        document.getElementById('editBookMainAuthor').value = mainAuthor;
-        document.getElementById('editBookCoAuthor').value = coAuthor;
-        document.getElementById('editBookPublisher').value = publisher;
-        document.getElementById('editBookEdition').value = edition;
-        document.getElementById('editBookCallNumber').value = callNumber;
-        document.getElementById('editBookLanguage').value = language;
-        document.getElementById('editBookType').value = type;
-        document.getElementById('editBookModal').style.display = 'flex';
-      }
-      
-      function closeBookEditModal() {
-        document.getElementById('editBookModal').style.display = 'none';
-      }
-      
-      function openUserEditModal(schoolId, name, email, grade, batch, isActivated) {
-        document.getElementById('editUserSchoolId').value = schoolId;
-        document.getElementById('editUserName').value = name;
-        document.getElementById('editUserEmail').value = email;
-        document.getElementById('editUserSchoolIdDisplay').value = schoolId;
-        document.getElementById('editUserGrade').value = grade;
-        document.getElementById('editUserGradeDisplay').value = grade;
-        document.getElementById('editUserBatch').value = batch;
-        document.getElementById('editUserIsActivated').value = isActivated ? 'true' : 'false';
-        document.getElementById('editUserModal').style.display = 'flex';
-      }
-      
-      function closeUserEditModal() {
-        document.getElementById('editUserModal').style.display = 'none';
-      }
-      
-      // Close modals when clicking outside
-      window.onclick = function(event) {
-        const bookModal = document.getElementById('editBookModal');
-        const userModal = document.getElementById('editUserModal');
-        if (event.target === bookModal) {
-          closeBookEditModal();
-        } else if (event.target === userModal) {
-          closeUserEditModal();
-        }
-      }
-      
-      // Search functions
-      function searchBooks() {
-        const input = document.getElementById('bookSearch');
-        const filter = input.value.toLowerCase();
-        const booksList = document.getElementById('booksList');
-        const items = booksList.getElementsByClassName('book-item');
-        let visibleCount = 0;
-        
-        for (let i = 0; i < items.length; i++) {
-          const title = items[i].getAttribute('data-title');
-          const author = items[i].getAttribute('data-author');
-          const accession = items[i].getAttribute('data-accession');
-          
-          if (title.includes(filter) || author.includes(filter) || accession.includes(filter)) {
-            items[i].style.display = '';
-            visibleCount++;
-          } else {
-            items[i].style.display = 'none';
-          }
-        }
-        
-        // Show "no results" message if no items visible
-        let noResultsMsg = document.getElementById('booksNoResults');
-        if (visibleCount === 0 && filter !== '') {
-          if (!noResultsMsg) {
-            noResultsMsg = document.createElement('p');
-            noResultsMsg.id = 'booksNoResults';
-            noResultsMsg.style.cssText = 'text-align: center; color: var(--secondary-color); padding: 20px; font-size: 0.8rem;';
-            noResultsMsg.textContent = 'No books found';
-            booksList.appendChild(noResultsMsg);
-          }
-        } else if (noResultsMsg) {
-          noResultsMsg.remove();
-        }
-      }
-      
-      function searchUsers() {
-        const input = document.getElementById('userSearch');
-        const filter = input.value.toLowerCase();
-        const usersList = document.getElementById('usersList');
-        const items = usersList.getElementsByClassName('user-item');
-        let visibleCount = 0;
-        
-        for (let i = 0; i < items.length; i++) {
-          const name = items[i].getAttribute('data-name');
-          const schoolId = items[i].getAttribute('data-schoolid');
-          const grade = items[i].getAttribute('data-grade');
-          const batch = items[i].getAttribute('data-batch');
-          
-          if (name.includes(filter) || schoolId.includes(filter) || grade.includes(filter) || batch.includes(filter)) {
-            items[i].style.display = '';
-            visibleCount++;
-          } else {
-            items[i].style.display = 'none';
-          }
-        }
-        
-        // Show "no results" message if no items visible
-        let noResultsMsg = document.getElementById('usersNoResults');
-        if (visibleCount === 0 && filter !== '') {
-          if (!noResultsMsg) {
-            noResultsMsg = document.createElement('p');
-            noResultsMsg.id = 'usersNoResults';
-            noResultsMsg.style.cssText = 'text-align: center; color: var(--secondary-color); padding: 20px; font-size: 0.8rem;';
-            noResultsMsg.textContent = 'No users found';
-            usersList.appendChild(noResultsMsg);
-          }
-        } else if (noResultsMsg) {
-          noResultsMsg.remove();
-        }
-      }
     </script>
   </body>
 </html>
