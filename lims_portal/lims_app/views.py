@@ -19,17 +19,17 @@ def about(request):
 
 def books(request):
     authors = Book.objects.values_list('mainAuthor', flat=True).distinct()
-    locations = Book.objects.values_list('Location', flat=True).distinct()
+    locations = BookCopy.objects.values_list('Location', flat=True).distinct()
 
     selected_author = request.GET.get('author')
     selected_location = request.GET.get('location')
     search_query = request.GET.get('search')
 
-    books_query = Book.objects.filter(is_borrowed=False)
+    books_query = Book.objects.all()
     if selected_author:
         books_query = books_query.filter(mainAuthor=selected_author)
     if selected_location:
-        books_query = books_query.filter(Location=selected_location)
+        books_query = books_query.filter(copies__Location=selected_location).distinct()
     if search_query:
         books_query = books_query.filter(Title__icontains=search_query)
 
@@ -297,11 +297,111 @@ def analytics(request):
     most_borrowed = BorrowHistory.objects.values('bookTitle', 'bookID').annotate(borrow_count=Count('id')).order_by('-borrow_count')[:10]
 
     # ========== LOCATION STATISTICS ==========
-    location_stats = Book.objects.values('Location').annotate(
+    location_stats = BookCopy.objects.values('Location').annotate(
         total=Count('id'),
         borrowed=Count('id', filter=Q(status='Borrowed')),
         available=Count('id', filter=Q(status='Available'))
     ).order_by('-total')
+
+    # ========== GENDER STATISTICS ==========
+    # Overall gender proportions
+    overall_gender = {
+        'Male': sum([
+            grade_Seven.objects.filter(gender='Male').count(),
+            grade_Eight.objects.filter(gender='Male').count(),
+            grade_Nine.objects.filter(gender='Male').count(),
+            grade_Ten.objects.filter(gender='Male').count(),
+            grade_Eleven.objects.filter(gender='Male').count(),
+            grade_Twelve.objects.filter(gender='Male').count(),
+        ]),
+        'Female': sum([
+            grade_Seven.objects.filter(gender='Female').count(),
+            grade_Eight.objects.filter(gender='Female').count(),
+            grade_Nine.objects.filter(gender='Female').count(),
+            grade_Ten.objects.filter(gender='Female').count(),
+            grade_Eleven.objects.filter(gender='Female').count(),
+            grade_Twelve.objects.filter(gender='Female').count(),
+        ]),
+        'Other': sum([
+            grade_Seven.objects.filter(gender='Other').count(),
+            grade_Eight.objects.filter(gender='Other').count(),
+            grade_Nine.objects.filter(gender='Other').count(),
+            grade_Ten.objects.filter(gender='Other').count(),
+            grade_Eleven.objects.filter(gender='Other').count(),
+            grade_Twelve.objects.filter(gender='Other').count(),
+        ]),
+    }
+    total_students = sum(overall_gender.values())
+    overall_gender_proportions = {k: round((v / total_students * 100), 1) if total_students > 0 else 0 for k, v in overall_gender.items()}
+
+    # Pie chart data
+    overall_gender_labels = list(overall_gender_proportions.keys())
+    overall_gender_data = list(overall_gender_proportions.values())
+
+    # Gender proportions per batch
+    batch_gender_stats = {
+        'Grade 7': {
+            'Male': grade_Seven.objects.filter(gender='Male').count(),
+            'Female': grade_Seven.objects.filter(gender='Female').count(),
+            'Other': grade_Seven.objects.filter(gender='Other').count(),
+        },
+        'Grade 8': {
+            'Male': grade_Eight.objects.filter(gender='Male').count(),
+            'Female': grade_Eight.objects.filter(gender='Female').count(),
+            'Other': grade_Eight.objects.filter(gender='Other').count(),
+        },
+        'Grade 9': {
+            'Male': grade_Nine.objects.filter(gender='Male').count(),
+            'Female': grade_Nine.objects.filter(gender='Female').count(),
+            'Other': grade_Nine.objects.filter(gender='Other').count(),
+        },
+        'Grade 10': {
+            'Male': grade_Ten.objects.filter(gender='Male').count(),
+            'Female': grade_Ten.objects.filter(gender='Female').count(),
+            'Other': grade_Ten.objects.filter(gender='Other').count(),
+        },
+        'Grade 11': {
+            'Male': grade_Eleven.objects.filter(gender='Male').count(),
+            'Female': grade_Eleven.objects.filter(gender='Female').count(),
+            'Other': grade_Eleven.objects.filter(gender='Other').count(),
+        },
+        'Grade 12': {
+            'Male': grade_Twelve.objects.filter(gender='Male').count(),
+            'Female': grade_Twelve.objects.filter(gender='Female').count(),
+            'Other': grade_Twelve.objects.filter(gender='Other').count(),
+        },
+    }
+    for batch, genders in batch_gender_stats.items():
+        total = sum(genders.values())
+        batch_gender_stats[batch]['total'] = total
+        batch_gender_stats[batch]['proportions'] = {k: round((v / total * 100), 1) if total > 0 else 0 for k, v in genders.items()}
+
+    # Pie chart data for batches
+    batch_gender_pie_data = {}
+    for batch, stats in batch_gender_stats.items():
+        batch_gender_pie_data[batch] = {
+            'labels': list(stats['proportions'].keys()),
+            'data': list(stats['proportions'].values())
+        }
+
+    # Batch activity (borrows per batch)
+    batch_activity = {
+        'Grade 7': BorrowHistory.objects.filter(accountID__in=grade_Seven.objects.values('school_id')).count(),
+        'Grade 8': BorrowHistory.objects.filter(accountID__in=grade_Eight.objects.values('school_id')).count(),
+        'Grade 9': BorrowHistory.objects.filter(accountID__in=grade_Nine.objects.values('school_id')).count(),
+        'Grade 10': BorrowHistory.objects.filter(accountID__in=grade_Ten.objects.values('school_id')).count(),
+        'Grade 11': BorrowHistory.objects.filter(accountID__in=grade_Eleven.objects.values('school_id')).count(),
+        'Grade 12': BorrowHistory.objects.filter(accountID__in=grade_Twelve.objects.values('school_id')).count(),
+    }
+    # Sort batch_activity by borrow count descending
+    sorted_batch_activity = []
+    for batch, count in sorted(batch_activity.items(), key=lambda x: x[1], reverse=True):
+        sorted_batch_activity.append({
+            'batch': batch,
+            'borrows': count,
+            'gender_proportions': batch_gender_stats[batch]['proportions'],
+            'total_students': batch_gender_stats[batch]['total']
+        })
 
     # ========== BATCH STATISTICS ==========
     # Batch statistics removed as Account model no longer exists
@@ -423,6 +523,14 @@ def analytics(request):
         "most_borrowed": list(most_borrowed),
         "location_stats": list(location_stats),
         "batch_stats": list(batch_stats),
+
+        # Gender statistics
+        "overall_gender_proportions": overall_gender_proportions,
+        "overall_gender_labels": overall_gender_labels,
+        "overall_gender_data": overall_gender_data,
+        "batch_gender_stats": batch_gender_stats,
+        "batch_gender_pie_data": batch_gender_pie_data,
+        "sorted_batch_activity": sorted_batch_activity,
 
         # Recent activity & overdue
         "borrowed_books": recent_activity,

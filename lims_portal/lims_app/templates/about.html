@@ -1,100 +1,242 @@
 <!DOCTYPE html>
-<html lang="en" >
+<html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>About Me</title>
-  <link href='https://fonts.googleapis.com/css?family=Open+Sans:700,800,400' rel='stylesheet' type='text/css'>
+  <title>About - eTala Library</title>
   <link rel="stylesheet" href="https://public.codepenassets.com/css/normalize-5.0.0.min.css">
+  <link rel="stylesheet" href="../static/Scripts/css/cadmin.css">
+  <link href='https://fonts.googleapis.com/css?family=Open+Sans:700,800,400' rel='stylesheet' type='text/css'>
   <link rel='stylesheet' href='https://unpkg.com/lenis@1.3.1/dist/lenis.css'>
   <link rel="stylesheet" href="../static/Scripts/css/about.css">
+  <style>
+    .about-content-wrapper {
+      padding: 2rem;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+  </style>
 </head>
 <body>
-  <div class="loading-overlay" id="loading-overlay">Loading <span class="loading-counter" id="loading-counter">[00]</span></div>
-  <div class="debug-info" id="debug-info">Current Section: 0</div>
-  <div class="scroll-container" id="scroll-container">
-    <div class="fixed-section" id="fixed-section">
-      <div class="fixed-container" id="fixed-container">
-        <div class="background-container" id="background-container">
-          <img src="https://assets.codepen.io/7558/flame-glow-blur-001.jpg" alt="Background 1" class="background-image active" id="background-1">
-          <img src="https://assets.codepen.io/7558/flame-glow-blur-002.jpg" alt="Background 2" class="background-image" id="background-2">
-          <img src="https://assets.codepen.io/7558/flame-glow-blur-003.jpg" alt="Background 3" class="background-image" id="background-3">
-          <img src="https://assets.codepen.io/7558/flame-glow-blur-004.jpg" alt="Background 4" class="background-image" id="background-4">
-          <img src="https://assets.codepen.io/7558/flame-glow-blur-005.jpg" alt="Background 5" class="background-image" id="background-5">
-          <img src="https://assets.codepen.io/7558/flame-glow-blur-006.jpg" alt="Background 6" class="background-image" id="background-6">
-          <img src="https://assets.codepen.io/7558/flame-glow-blur-007.jpg" alt="Background 7" class="background-image" id="background-7">
+  <div class="app-container">
+    <div class="app-header">
+      <div class="app-header-left">
+        <span class="app-icon"></span>
+        <p class="app-name">eTala Library</p>
+        <div class="search-wrapper">
+          <input class="search-input" type="text" placeholder="Search books...">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="feather feather-search" viewBox="0 0 24 24">
+            <defs></defs>
+            <circle cx="11" cy="11" r="8"></circle>
+            <path d="M21 21l-4.35-4.35"></path>
+          </svg>
         </div>
-        <div class="grid-container">
-          <div class="header">
-            <div class="header-row">This is</div>
-            <div class="header-row">eTala</div>
+      </div>
+      <div class="app-header-right">
+        <button class="mode-switch" title="Switch Theme">
+          <svg class="moon" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" width="24" height="24" viewBox="0 0 24 24">
+            <defs></defs>
+            <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"></path>
+          </svg>
+        </button>
+        <button class="notification-btn">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-bell">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+            <path d="M13.73 21a2 2 0 0 1-3.46 0" /></svg>
+        </button>
+      </div>
+      <button class="messages-btn" onclick="window.location.href='{% url 'about' %}'">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-info">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="16" x2="12" y2="12"></line>
+          <line x1="12" y1="8" x2="12.01" y2="8"></line>
+        </svg>
+      </button>
+    </div>
+    <div class="app-content">
+      <div class="app-sidebar">
+        <a href="{% url 'home' %}" class="app-sidebar-link" title="Home">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-home">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+            <polyline points="9 22 9 12 15 12 15 22" /></svg>
+        </a>
+        <a href="{% url 'records' %}" class="app-sidebar-link" title="Records">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-book">
+            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+          </svg>
+        </a>
+        <a href="{% url 'about' %}" class="app-sidebar-link active" title="About">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-info">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="16" x2="12" y2="12"></line>
+            <line x1="12" y1="8" x2="12.01" y2="8"></line>
+          </svg>
+        </a>
+        <a href="{% url 'analytics' %}" class="app-sidebar-link" title="Statistics">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-bar-chart-2">
+            <line x1="18" y1="20" x2="18" y2="10"></line>
+            <line x1="12" y1="20" x2="12" y2="4"></line>
+            <line x1="6" y1="20" x2="6" y2="14"></line>
+          </svg>
+        </a>
+        <a href="#" class="app-sidebar-link" onclick="alert('Activation portal coming soon!'); return false;" title="Activate Account">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-user-check">
+            <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+            <circle cx="8.5" cy="7" r="4"></circle>
+            <polyline points="17 11 19 13 23 9"></polyline>
+          </svg>
+        </a>
+      </div>
+
+      <div class="projects-section about-content-wrapper">
+        <div class="projects-section-header">
+          <p>About eTala</p>
+          <p class="time">Meet the Team</p>
+        </div>
+        <div class="projects-section-header">
+          <p>About eTala</p>
+          <p class="time">Meet the Team</p>
+        </div>
+
+        <div style="background: white; padding: 2rem; border-radius: 12px; margin-bottom: 2rem;">
+          <h2 style="color: #3368a4; margin-top: 0;">eTala Library Management System</h2>
+          <p style="color: #666; font-size: 1.1rem; line-height: 1.8;">
+            eTala is a modern library management system designed to streamline book cataloging, 
+            borrowing, and tracking. Built with cutting-edge technology, it provides an intuitive 
+            interface for both librarians and students.
+          </p>
+        </div>
+
+        <div class="project-boxes jsGridView">
+          <!-- Team Member: Bright -->
+          <div class="project-box-wrapper">
+            <div class="project-box" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+              <div class="project-box-header">
+                <span style="color: white;">Developer</span>
+              </div>
+              <div class="project-box-content-header">
+                <p class="box-content-header" style="color: white;">Bright Bastasa</p>
+                <p class="box-content-subheader" style="color: rgba(255,255,255,0.8);">Lead Developer</p>
+              </div>
+              <div class="box-progress-wrapper">
+                <p class="box-progress-header" style="color: rgba(255,255,255,0.9);">Role</p>
+                <p style="color: white; font-size: 0.9rem;">Full-stack development and system architecture</p>
+              </div>
+            </div>
           </div>
-          <div class="content">
-            <div class="left-column" id="left-column">
-              <div class="artist active" id="artist-0" data-index="0"><a href="/home">Home</a></div>
-              <div class="artist" id="artist-1" data-index="1">Bright</div>
-              <div class="artist" id="artist-2" data-index="2">Jared John</div>
-              <div class="artist" id="artist-3" data-index="3">Lorenz</div>
-              <div class="artist" id="artist-4" data-index="4">Gabriel Dominic</div>
-              <div class="artist" id="artist-5" data-index="5">Juan Miguel</div>
-              <div class="artist" id="artist-6" data-index="6">Rover Von</div>
-            </div>
-            <div class="featured" id="featured">
-              <div class="featured-content active" id="featured-0" data-index="0">
-                <h3>Creative Elements</h3>
+
+          <!-- Team Member: Jared John -->
+          <div class="project-box-wrapper">
+            <div class="project-box" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+              <div class="project-box-header">
+                <span style="color: white;">Developer</span>
               </div>
-              <div class="featured-content" id="featured-1" data-index="1">
-                <h3>Inner Stillness</h3>
+              <div class="project-box-content-header">
+                <p class="box-content-header" style="color: white;">Jared John Campricio</p>
+                <p class="box-content-subheader" style="color: rgba(255,255,255,0.8);">Backend Developer</p>
               </div>
-              <div class="featured-content" id="featured-2" data-index="2">
-                <h3>Deep Knowing</h3>
+              <div class="box-progress-wrapper">
+                <p class="box-progress-header" style="color: rgba(255,255,255,0.9);">Role</p>
+                <p style="color: white; font-size: 0.9rem;">Database management and API development</p>
               </div>
-              <div class="featured-content" id="featured-3" data-index="3">
-                <h3>True Expression</h3>
-              </div>
-              <div class="featured-content" id="featured-4" data-index="4">
-                <h3>Now Moment</h3>
-              </div>
-              <div class="featured-content" id="featured-5" data-index="5">
-                <h3>Deep Attention</h3>
-              </div>
-              <div class="featured-content" id="featured-6" data-index="6">
-                <h3>Patience</h3>
-              </div>
-            </div>
-            <div class="right-column" id="right-column">
-              <div class="category active" id="category-0" data-index="0"><a href="/home">Home</a></div>
-              <div class="category" id="category-1" data-index="1">Bastasa</div>
-              <div class="category" id="category-2" data-index="2">Campricio</div>
-              <div class="category" id="category-3" data-index="3">Wee</div>
-              <div class="category" id="category-4" data-index="4">Bobita</div>
-              <div class="category" id="category-5" data-index="5">Realiza</div>
-              <div class="category" id="category-6" data-index="6">Opay</div>
             </div>
           </div>
-          <div class="footer" id="footer">
-            <div class="header-row">Beyond</div>
-            <div class="header-row">Thinking</div>
-            <div class="progress-indicator">
-              <div class="progress-numbers">
-                <span id="current-section">01</span>
-                <span id="total-sections">07</span>
+
+          <!-- Team Member: Lorenz -->
+          <div class="project-box-wrapper">
+            <div class="project-box" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+              <div class="project-box-header">
+                <span style="color: white;">Developer</span>
               </div>
-              <div class="progress-fill" id="progress-fill"></div>
+              <div class="project-box-content-header">
+                <p class="box-content-header" style="color: white;">Lorenz Wee</p>
+                <p class="box-content-subheader" style="color: rgba(255,255,255,0.8);">Frontend Developer</p>
+              </div>
+              <div class="box-progress-wrapper">
+                <p class="box-progress-header" style="color: rgba(255,255,255,0.9);">Role</p>
+                <p style="color: white; font-size: 0.9rem;">UI/UX design and implementation</p>
+              </div>
             </div>
           </div>
+
+          <!-- Team Member: Gabriel Dominic -->
+          <div class="project-box-wrapper">
+            <div class="project-box" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+              <div class="project-box-header">
+                <span style="color: white;">Developer</span>
+              </div>
+              <div class="project-box-content-header">
+                <p class="box-content-header" style="color: white;">Gabriel Dominic Bobita</p>
+                <p class="box-content-subheader" style="color: rgba(255,255,255,0.8);">QA Engineer</p>
+              </div>
+              <div class="box-progress-wrapper">
+                <p class="box-progress-header" style="color: rgba(255,255,255,0.9);">Role</p>
+                <p style="color: white; font-size: 0.9rem;">Testing and quality assurance</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Team Member: Juan Miguel -->
+          <div class="project-box-wrapper">
+            <div class="project-box" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
+              <div class="project-box-header">
+                <span style="color: white;">Developer</span>
+              </div>
+              <div class="project-box-content-header">
+                <p class="box-content-header" style="color: white;">Juan Miguel Realiza</p>
+                <p class="box-content-subheader" style="color: rgba(255,255,255,0.8);">Documentation</p>
+              </div>
+              <div class="box-progress-wrapper">
+                <p class="box-progress-header" style="color: rgba(255,255,255,0.9);">Role</p>
+                <p style="color: white; font-size: 0.9rem;">Documentation and user guides</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Team Member: Rover Von -->
+          <div class="project-box-wrapper">
+            <div class="project-box" style="background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);">
+              <div class="project-box-header">
+                <span style="color: #333;">Developer</span>
+              </div>
+              <div class="project-box-content-header">
+                <p class="box-content-header" style="color: #333;">Rover Von Opay</p>
+                <p class="box-content-subheader" style="color: #666;">Project Manager</p>
+              </div>
+              <div class="box-progress-wrapper">
+                <p class="box-progress-header" style="color: #555;">Role</p>
+                <p style="color: #333; font-size: 0.9rem;">Project coordination and planning</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style="background: white; padding: 2rem; border-radius: 12px; margin-top: 2rem;">
+          <h3 style="color: #3368a4;">Our Mission</h3>
+          <p style="color: #666; font-size: 1rem; line-height: 1.6;">
+            To provide an efficient, user-friendly library management system that enhances the 
+            learning experience for students and simplifies administrative tasks for librarians. 
+            We believe in making knowledge more accessible through technology.
+          </p>
         </div>
       </div>
     </div>
-    <div class="end-section">
-      <p class="fin">fin</p>
-    </div>
   </div>
 
-    <script src='https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js'></script>
-    <script src='https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/ScrollTrigger.min.js'></script>
-    <script src='https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/CustomEase.min.js'></script>
-    <script src='https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/SplitText.min.js'></script>
-    <script src='https://unpkg.com/lenis@1.3.1/dist/lenis.js'></script>
-    <script  src="../static/Scripts/js/aboutscript.js"></script>
+  <script src='https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js'></script>
+  <script src='https://unpkg.com/lenis@1.3.1/dist/lenis.js'></script>
+  <script>
+    // Theme switcher
+    var lightTheme = "light";
+    var darkTheme = "dark";
+    var theme = localStorage.getItem("theme") || lightTheme;
+    document.body.classList.add(theme);
+    
+    document.querySelector(".mode-switch").addEventListener("click", function() {
+      document.body.classList.toggle("light");
+      document.body.classList.toggle("dark");
+      localStorage.setItem("theme", document.body.classList.contains("light") ? "light" : "dark");
+    });
+  </script>
 </body>
 </html>
