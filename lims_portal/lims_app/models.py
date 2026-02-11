@@ -224,7 +224,7 @@ class BorrowHistory(models.Model):
     accountName = models.CharField(max_length=255, editable=False, blank=True)
 
     borrow_date = models.DateTimeField(default=timezone.now)
-    return_date = models.DateTimeField(null=True, blank=True)Z
+    return_date = models.DateTimeField(null=True, blank=True)
     returned = models.BooleanField(default=False)
 
     def clean(self):
