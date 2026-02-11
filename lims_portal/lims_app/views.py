@@ -478,6 +478,60 @@ def admin_dashboard(request):
             except Exception as e:
                 messages.error(request, f'Error returning book: {str(e)}')
         
+        elif action == 'edit_book':
+            book_id = request.POST.get('book_id')
+            try:
+                book = Book.objects.get(id=book_id)
+                book.Title = request.POST.get('title', book.Title)
+                book.mainAuthor = request.POST.get('main_author', book.mainAuthor)
+                book.coAuthor = request.POST.get('co_author', book.coAuthor)
+                book.Publisher = request.POST.get('publisher', book.Publisher)
+                book.Edition = request.POST.get('edition', book.Edition)
+                book.callNumber = request.POST.get('call_number', book.callNumber)
+                book.Location = request.POST.get('location', book.Location)
+                book.Language = request.POST.get('language', book.Language)
+                book.Type = request.POST.get('type', book.Type)
+                book.status = request.POST.get('status', book.status)
+                book.save()
+                messages.success(request, f'Book "{book.Title}" updated successfully.')
+            except Book.DoesNotExist:
+                messages.error(request, 'Book not found.')
+            except Exception as e:
+                messages.error(request, f'Error updating book: {str(e)}')
+        
+        elif action == 'edit_user':
+            school_id = request.POST.get('school_id')
+            grade = request.POST.get('grade')
+            try:
+                # Determine which model to use based on grade
+                grade_model = None
+                if 'Seven' in grade:
+                    grade_model = grade_Seven
+                elif 'Eight' in grade:
+                    grade_model = grade_Eight
+                elif 'Nine' in grade:
+                    grade_model = grade_Nine
+                elif 'Ten' in grade:
+                    grade_model = grade_Ten
+                elif 'Eleven' in grade:
+                    grade_model = grade_Eleven
+                elif 'Twelve' in grade:
+                    grade_model = grade_Twelve
+                
+                if grade_model:
+                    user = grade_model.objects.get(school_id=school_id)
+                    user.name = request.POST.get('name', user.name)
+                    user.email = request.POST.get('email', user.email)
+                    user.batch = request.POST.get('batch', user.batch)
+                    is_activated = request.POST.get('is_activated', 'false')
+                    user.is_activated = is_activated.lower() == 'true'
+                    user.save()
+                    messages.success(request, f'User "{user.name}" updated successfully.')
+                else:
+                    messages.error(request, 'Invalid grade.')
+            except Exception as e:
+                messages.error(request, f'Error updating user: {str(e)}')
+        
         return redirect('admin_dashboard')
     
     borrowed_books = BorrowHistory.objects.filter(returned=False).select_related()
