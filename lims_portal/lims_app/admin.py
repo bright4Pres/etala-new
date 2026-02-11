@@ -8,7 +8,11 @@ from django.http import HttpResponse
 from django.core.management import call_command
 from django.contrib import messages
 import csv
-from io import StringIO
+from io import StringIO, BytesIO
+import barcode
+from barcode.writer import ImageWriter
+from PIL import Image
+import base64
 
 class CirculationAdmin(admin.ModelAdmin):
     change_list_template = "admin/circulation_change_list.html"
@@ -233,15 +237,78 @@ class StudentActivationAdmin(admin.ModelAdmin):
         return redirect('admin:lims_app_studentactivation_changelist')
 
 class BookAdmin(admin.ModelAdmin):
+    change_list_template = "admin/book_change_list.html"
     search_fields = ['Title', 'mainAuthor', 'coAuthor', 'accessionNumber', 'Location', 'Language', 'Type']
 
     list_display = [
         'Title', 'mainAuthor', 'coAuthor', 'Publisher', 'placeofPublication', 'copyrightDate', 'publicationDate',
-        'Editors', 'accessionNumber', 'status', 'borrow_date', 'return_date',
+        'Editors', 'accession_number_barcode', 'status', 'borrow_date', 'return_date',
         'borrowed_by', 'student_id', 'approve_request'
     ]
 
     list_filter = ['status']  # Allow admin to filter by request type
+
+    def generate_barcode_image(self, accession_number):
+        """Generate a barcode image and return as base64 data URL."""
+        try:
+            # Create barcode
+            code128 = barcode.get('code128', accession_number, writer=ImageWriter())
+            
+            # Adjust parameters based on length for better display
+            length = len(str(accession_number))
+            if length <= 5:
+                # For short codes, make barcode wider and taller
+                module_width = 0.5
+                module_height = 12.0
+                quiet_zone = 2.0
+            else:
+                # Default parameters for longer codes
+                module_width = 0.3
+                module_height = 8.0
+                quiet_zone = 1.0
+            
+            # Generate barcode image in memory without text
+            buffer = BytesIO()
+            code128.write(buffer, {
+                'module_width': module_width,
+                'module_height': module_height,
+                'font_size': 0,  # Disable text in image
+                'text_distance': 0,  # No space for text
+                'quiet_zone': quiet_zone,
+            })
+            
+            # Convert to base64
+            buffer.seek(0)
+            image_data = buffer.getvalue()
+            encoded = base64.b64encode(image_data).decode('utf-8')
+            buffer.close()
+            
+            return f"data:image/png;base64,{encoded}"
+        except Exception as e:
+            # Fallback to text if barcode generation fails
+            return None
+
+    def accession_number_barcode(self, obj):
+        """Display accession number as a barcode image with download link."""
+        barcode_data_url = self.generate_barcode_image(obj.accessionNumber)
+        if barcode_data_url:
+            return format_html(
+                '<div style="text-align: center;">'
+                '<img src="{}" alt="Barcode for {}" style="max-width: 200px; height: auto; border: 1px solid #ddd; padding: 5px; background: white; margin-bottom: 5px;" /><br/>'
+                '<small style="font-family: monospace; font-size: 11px; color: #666; display: block; margin-bottom: 5px;">{}</small>'
+                '<a href="{}" download="barcode_{}.png" style="font-size: 11px; color: #007bff; text-decoration: none;">Download</a>'
+                '</div>',
+                barcode_data_url,
+                obj.accessionNumber,
+                obj.accessionNumber,
+                barcode_data_url,
+                obj.accessionNumber
+            )
+        else:
+            # Fallback to text only
+            return format_html('<span style="font-family: monospace;">{}</span>', obj.accessionNumber)
+    
+    accession_number_barcode.short_description = "Accession Number"
 
     def approve_request(self, obj):
         """Display an approval button for books in 'Processing Borrow' or 'Processing Return' status."""
