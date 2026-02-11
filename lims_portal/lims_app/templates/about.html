@@ -49,6 +49,21 @@
       max-width: 1200px;
       margin: 0 auto;
     }
+    .app-logo {
+      width: 36px;
+      height: 36px;
+      object-fit: contain;
+      flex-shrink: 0;
+      transition: transform 0.2s ease;
+    }
+    .app-logo:hover {
+      transform: scale(1.05);
+    }
+    .app-name {
+      margin: 0;
+      font-weight: 600;
+      white-space: nowrap;
+    }
     .search-suggestions {
       display: none;
       position: absolute;
@@ -106,7 +121,7 @@
   <div class="app-container">
     <div class="app-header">
       <div class="app-header-left">
-        <span class="app-icon"></span>
+        <img src="../static/img/etalalogo.svg" alt="eTala Logo" class="app-logo">
         <p class="app-name">eTala Library</p>
         <div class="search-wrapper">
           <input class="search-input" type="text" id="aboutSearchInput" placeholder="Search books..." autocomplete="off">
