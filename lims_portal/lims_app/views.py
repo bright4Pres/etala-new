@@ -2,7 +2,7 @@ from django.http import JsonResponse
 from django.utils.dateparse import parse_datetime
 from django.utils import timezone
 from django.shortcuts import render, redirect
-from .models import Book, BorrowHistory, grade_Seven, grade_Eight, grade_Nine, grade_Ten, grade_Eleven, grade_Twelve
+from .models import Book, BookCopy, BorrowHistory, grade_Seven, grade_Eight, grade_Nine, grade_Ten, grade_Eleven, grade_Twelve
 from django.views.decorators.csrf import csrf_protect
 from django.db.models import Count, Q, Avg
 from datetime import datetime, timedelta
@@ -83,7 +83,8 @@ def check_duplicate(request):
     return JsonResponse({'error': 'Invalid request method.'}, status=405)
 
 def records(request):
-    all_books = Book.objects.all()
+    # Show individual book copies (physical items) not books (bibliographic records)
+    all_copies = BookCopy.objects.select_related('book').all()
 
     # Capture user-selected filters
     book_type = request.GET.get('book_type')
@@ -94,31 +95,33 @@ def records(request):
     location = request.GET.get('location')
     search_query = request.GET.get('search')
 
-    # Apply filters dynamically
+    # Apply filters dynamically (filtering through related book)
     if book_type:
-        all_books = all_books.filter(Type=book_type)
+        all_copies = all_copies.filter(book__Type=book_type)
     if language:
-        all_books = all_books.filter(Language=language)
+        all_copies = all_copies.filter(book__Language=language)
     if publisher:
-        all_books = all_books.filter(Publisher=publisher)
+        all_copies = all_copies.filter(book__Publisher=publisher)
     if main_author:
-        all_books = all_books.filter(mainAuthor=main_author)
+        all_copies = all_copies.filter(book__mainAuthor=main_author)
     if co_author:
-        all_books = all_books.filter(coAuthor=co_author)
+        all_copies = all_copies.filter(book__coAuthor=co_author)
     if location:
-        all_books = all_books.filter(Location=location)
+        all_copies = all_copies.filter(Location=location)
     if search_query:
-        all_books = all_books.filter(
-            Q(Title__icontains=search_query) | Q(mainAuthor__icontains=search_query) | Q(coAuthor__icontains=search_query)
+        all_copies = all_copies.filter(
+            Q(book__Title__icontains=search_query) | 
+            Q(book__mainAuthor__icontains=search_query) | 
+            Q(book__coAuthor__icontains=search_query) |
+            Q(accessionNumber__icontains=search_query)
         )
 
-    # values based on all books for filter options
-    all_books_for_filters = Book.objects.all()
-    distinct_languages = all_books_for_filters.values_list("Language", flat=True).distinct()
-    distinct_publishers = all_books_for_filters.values_list("Publisher", flat=True).distinct()
-    distinct_authors = all_books_for_filters.values_list("mainAuthor", flat=True).distinct()
-    distinct_coauthors = all_books_for_filters.values_list("coAuthor", flat=True).distinct()
-    distinct_locations = all_books_for_filters.values_list("Location", flat=True).distinct()
+    # Get distinct values for filter options
+    distinct_languages = Book.objects.values_list("Language", flat=True).distinct()
+    distinct_publishers = Book.objects.values_list("Publisher", flat=True).distinct()
+    distinct_authors = Book.objects.values_list("mainAuthor", flat=True).distinct()
+    distinct_coauthors = Book.objects.values_list("coAuthor", flat=True).distinct().exclude(coAuthor__isnull=True)
+    distinct_locations = BookCopy.objects.values_list("Location", flat=True).distinct()
 
     selected_filters = {
         "book_type": book_type,
@@ -131,11 +134,29 @@ def records(request):
     }
 
     if request.headers.get("X-Requested-With") == "XMLHttpRequest":
-        books_data = list(all_books.values("Title", "mainAuthor", "coAuthor", "Publisher", "placeofPublication", "copyrightDate", "publicationDate", "Editors", "accessionNumber", "Location", "Language", "Type", "is_borrowed", "borrowed_by", "student_id", "borrow_date", "return_date"))
-        return JsonResponse({"books": books_data})
+        # Build response with book copy data and related book info
+        copies_data = []
+        for copy in all_copies:
+            copies_data.append({
+                "accessionNumber": copy.accessionNumber,
+                "Location": copy.Location,
+                "status": copy.status,
+                "borrowed_by": copy.borrowed_by,
+                "student_id": copy.student_id,
+                "borrow_date": copy.borrow_date.isoformat() if copy.borrow_date else None,
+                "return_date": copy.return_date.isoformat() if copy.return_date else None,
+                "Title": copy.book.Title,
+                "mainAuthor": copy.book.mainAuthor,
+                "coAuthor": copy.book.coAuthor,
+                "Publisher": copy.book.Publisher,
+                "Edition": copy.book.Edition,
+                "Language": copy.book.Language,
+                "Type": copy.book.Type,
+            })
+        return JsonResponse({"books": copies_data})
 
     return render(request, "records.html", {
-        "recorded_books": all_books,
+        "recorded_books": all_copies,
         "distinct_languages": distinct_languages,
         "distinct_publishers": distinct_publishers,
         "distinct_authors": distinct_authors,
@@ -419,19 +440,34 @@ def admin_dashboard(request):
         action = request.POST.get('action')
         
         if action == 'checkout':
-            book_id = request.POST.get('book_id', '').strip()
+            accession_number = request.POST.get('book_id', '').strip()
             student_id = request.POST.get('student_id', '').strip()
             try:
-                # Verify book exists and is available
-                book = Book.objects.get(accessionNumber=book_id)
-                if book.status != 'Available':
-                    messages.error(request, f'Book "{book.Title}" is not available for checkout.')
+                # Find the book copy by accession number
+                book_copy = BookCopy.objects.get(accessionNumber=accession_number)
+                if book_copy.status != 'Available':
+                    messages.error(request, f'Book "{book_copy.book.Title}" is not available for checkout.')
                 else:
-                    borrow = BorrowHistory(bookID=book_id, accountID=student_id)
+                    # Create borrow history
+                    borrow = BorrowHistory(
+                        book_copy=book_copy,
+                        bookID=accession_number,  # Keep for backward compatibility
+                        accountID=student_id,
+                        bookTitle=book_copy.book.Title,
+                        accountName=student_id  # Could look up student name here
+                    )
                     borrow.save()
-                    messages.success(request, f'Book "{book.Title}" (#{book_id}) checked out to student {student_id}.')
-            except Book.DoesNotExist:
-                messages.error(request, f'Book with accession number {book_id} not found.')
+                    
+                    # Update book copy status
+                    book_copy.status = 'Borrowed'
+                    book_copy.borrowed_by = student_id
+                    book_copy.student_id = student_id
+                    book_copy.borrow_date = timezone.now()
+                    book_copy.save()
+                    
+                    messages.success(request, f'Book "{book_copy.book.Title}" (#{accession_number}) checked out to student {student_id}.')
+            except BookCopy.DoesNotExist:
+                messages.error(request, f'Book copy with accession number {accession_number} not found.')
             except Exception as e:
                 messages.error(request, f'Error checking out book: {str(e)}')
                 
@@ -440,15 +476,18 @@ def admin_dashboard(request):
             try:
                 borrow = BorrowHistory.objects.get(id=borrow_id, returned=False)
                 borrow.returned = True
+                borrow.return_date = timezone.now()
                 borrow.save()
-                # Update book status
-                book = Book.objects.get(accessionNumber=borrow.bookID)
-                book.status = 'Available'
-                book.borrowed_by = None
-                book.student_id = None
-                book.borrow_date = None
-                book.return_date = None
-                book.save()
+                
+                # Update book copy status
+                book_copy = borrow.book_copy
+                book_copy.status = 'Available'
+                book_copy.borrowed_by = None
+                book_copy.student_id = None
+                book_copy.borrow_date = None
+                book_copy.return_date = None
+                book_copy.save()
+                
                 messages.success(request, 'Book returned successfully.')
             except BorrowHistory.DoesNotExist:
                 messages.error(request, 'Borrow record not found.')
@@ -458,23 +497,28 @@ def admin_dashboard(request):
         elif action == 'return_barcode':
             accession_number = request.POST.get('accession_number', '').strip()
             try:
-                # Find the active borrow record for this book
-                borrow = BorrowHistory.objects.get(bookID=accession_number, returned=False)
+                # Find the book copy
+                book_copy = BookCopy.objects.get(accessionNumber=accession_number)
+                
+                # Find the active borrow record for this copy
+                borrow = BorrowHistory.objects.get(book_copy=book_copy, returned=False)
                 borrow.returned = True
+                borrow.return_date = timezone.now()
                 borrow.save()
-                # Update book status
-                book = Book.objects.get(accessionNumber=accession_number)
-                book.status = 'Available'
-                book.borrowed_by = None
-                book.student_id = None
-                book.borrow_date = None
-                book.return_date = None
-                book.save()
-                messages.success(request, f'Book "{book.Title}" (#{accession_number}) returned successfully.')
+                
+                # Update book copy status
+                book_copy.status = 'Available'
+                book_copy.borrowed_by = None
+                book_copy.student_id = None
+                book_copy.borrow_date = None
+                book_copy.return_date = None
+                book_copy.save()
+                
+                messages.success(request, f'Book "{book_copy.book.Title}" (#{accession_number}) returned successfully.')
+            except BookCopy.DoesNotExist:
+                messages.error(request, f'Book copy with accession number {accession_number} not found.')
             except BorrowHistory.DoesNotExist:
                 messages.error(request, f'No active borrow record found for accession number: {accession_number}')
-            except Book.DoesNotExist:
-                messages.error(request, f'Book with accession number {accession_number} not found.')
             except Exception as e:
                 messages.error(request, f'Error returning book: {str(e)}')
         
@@ -488,10 +532,8 @@ def admin_dashboard(request):
                 book.Publisher = request.POST.get('publisher', book.Publisher)
                 book.Edition = request.POST.get('edition', book.Edition)
                 book.callNumber = request.POST.get('call_number', book.callNumber)
-                book.Location = request.POST.get('location', book.Location)
                 book.Language = request.POST.get('language', book.Language)
                 book.Type = request.POST.get('type', book.Type)
-                book.status = request.POST.get('status', book.status)
                 book.save()
                 messages.success(request, f'Book "{book.Title}" updated successfully.')
             except Book.DoesNotExist:
@@ -542,8 +584,25 @@ def admin_dashboard(request):
     
     # Get total books and users
     total_books_count = Book.objects.count()
-    # Get all books regardless of status (not just available)
-    all_books = Book.objects.all().order_by('-id')[:100]  # Get recent 100 books of all statuses
+    # Get all books with their copies information
+    all_books = []
+    for book in Book.objects.all().order_by('-id')[:50]:
+        copies = book.copies.all()
+        all_books.append({
+            'id': book.id,
+            'Title': book.Title,
+            'mainAuthor': book.mainAuthor,
+            'coAuthor': book.coAuthor,
+            'Publisher': book.Publisher,
+            'Edition': book.Edition,
+            'callNumber': book.callNumber,
+            'Language': book.Language,
+            'Type': book.Type,
+            'total_copies': book.get_total_copies(),
+            'available_copies': book.get_available_copies(),
+            'borrowed_copies': book.get_borrowed_copies(),
+            'copies': [{'accessionNumber': c.accessionNumber, 'status': c.status, 'Location': c.Location} for c in copies]
+        })
     
     # Get all users from all grade models
     all_users = []
@@ -601,15 +660,31 @@ def admin_return(request):
         try:
             borrow = BorrowHistory.objects.get(id=borrow_id, returned=False)
             borrow.returned = True
+            borrow.return_date = timezone.now()
             borrow.save()
-            # Update book status
-            book = Book.objects.get(accessionNumber=borrow.bookID)
-            book.status = 'Available'
-            book.borrowed_by = None
-            book.student_id = None
-            book.borrow_date = None
-            book.return_date = None
-            book.save()
+            
+            # Update book copy status
+            if borrow.book_copy:
+                book_copy = borrow.book_copy
+                book_copy.status = 'Available'
+                book_copy.borrowed_by = None
+                book_copy.student_id = None
+                book_copy.borrow_date = None
+                book_copy.return_date = None
+                book_copy.save()
+            else:
+                # Fallback for legacy records without book_copy
+                try:
+                    book_copy = BookCopy.objects.get(accessionNumber=borrow.bookID)
+                    book_copy.status = 'Available'
+                    book_copy.borrowed_by = None
+                    book_copy.student_id = None
+                    book_copy.borrow_date = None
+                    book_copy.return_date = None
+                    book_copy.save()
+                except BookCopy.DoesNotExist:
+                    pass
+            
             messages.success(request, 'Book returned successfully.')
         except BorrowHistory.DoesNotExist:
             messages.error(request, 'Borrow record not found.')

@@ -110,20 +110,20 @@
           <tbody>
             {% for book in recorded_books %}
             <tr class="book-row" data-details="
-              <strong>Title:</strong> {{ book.Title|default:'-' }}<br>
-              <strong>Main Author:</strong> {{ book.mainAuthor|default:'-' }}<br>
-              <strong>Co-Author:</strong> {{ book.coAuthor|default:'-' }}<br>
-              <strong>Edition:</strong> {{ book.Edition|default:'-' }}<br>
-              <strong>Acquisition Status:</strong> {{ book.acquisitionStatus|default:'-' }}<br>
-              <strong>Editors:</strong> {{ book.Editors|default:'-' }}<br>
-              <strong>Publisher:</strong> {{ book.Publisher|default:'-' }}<br>
-              <strong>Place of Publication:</strong> {{ book.placeofPublication|default:'-' }}<br>
-              <strong>Publication Date:</strong> {% if book.publicationDate %}{{ book.publicationDate|date:'Y-m-d' }}{% else %}-{% endif %}<br>
-              <strong>Copyright Date:</strong> {% if book.copyrightDate %}{{ book.copyrightDate|date:'Y-m-d' }}{% else %}-{% endif %}<br>
-              <strong>Language:</strong> {{ book.Language }}<br>
-              <strong>Type:</strong> {{ book.Type }}<br>
+              <strong>Title:</strong> {{ book.book.Title|default:'-' }}<br>
+              <strong>Main Author:</strong> {{ book.book.mainAuthor|default:'-' }}<br>
+              <strong>Co-Author:</strong> {{ book.book.coAuthor|default:'-' }}<br>
+              <strong>Edition:</strong> {{ book.book.Edition|default:'-' }}<br>
+              <strong>Acquisition Status:</strong> {{ book.book.acquisitionStatus|default:'-' }}<br>
+              <strong>Editors:</strong> {{ book.book.Editors|default:'-' }}<br>
+              <strong>Publisher:</strong> {{ book.book.Publisher|default:'-' }}<br>
+              <strong>Place of Publication:</strong> {{ book.book.placeofPublication|default:'-' }}<br>
+              <strong>Publication Date:</strong> {% if book.book.publicationDate %}{{ book.book.publicationDate|date:'Y-m-d' }}{% else %}-{% endif %}<br>
+              <strong>Copyright Date:</strong> {% if book.book.copyrightDate %}{{ book.book.copyrightDate|date:'Y-m-d' }}{% else %}-{% endif %}<br>
+              <strong>Language:</strong> {{ book.book.Language }}<br>
+              <strong>Type:</strong> {{ book.book.Type }}<br>
               <strong>Accession Number:</strong> {{ book.accessionNumber }}<br>
-              <strong>Call Number:</strong> {{ book.callNumber }}<br>
+              <strong>Call Number:</strong> {{ book.book.callNumber }}<br>
               {% if book.status == 'Borrowed' %}
                 <hr>
                 <strong>Borrowed By:</strong> {{ book.borrowed_by }}<br>
@@ -132,7 +132,7 @@
                 <strong>Return Date:</strong> {{ book.return_date|date:'Y-m-d' }}<br>
               {% endif %}
             ">
-              <td><strong>{{ book.Title }}</strong> by {{ book.mainAuthor }}</td>
+              <td><strong>{{ book.book.Title }}</strong> by {{ book.book.mainAuthor }}</td>
               <td style="text-align:center;">
                 {% if book.status == 'Processing Borrow' %}
                   <span>Processing Borrow</span>

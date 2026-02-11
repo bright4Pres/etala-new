@@ -1,36 +1,44 @@
 """
-Initialization script to create 100 sample books for testing.
+Initialization script to create sample books with multiple copies for testing.
 Usage: python manage.py init_sample_books
 """
 from django.core.management.base import BaseCommand
-from lims_app.models import Book
+from lims_app.models import Book, BookCopy
 from datetime import datetime, timedelta
 import random
 
 
 class Command(BaseCommand):
-    help = 'Create 100 sample books for testing'
+    help = 'Create sample books with multiple physical copies for testing'
 
     def add_arguments(self, parser):
         parser.add_argument(
-            '--count',
+            '--books',
             type=int,
-            default=100,
-            help='Number of sample books to create (default: 100)',
+            default=50,
+            help='Number of unique books to create (default: 50)',
+        )
+        parser.add_argument(
+            '--copies-per-book',
+            type=int,
+            default=3,
+            help='Average number of copies per book (default: 3)',
         )
         parser.add_argument(
             '--clear',
             action='store_true',
-            help='Clear all existing books before creating samples',
+            help='Clear all existing books and copies before creating samples',
         )
 
     def handle(self, *args, **options):
-        count = options['count']
+        book_count = options['books']
+        avg_copies = options['copies_per_book']
         clear_existing = options['clear']
         
         if clear_existing:
+            BookCopy.objects.all().delete()
             Book.objects.all().delete()
-            self.stdout.write(self.style.WARNING('Cleared all existing books\n'))
+            self.stdout.write(self.style.WARNING('Cleared all existing books and copies\n'))
         
         # Sample data
         book_titles = [
@@ -90,20 +98,13 @@ class Command(BaseCommand):
         languages = ["English", "Filipino", "Spanish", "French"]
         book_types = ["Books", "Analytics", "Article", "Thesis"]
         
-        self.stdout.write(f'Creating {count} sample books...\n')
+        self.stdout.write(f'Creating {book_count} unique books with ~{avg_copies} copies each...\n')
         
-        created_count = 0
+        books_created = 0
+        copies_created = 0
         skipped_count = 0
         
-        for i in range(count):
-            # Generate unique accession number
-            year = random.randint(2015, 2025)
-            accession_num = f"BK{year}-{str(i+1).zfill(5)}"
-            
-            # Check if accession number already exists
-            if Book.objects.filter(accessionNumber=accession_num).exists():
-                accession_num = f"BK{year}-{str(random.randint(10000, 99999))}"
-            
+        for i in range(book_count):
             # Random book details
             title_base = random.choice(book_titles)
             volume = random.choice(["", " Vol. I", " Vol. II", " Vol. III", ""])
@@ -121,7 +122,6 @@ class Command(BaseCommand):
             main_author = f"{author_first} {author_last}"
             
             # Generate call number (Library classification)
-            # Format: Dewey Decimal-like or Library of Congress-like
             call_prefix = random.choice([
                 "QC", "QD", "QH", "QA", "PE", "PL", "HT", "HD", "LB", "Z",  # LC style
                 "500", "540", "570", "510", "420", "800", "300", "370", "000"  # Dewey style
@@ -144,7 +144,6 @@ class Command(BaseCommand):
                 co_author = f"{co_first} {co_last}"
             
             publisher = random.choice(publishers)
-            location = random.choice(locations)
             language = random.choice(languages)
             book_type = random.choice(book_types)
             
@@ -153,9 +152,9 @@ class Command(BaseCommand):
             copyright_date = datetime(copyright_year, random.randint(1, 12), random.randint(1, 28))
             publication_date = copyright_date + timedelta(days=random.randint(0, 365))
             
-            # Create book
+            # Create the Book record (bibliographic data)
             try:
-                Book.objects.create(
+                book = Book.objects.create(
                     Title=title,
                     mainAuthor=main_author,
                     coAuthor=co_author,
@@ -165,17 +164,39 @@ class Command(BaseCommand):
                     copyrightDate=copyright_date.date(),
                     publicationDate=publication_date.date(),
                     Editors=f"Editorial Board of {publisher}" if random.random() > 0.7 else None,
-                    accessionNumber=accession_num,
                     callNumber=call_number,
-                    Location=location,
                     Language=language,
-                    Type=book_type,
-                    status='Available'
+                    Type=book_type
                 )
-                created_count += 1
+                books_created += 1
                 
-                if (created_count) % 10 == 0:
-                    self.stdout.write(f'  Created {created_count} books...')
+                # Create multiple physical copies of this book
+                num_copies = random.randint(max(1, avg_copies - 2), avg_copies + 2)
+                for copy_num in range(num_copies):
+                    year = random.randint(2015, 2025)
+                    accession_num = f"BK{year}-{str(random.randint(10000, 99999))}"
+                    
+                    # Ensure unique accession number
+                    while BookCopy.objects.filter(accessionNumber=accession_num).exists():
+                        accession_num = f"BK{year}-{str(random.randint(10000, 99999))}"
+                    
+                    location = random.choice(locations)
+                    
+                    # Most copies available, some borrowed
+                    status = 'Available'
+                    if random.random() < 0.2:  # 20% chance borrowed
+                        status = 'Borrowed'
+                    
+                    BookCopy.objects.create(
+                        book=book,
+                        accessionNumber=accession_num,
+                        Location=location,
+                        status=status
+                    )
+                    copies_created += 1
+                
+                if (books_created) % 10 == 0:
+                    self.stdout.write(f'  Created {books_created} books with {copies_created} copies...')
                     
             except Exception as e:
                 skipped_count += 1
@@ -184,23 +205,34 @@ class Command(BaseCommand):
                 )
         
         # Summary
-        self.stdout.write('\n' + '='*50)
+        self.stdout.write('\n' + '='*60)
         self.stdout.write(
             self.style.SUCCESS(
-                f'✅ Successfully created {created_count} sample books!'
+                f'✅ Successfully created {books_created} books with {copies_created} physical copies!'
+            )
+        )
+        self.stdout.write(
+            self.style.SUCCESS(
+                f'   Average: {copies_created/books_created:.1f} copies per book'
             )
         )
         if skipped_count > 0:
             self.stdout.write(
                 self.style.WARNING(f'⚠ Skipped {skipped_count} books due to errors')
             )
-        self.stdout.write('='*50)
+        self.stdout.write('='*60)
         
         # Display some sample books
         self.stdout.write('\nSample of created books:')
         sample_books = Book.objects.order_by('-id')[:5]
         for book in sample_books:
             edition_text = f" - {book.Edition}" if book.Edition else ""
+            copies = book.copies.all()
+            available = book.get_available_copies()
+            total = book.get_total_copies()
             self.stdout.write(
-                f'  • [{book.callNumber}] {book.accessionNumber}: {book.Title}{edition_text} by {book.mainAuthor} ({book.Type})'
+                f'  • [{book.callNumber}] {book.Title}{edition_text} by {book.mainAuthor}'
+            )
+            self.stdout.write(
+                f'    {available}/{total} available - Copies: {", ".join([c.accessionNumber for c in copies[:3]])}...'
             )

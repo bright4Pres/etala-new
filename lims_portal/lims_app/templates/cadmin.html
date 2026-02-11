@@ -106,14 +106,33 @@
       </div>
       <div id="booksList" style="max-height: calc(100vh - 290px); overflow-y: auto; padding: 12px;">
         {% for book in all_books %}
-        <div class="book-item" data-title="{{ book.Title|lower }}" data-author="{{ book.mainAuthor|lower }}" data-accession="{{ book.accessionNumber|lower }}" style="padding: 10px; margin-bottom: 8px; background: var(--message-box-hover); border-radius: 8px; border-left: 3px solid {% if book.status == 'Available' %}#28a745{% else %}#dc3545{% endif %}; position: relative;">
-          <button onclick="openBookEditModal('{{ book.id }}', '{{ book.Title|escapejs }}', '{{ book.mainAuthor|escapejs }}', '{{ book.coAuthor|escapejs }}', '{{ book.Publisher|escapejs }}', '{{ book.Edition|escapejs }}', '{{ book.callNumber|escapejs }}', '{{ book.accessionNumber }}', '{{ book.Location|escapejs }}', '{{ book.Language }}', '{{ book.Type }}', '{{ book.status }}')" style="position: absolute; top: 8px; right: 8px; background: #3368a4; color: white; border: none; border-radius: 4px; padding: 4px 8px; font-size: 0.7rem; cursor: pointer;">Edit</button>
-          <div style="font-weight: 600; font-size: 0.85rem; color: var(--main-color); margin-bottom: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding-right: 50px;">{{ book.Title }}</div>
-          <div style="font-size: 0.75rem; color: var(--secondary-color); margin-bottom: 4px;">{{ book.mainAuthor }}</div>
-          <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.7rem;">
-            <span style="color: var(--secondary-color);">{{ book.accessionNumber }}</span>
-            <span style="padding: 2px 6px; border-radius: 6px; {% if book.status == 'Available' %}background: #d4edda; color: #155724;{% else %}background: #f8d7da; color: #721c24;{% endif %}">{{ book.status }}</span>
+        <div class="book-item" data-title="{{ book.Title|lower }}" data-author="{{ book.mainAuthor|lower }}" data-callnumber="{{ book.callNumber|lower }}" style="padding: 12px; margin-bottom: 10px; background: var(--message-box-hover); border-radius: 8px; border-left: 4px solid {% if book.available_copies > 0 %}#28a745{% else %}#dc3545{% endif %}; position: relative;">
+          <button onclick="openBookEditModal('{{ book.id }}', '{{ book.Title|escapejs }}', '{{ book.mainAuthor|escapejs }}', '{{ book.coAuthor|escapejs }}', '{{ book.Publisher|escapejs }}', '{{ book.Edition|escapejs }}', '{{ book.callNumber|escapejs }}', '{{ book.Language }}', '{{ book.Type }}')" style="position: absolute; top: 10px; right: 10px; background: #3368a4; color: white; border: none; border-radius: 4px; padding: 4px 8px; font-size: 0.7rem; cursor: pointer;">Edit</button>
+          
+          <div style="font-weight: 600; font-size: 0.9rem; color: var(--main-color); margin-bottom: 6px; padding-right: 50px;">{{ book.Title }}</div>
+          <div style="font-size: 0.75rem; color: var(--secondary-color); margin-bottom: 6px;">{{ book.mainAuthor }}</div>
+          
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; padding: 6px; background: var(--app-container); border-radius: 6px;">
+            <span style="font-size: 0.75rem; color: var(--main-color); font-weight: 500;">{{ book.available_copies }} available / {{ book.total_copies }} copies</span>
+            <span style="font-size: 0.7rem; color: var(--secondary-color);">{{ book.callNumber }}</span>
           </div>
+          
+          <details style="margin-top: 8px;">
+            <summary style="cursor: pointer; font-size: 0.75rem; font-weight: 500; color: var(--main-color); padding: 4px; border-radius: 4px; background: var(--app-container);">View All Copies ({{ book.total_copies }})</summary>
+            <div style="margin-top: 8px; padding-left: 8px;">
+              {% for copy in book.copies %}
+              <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px; margin-bottom: 4px; background: var(--app-container); border-radius: 4px; border-left: 2px solid {% if copy.status == 'Available' %}#28a745{% else %}#dc3545{% endif %};">
+                <div style="flex: 1;">
+                  <div style="font-size: 0.7rem; font-weight: 500; color: var(--main-color);">{{ copy.accessionNumber }}</div>
+                  <div style="font-size: 0.65rem; color: var(--secondary-color);">{{ copy.Location }}</div>
+                </div>
+                <span style="padding: 2px 6px; border-radius: 4px; font-size: 0.65rem; {% if copy.status == 'Available' %}background: #d4edda; color: #155724;{% else %}background: #f8d7da; color: #721c24;{% endif %}">{{ copy.status }}</span>
+              </div>
+              {% empty %}
+              <p style="font-size: 0.7rem; color: var(--secondary-color); padding: 8px;">No copies available</p>
+              {% endfor %}
+            </div>
+          </details>
         </div>
         {% empty %}
         <p style="text-align: center; color: var(--secondary-color); padding: 20px; font-size: 0.8rem;">No books</p>
@@ -446,19 +465,8 @@
           
           <div class="form-row">
             <div class="form-group">
-              <label>Call Number</label>
-              <input type="text" name="call_number" id="editBookCallNumber">
-            </div>
-            <div class="form-group">
-              <label>Accession Number *</label>
-              <input type="text" name="accession_number" id="editBookAccessionNumber" readonly>
-            </div>
-          </div>
-          
-          <div class="form-row">
-            <div class="form-group">
-              <label>Location</label>
-              <input type="text" name="location" id="editBookLocation">
+              <label>Call Number *</label>
+              <input type="text" name="call_number" id="editBookCallNumber" required>
             </div>
             <div class="form-group">
               <label>Language</label>
@@ -481,14 +489,6 @@
                 <option value="Textbook">Textbook</option>
                 <option value="Magazine">Magazine</option>
                 <option value="Other">Other</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label>Status</label>
-              <select name="status" id="editBookStatus">
-                <option value="Available">Available</option>
-                <option value="Borrowed">Borrowed</option>
-                <option value="Unavailable">Unavailable</option>
               </select>
             </div>
           </div>
@@ -664,7 +664,7 @@
       });
       
       // Modal functions
-      function openBookEditModal(id, title, mainAuthor, coAuthor, publisher, edition, callNumber, accessionNumber, location, language, type, status) {
+      function openBookEditModal(id, title, mainAuthor, coAuthor, publisher, edition, callNumber, language, type) {
         document.getElementById('editBookId').value = id;
         document.getElementById('editBookTitle').value = title;
         document.getElementById('editBookMainAuthor').value = mainAuthor;
@@ -672,11 +672,8 @@
         document.getElementById('editBookPublisher').value = publisher;
         document.getElementById('editBookEdition').value = edition;
         document.getElementById('editBookCallNumber').value = callNumber;
-        document.getElementById('editBookAccessionNumber').value = accessionNumber;
-        document.getElementById('editBookLocation').value = location;
         document.getElementById('editBookLanguage').value = language;
         document.getElementById('editBookType').value = type;
-        document.getElementById('editBookStatus').value = status;
         document.getElementById('editBookModal').style.display = 'flex';
       }
       

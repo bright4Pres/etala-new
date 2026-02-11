@@ -203,9 +203,18 @@ class activeStudents(models.Model):
 # ---------------------------------
 class BorrowHistory(models.Model):
     # --- User Inputs ---
+    book_copy = models.ForeignKey(
+        'BookCopy',
+        on_delete=models.CASCADE,
+        related_name='borrow_history',
+        help_text="The physical book copy that was borrowed"
+    )
+    # Keep bookID for backward compatibility during migration
     bookID = models.CharField(
         max_length=100,
-        help_text="Enter Book Accession Number",
+        help_text="Book Accession Number (deprecated, use book_copy)",
+        blank=True,
+        null=True
     )
     accountID = models.CharField(
         max_length=100,
@@ -215,7 +224,7 @@ class BorrowHistory(models.Model):
     accountName = models.CharField(max_length=255, editable=False, blank=True)
 
     borrow_date = models.DateTimeField(default=timezone.now)
-    return_date = models.DateTimeField(null=True, blank=True)
+    return_date = models.DateTimeField(null=True, blank=True)Z
     returned = models.BooleanField(default=False)
 
     def clean(self):
@@ -341,17 +350,42 @@ class Book(models.Model):
     copyrightDate = models.DateField(null=True, blank=True)
     publicationDate = models.DateField(null=True, blank=True)
     Editors = models.CharField(max_length=255, null=True, blank=True)
-    accessionNumber = models.CharField(max_length=50, unique=True)
     callNumber = models.CharField(max_length=50, unique=True)
-    Location = models.CharField(max_length=255)
     Language = models.CharField(max_length=255)
     Type = models.CharField(max_length=50, choices=type_CHOICES, default="Other")
+    acquisitionStatus = models.CharField(max_length=255, choices=acquisition_STATUS, null=True, blank=True)
+    # Removed copy-specific fields: accessionNumber, status, borrowed_by, student_id, borrow_date, return_date, Location
+    
+    def get_total_copies(self):
+        """Get total number of copies for this book"""
+        return self.copies.count()
+    
+    def get_available_copies(self):
+        """Get number of available copies"""
+        return self.copies.filter(status='Available').count()
+    
+    def get_borrowed_copies(self):
+        """Get number of borrowed copies"""
+        return self.copies.filter(status='Borrowed').count()
+
+    def __str__(self):
+        return f"{self.Title} ({self.get_available_copies()}/{self.get_total_copies()} available)"
+
+
+class BookCopy(models.Model):
+    """Individual copy of a book with its own accession number and status"""
+    book = models.ForeignKey(Book, on_delete=models.CASCADE, related_name='copies')
+    accessionNumber = models.CharField(max_length=50, unique=True)
+    Location = models.CharField(max_length=255)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Available')
     borrowed_by = models.CharField(max_length=255, null=True, blank=True)
     student_id = models.CharField(max_length=50, null=True, blank=True)
     borrow_date = models.DateField(null=True, blank=True)
-    acquisitionStatus = models.CharField(max_length=255, choices=acquisition_STATUS, null=True, blank=True)
     return_date = models.DateField(null=True, blank=True)
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Available')
 
     def __str__(self):
-        return self.Title
+        return f"{self.book.Title} - {self.accessionNumber} ({self.status})"
+    
+    class Meta:
+        verbose_name_plural = "Book Copies"
+        ordering = ['accessionNumber']
