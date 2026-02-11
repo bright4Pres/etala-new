@@ -542,7 +542,8 @@ def admin_dashboard(request):
     
     # Get total books and users
     total_books_count = Book.objects.count()
-    all_books = Book.objects.all().order_by('-id')[:50]  # Get recent 50 books
+    # Get all books regardless of status (not just available)
+    all_books = Book.objects.all().order_by('-id')[:100]  # Get recent 100 books of all statuses
     
     # Get all users from all grade models
     all_users = []
