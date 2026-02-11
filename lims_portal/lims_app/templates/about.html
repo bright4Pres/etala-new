@@ -12,13 +12,10 @@
   </script>
   <link rel="stylesheet" href="https://public.codepenassets.com/css/normalize-5.0.0.min.css">
   <link rel="stylesheet" href="../static/Scripts/css/cadmin.css">
-  <link href='https://fonts.googleapis.com/css?family=Open+Sans:700,800,400' rel='stylesheet' type='text/css'>
-  <link rel='stylesheet' href='https://unpkg.com/lenis@1.3.1/dist/lenis.css'>
-  <link rel="stylesheet" href="../static/Scripts/css/about.css">
   <style>
-    /* Override about.css backgrounds for theme support */
     html, body {
       background-color: var(--app-container) !important;
+      overflow: hidden;
     }
     .app-header {
       display: flex;
@@ -44,11 +41,6 @@
       transform: translateX(-50%);
       width: 600px;
       max-width: 600px;
-    }
-    .about-content-wrapper {
-      padding: 2rem;
-      max-width: 1200px;
-      margin: 0 auto;
     }
     .app-logo {
       width: 36px;
@@ -116,6 +108,158 @@
       text-align: center;
       color: var(--secondary-color);
     }
+
+    /* Slider Styles */
+    .projects-section {
+      flex: 1;
+      padding: 24px;
+      overflow-y: auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .slider-container {
+      width: 100%;
+      height: 100%;
+      background: var(--app-container);
+      box-shadow: 0 30px 50px rgba(0, 0, 0, 0.2);
+      border-radius: 20px;
+      position: relative;
+      border: 1px solid var(--border-color);
+    }
+    .slider-container .slide {
+      border-radius: 20px;
+      overflow: hidden;
+      width: 100%;
+      height: 100%;
+      position: relative;
+    }
+    .slider-container .slide .item {
+      width: 250px;
+      height: 300px;
+      position: absolute;
+      top: 50%;
+      transform: translate(0, -50%);
+      border-radius: 20px;
+      box-shadow: 0 30px 50px rgba(0, 0, 0, 0.3);
+      background-position: 50% 50%;
+      background-size: cover;
+      display: inline-block;
+      transition: all 0.5s;
+    }
+    .slide .item:nth-child(1),
+    .slide .item:nth-child(2) {
+      top: 0;
+      left: 0;
+      transform: translate(0, 0);
+      border-radius: 0;
+      width: 100%;
+      height: 100%;
+      border-radius: 20px;
+      transition: all .5s;
+    }
+    .slide .item:nth-child(3) {
+      left: 55%;
+    }
+    .slide .item:nth-child(4) {
+      left: calc(55% + 270px);
+    }
+    .slide .item:nth-child(5) {
+      left: calc(55% + 540px);
+    }
+    .slide .item:nth-child(6) {
+      left: calc(55% + 810px);
+    }
+    .slide .item:nth-child(n + 7) {
+      left: calc(55% + 1080px);
+      opacity: 0;
+    }
+    .item .content {
+      position: absolute;
+      top: 50%;
+      left: 120px;
+      width: 350px;
+      text-align: left;
+      color: #eee;
+      transform: translate(0, -50%);
+      font-family: system-ui;
+      display: none;
+    }
+    .slide .item:nth-child(2) .content {
+      display: block;
+    }
+    .content .name {
+      font-size: 48px;
+      text-transform: uppercase;
+      font-weight: bold;
+      opacity: 0;
+      animation: animate 1s ease-in-out 1 forwards;
+    }
+    .content .des {
+      margin-top: 15px;
+      margin-bottom: 25px;
+      font-size: 16px;
+      line-height: 1.5;
+      opacity: 0;
+      animation: animate 1s ease-in-out 0.3s 1 forwards;
+    }
+    @keyframes animate {
+      from {
+        opacity: 0;
+        transform: translate(0, 100px);
+        filter: blur(33px);
+      }
+      to {
+        opacity: 1;
+        transform: translate(0);
+        filter: blur(0);
+      }
+    }
+    .button {
+      display: flex;
+      flex-direction: row;
+      gap: 20px;
+      justify-content: center;
+      width: 100%;
+      align-items: center;
+      text-align: center;
+      position: absolute;
+      bottom: 30px;
+      left: 0;
+    }
+    .button button {
+      width: 45px;
+      height: 40px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      margin: 0 5px;
+      border: 2px solid var(--border-color);
+      transition: 0.3s;
+      background: var(--content-bg);
+      color: var(--main-color);
+      font-size: 16px;
+    }
+    .button button:hover {
+      border: 2px solid var(--link-color);
+      transform: scale(1.1);
+      background: var(--message-box-hover);
+    }
+    .button button:focus {
+      transform: scale(1.1);
+      background: var(--link-color-active-bg);
+      border: 2px solid var(--link-color-active);
+      outline: none;
+    }
+    .button button:active {
+      transform: scale(1.02);
+    }
+    .next {
+      padding: 0 0 0 3px;
+    }
+    .prev {
+      padding: 0 3px 0 0;
+    }
   </style>
 </head>
 <body>
@@ -179,145 +323,74 @@
         </a>
       </div>
 
-      <div class="projects-section about-content-wrapper">
-        <div class="projects-section-header">
-          <p>About eTala</p>
-          <p class="time">Meet the Team</p>
-        </div>
-        <div class="projects-section-header">
-          <p>About eTala</p>
-          <p class="time">Meet the Team</p>
-        </div>
-
-        <div style="background: var(--projects-section); padding: 2rem; border-radius: 12px; margin-bottom: 2rem;">
-          <h2 style="color: #3368a4; margin-top: 0;">eTala Library Management System</h2>
-          <p style="color: var(--secondary-color); font-size: 1.1rem; line-height: 1.8;">
-            eTala is a modern library management system designed to streamline book cataloging, 
-            borrowing, and tracking. Built with cutting-edge technology, it provides an intuitive 
-            interface for both librarians and students.
-          </p>
-        </div>
-
-        <div class="project-boxes jsGridView">
-          <!-- Team Member: Bright -->
-          <div class="project-box-wrapper">
-            <div class="project-box" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-              <div class="project-box-header">
-                <span style="color: white;">Developer</span>
+      <div class="projects-section">
+        <div class="slider-container">
+          <div class="slide">
+            <div class="item" style="background-image: url('https://images.unsplash.com/photo-1557862921-37829c790f19?q=80&w=1171&auto=format&fit=crop');">
+              <div class="content">
+                <div class="name">Bright R. Bastasa</div>
+                <div class="des">
+                  Fullstack Developer & Designer - Created this entire site, handling all development and design work.
+                </div>
               </div>
-              <div class="project-box-content-header">
-                <p class="box-content-header" style="color: white;">Bright Bastasa</p>
-                <p class="box-content-subheader" style="color: rgba(255,255,255,0.8);">Lead Developer</p>
+            </div>
+
+            <div class="item" style="background-image: url('https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?q=80&w=1074&auto=format&fit=crop');">
+              <div class="content">
+                <div class="name">Jared John C. Campricio</div>
+                <div class="des">
+                  Project Lead - Coordinating team efforts and project management.
+                </div>
               </div>
-              <div class="box-progress-wrapper">
-                <p class="box-progress-header" style="color: rgba(255,255,255,0.9);">Role</p>
-                <p style="color: white; font-size: 0.9rem;">Full-stack development and system architecture</p>
+            </div>
+
+            <div class="item" style="background-image: url('https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=1074&auto=format&fit=crop');">
+              <div class="content">
+                <div class="name">Lorenz P. Wee</div>
+                <div class="des">
+                  Team Member - Contributing to project documentation and support.
+                </div>
+              </div>
+            </div>
+
+            <div class="item" style="background-image: url('https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?q=80&w=1074&auto=format&fit=crop');">
+              <div class="content">
+                <div class="name">Gabriel Dominic Bobita</div>
+                <div class="des">
+                  Secretary - Managing project documentation and meeting notes.
+                </div>
+              </div>
+            </div>
+
+            <div class="item" style="background-image: url('https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=1074&auto=format&fit=crop');">
+              <div class="content">
+                <div class="name">Rover Opay</div>
+                <div class="des">
+                  Team Member - Supporting project initiatives and team collaboration.
+                </div>
+              </div>
+            </div>
+
+            <div class="item" style="background-image: url('https://images.unsplash.com/photo-1531427186611-ecfd6d936c79?q=80&w=1074&auto=format&fit=crop');">
+              <div class="content">
+                <div class="name">Juan Miguel Realiza</div>
+                <div class="des">
+                  Quality Officer - Ensuring project standards and quality control.
+                </div>
               </div>
             </div>
           </div>
-
-          <!-- Team Member: Jared John -->
-          <div class="project-box-wrapper">
-            <div class="project-box" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
-              <div class="project-box-header">
-                <span style="color: white;">Developer</span>
-              </div>
-              <div class="project-box-content-header">
-                <p class="box-content-header" style="color: white;">Jared John Campricio</p>
-                <p class="box-content-subheader" style="color: rgba(255,255,255,0.8);">Backend Developer</p>
-              </div>
-              <div class="box-progress-wrapper">
-                <p class="box-progress-header" style="color: rgba(255,255,255,0.9);">Role</p>
-                <p style="color: white; font-size: 0.9rem;">Database management and API development</p>
-              </div>
-            </div>
+          <div class="button">
+            <button class="prev">◁</button>
+            <button class="next">▷</button>
           </div>
-
-          <!-- Team Member: Lorenz -->
-          <div class="project-box-wrapper">
-            <div class="project-box" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
-              <div class="project-box-header">
-                <span style="color: white;">Developer</span>
-              </div>
-              <div class="project-box-content-header">
-                <p class="box-content-header" style="color: white;">Lorenz Wee</p>
-                <p class="box-content-subheader" style="color: rgba(255,255,255,0.8);">Frontend Developer</p>
-              </div>
-              <div class="box-progress-wrapper">
-                <p class="box-progress-header" style="color: rgba(255,255,255,0.9);">Role</p>
-                <p style="color: white; font-size: 0.9rem;">UI/UX design and implementation</p>
-              </div>
-            </div>
-          </div>
-
-          <!-- Team Member: Gabriel Dominic -->
-          <div class="project-box-wrapper">
-            <div class="project-box" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
-              <div class="project-box-header">
-                <span style="color: white;">Developer</span>
-              </div>
-              <div class="project-box-content-header">
-                <p class="box-content-header" style="color: white;">Gabriel Dominic Bobita</p>
-                <p class="box-content-subheader" style="color: rgba(255,255,255,0.8);">QA Engineer</p>
-              </div>
-              <div class="box-progress-wrapper">
-                <p class="box-progress-header" style="color: rgba(255,255,255,0.9);">Role</p>
-                <p style="color: white; font-size: 0.9rem;">Testing and quality assurance</p>
-              </div>
-            </div>
-          </div>
-
-          <!-- Team Member: Juan Miguel -->
-          <div class="project-box-wrapper">
-            <div class="project-box" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
-              <div class="project-box-header">
-                <span style="color: white;">Developer</span>
-              </div>
-              <div class="project-box-content-header">
-                <p class="box-content-header" style="color: white;">Juan Miguel Realiza</p>
-                <p class="box-content-subheader" style="color: rgba(255,255,255,0.8);">Documentation</p>
-              </div>
-              <div class="box-progress-wrapper">
-                <p class="box-progress-header" style="color: rgba(255,255,255,0.9);">Role</p>
-                <p style="color: white; font-size: 0.9rem;">Documentation and user guides</p>
-              </div>
-            </div>
-          </div>
-
-          <!-- Team Member: Rover Von -->
-          <div class="project-box-wrapper">
-            <div class="project-box" style="background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);">
-              <div class="project-box-header">
-                <span style="color: #333;">Developer</span>
-              </div>
-              <div class="project-box-content-header">
-                <p class="box-content-header" style="color: #333;">Rover Von Opay</p>
-                <p class="box-content-subheader" style="color: #666;">Project Manager</p>
-              </div>
-              <div class="box-progress-wrapper">
-                <p class="box-progress-header" style="color: #555;">Role</p>
-                <p style="color: #333; font-size: 0.9rem;">Project coordination and planning</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div style="background: var(--projects-section); padding: 2rem; border-radius: 12px; margin-top: 2rem;">
-          <h3 style="color: #3368a4;">Our Mission</h3>
-          <p style="color: var(--secondary-color); font-size: 1rem; line-height: 1.6;">
-            To provide an efficient, user-friendly library management system that enhances the 
-            learning experience for students and simplifies administrative tasks for librarians. 
-            We believe in making knowledge more accessible through technology.
-          </p>
         </div>
       </div>
     </div>
   </div>
 
-  <script src='https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js'></script>
-  <script src='https://unpkg.com/lenis@1.3.1/dist/lenis.js'></script>
   <script>
-    // Theme switcher (theme already loaded in head)
+    // Theme switcher
     document.querySelector(".mode-switch").addEventListener("click", function() {
       if (document.documentElement.classList.contains('dark')) {
         document.documentElement.classList.remove('dark');
@@ -438,6 +511,20 @@
     function goToRecords(query) {
       window.location.href = `/records/?search=${query}`;
     }
+
+    // Image Slider functionality
+    let next = document.querySelector(".next");
+    let prev = document.querySelector(".prev");
+
+    next.addEventListener("click", function () {
+      let items = document.querySelectorAll(".item");
+      document.querySelector(".slide").appendChild(items[0]);
+    });
+
+    prev.addEventListener("click", function () {
+      let items = document.querySelectorAll(".item");
+      document.querySelector(".slide").prepend(items[items.length - 1]);
+    });
   </script>
 </body>
 </html>
