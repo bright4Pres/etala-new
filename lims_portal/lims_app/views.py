@@ -83,9 +83,6 @@ def check_duplicate(request):
     return JsonResponse({'error': 'Invalid request method.'}, status=405)
 
 def records(request):
-    # Show individual book copies (physical items) not books (bibliographic records)
-    all_copies = BookCopy.objects.select_related('book').all()
-
     # Capture user-selected filters
     book_type = request.GET.get('book_type')
     language = request.GET.get('language')
@@ -95,26 +92,73 @@ def records(request):
     location = request.GET.get('location')
     search_query = request.GET.get('search')
 
-    # Apply filters dynamically (filtering through related book)
+    # Start with all books
+    books_query = Book.objects.all()
+    
+    # Apply filters to books
     if book_type:
-        all_copies = all_copies.filter(book__Type=book_type)
+        books_query = books_query.filter(Type=book_type)
     if language:
-        all_copies = all_copies.filter(book__Language=language)
+        books_query = books_query.filter(Language=language)
     if publisher:
-        all_copies = all_copies.filter(book__Publisher=publisher)
+        books_query = books_query.filter(Publisher=publisher)
     if main_author:
-        all_copies = all_copies.filter(book__mainAuthor=main_author)
+        books_query = books_query.filter(mainAuthor=main_author)
     if co_author:
-        all_copies = all_copies.filter(book__coAuthor=co_author)
-    if location:
-        all_copies = all_copies.filter(Location=location)
+        books_query = books_query.filter(coAuthor=co_author)
     if search_query:
-        all_copies = all_copies.filter(
-            Q(book__Title__icontains=search_query) | 
-            Q(book__mainAuthor__icontains=search_query) | 
-            Q(book__coAuthor__icontains=search_query) |
-            Q(accessionNumber__icontains=search_query)
+        books_query = books_query.filter(
+            Q(Title__icontains=search_query) | 
+            Q(mainAuthor__icontains=search_query) | 
+            Q(coAuthor__icontains=search_query) |
+            Q(callNumber__icontains=search_query)
         )
+    
+    # If location filter, only include books that have copies in that location
+    if location:
+        books_query = books_query.filter(copies__Location=location).distinct()
+    
+    # Build grouped book data with copy information
+    all_books = []
+    for book in books_query.order_by('-id'):
+        copies = book.copies.all()
+        
+        # If location filter is set, only include copies from that location
+        if location:
+            copies = copies.filter(Location=location)
+        
+        # Calculate availability
+        total_copies = copies.count()
+        available_copies = copies.filter(status='Available').count()
+        
+        all_books.append({
+            'id': book.id,
+            'Title': book.Title,
+            'mainAuthor': book.mainAuthor,
+            'coAuthor': book.coAuthor,
+            'Publisher': book.Publisher,
+            'Edition': book.Edition,
+            'callNumber': book.callNumber,
+            'Language': book.Language,
+            'Type': book.Type,
+            'placeofPublication': book.placeofPublication,
+            'copyrightDate': book.copyrightDate,
+            'publicationDate': book.publicationDate,
+            'Editors': book.Editors,
+            'acquisitionStatus': book.acquisitionStatus,
+            'total_copies': total_copies,
+            'available_copies': available_copies,
+            'borrowed_copies': total_copies - available_copies,
+            'copies': [{
+                'accessionNumber': c.accessionNumber,
+                'Location': c.Location,
+                'status': c.status,
+                'borrowed_by': c.borrowed_by,
+                'student_id': c.student_id,
+                'borrow_date': c.borrow_date,
+                'return_date': c.return_date
+            } for c in copies]
+        })
 
     # Get distinct values for filter options
     distinct_languages = Book.objects.values_list("Language", flat=True).distinct()
@@ -134,29 +178,10 @@ def records(request):
     }
 
     if request.headers.get("X-Requested-With") == "XMLHttpRequest":
-        # Build response with book copy data and related book info
-        copies_data = []
-        for copy in all_copies:
-            copies_data.append({
-                "accessionNumber": copy.accessionNumber,
-                "Location": copy.Location,
-                "status": copy.status,
-                "borrowed_by": copy.borrowed_by,
-                "student_id": copy.student_id,
-                "borrow_date": copy.borrow_date.isoformat() if copy.borrow_date else None,
-                "return_date": copy.return_date.isoformat() if copy.return_date else None,
-                "Title": copy.book.Title,
-                "mainAuthor": copy.book.mainAuthor,
-                "coAuthor": copy.book.coAuthor,
-                "Publisher": copy.book.Publisher,
-                "Edition": copy.book.Edition,
-                "Language": copy.book.Language,
-                "Type": copy.book.Type,
-            })
-        return JsonResponse({"books": copies_data})
+        return JsonResponse({"books": all_books})
 
     return render(request, "records.html", {
-        "recorded_books": all_copies,
+        "recorded_books": all_books,
         "distinct_languages": distinct_languages,
         "distinct_publishers": distinct_publishers,
         "distinct_authors": distinct_authors,
@@ -180,9 +205,9 @@ def analytics(request):
         grade_Twelve.objects.count(),
     ])
     total_borrows_all_time = BorrowHistory.objects.count()
-    # count books marked as Borrowed in Book.status
-    currently_borrowed = Book.objects.filter(status='Borrowed').count()
-    available_books = Book.objects.filter(status='Available').count()
+    # count book copies marked as Borrowed in BookCopy.status
+    currently_borrowed = BookCopy.objects.filter(status='Borrowed').count()
+    available_books = BookCopy.objects.filter(status='Available').count()
     
     # Overdue books (borrow records not returned and past return_date)
     overdue_books = BorrowHistory.objects.filter(
@@ -578,12 +603,13 @@ def admin_dashboard(request):
     
     borrowed_books = BorrowHistory.objects.filter(returned=False).select_related()
     overdue_books = [b for b in borrowed_books if b.is_overdue()]
-    available_books_count = Book.objects.filter(status='Available').count()
-    available_books = Book.objects.filter(status='Available')
+    available_books_count = BookCopy.objects.filter(status='Available').count()
+    available_book_copies = BookCopy.objects.filter(status='Available').select_related('book')
     recent_activity = BorrowHistory.objects.all().order_by('-borrow_date')[:10]
     
-    # Get total books and users
+    # Get total books and book copies
     total_books_count = Book.objects.count()
+    total_copies_count = BookCopy.objects.count()
     # Get all books with their copies information
     all_books = []
     for book in Book.objects.all().order_by('-id')[:50]:
@@ -630,9 +656,10 @@ def admin_dashboard(request):
         'borrowed_books': borrowed_books,
         'overdue_books': overdue_books,
         'available_books_count': available_books_count,
-        'available_books': available_books,
+        'available_books': available_book_copies,
         'recent_activity': recent_activity,
         'total_books_count': total_books_count,
+        'total_copies_count': total_copies_count,
         'all_books': all_books,
         'total_users_count': total_users_count,
         'all_users': all_users,
@@ -650,8 +677,8 @@ def admin_checkout(request):
             return redirect('admin_dashboard')
         except Exception as e:
             messages.error(request, str(e))
-    books = Book.objects.filter(status='Available')
-    return render(request, 'admin_checkout.html', {'books': books})
+    book_copies = BookCopy.objects.filter(status='Available').select_related('book')
+    return render(request, 'admin_checkout.html', {'books': book_copies})
 
 @login_required
 def admin_return(request):
@@ -711,7 +738,7 @@ def admin_books(request):
     if search_query:
         books = books.filter(
             Q(Title__icontains=search_query) | 
-            Q(accessionNumber__icontains=search_query) |
+            Q(callNumber__icontains=search_query) |
             Q(mainAuthor__icontains=search_query)
         )
     return render(request, 'admin_books.html', {'books': books, 'search_query': search_query})
@@ -722,11 +749,12 @@ def admin_edit_book(request, book_id):
     if request.method == 'POST':
         book.Title = request.POST.get('Title')
         book.mainAuthor = request.POST.get('mainAuthor')
+        book.coAuthor = request.POST.get('coAuthor', '')
         book.Publisher = request.POST.get('Publisher', '')
-        book.Location = request.POST.get('Location', '')
+        book.Edition = request.POST.get('Edition', '')
+        book.callNumber = request.POST.get('callNumber', '')
         book.Language = request.POST.get('Language', '')
         book.Type = request.POST.get('Type', '')
-        book.status = request.POST.get('status')
         book.save()
         messages.success(request, 'Book updated successfully.')
         return redirect('admin_books')

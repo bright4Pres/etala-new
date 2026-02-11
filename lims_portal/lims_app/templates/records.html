@@ -110,41 +110,48 @@
           <tbody>
             {% for book in recorded_books %}
             <tr class="book-row" data-details="
-              <strong>Title:</strong> {{ book.book.Title|default:'-' }}<br>
-              <strong>Main Author:</strong> {{ book.book.mainAuthor|default:'-' }}<br>
-              <strong>Co-Author:</strong> {{ book.book.coAuthor|default:'-' }}<br>
-              <strong>Edition:</strong> {{ book.book.Edition|default:'-' }}<br>
-              <strong>Acquisition Status:</strong> {{ book.book.acquisitionStatus|default:'-' }}<br>
-              <strong>Editors:</strong> {{ book.book.Editors|default:'-' }}<br>
-              <strong>Publisher:</strong> {{ book.book.Publisher|default:'-' }}<br>
-              <strong>Place of Publication:</strong> {{ book.book.placeofPublication|default:'-' }}<br>
-              <strong>Publication Date:</strong> {% if book.book.publicationDate %}{{ book.book.publicationDate|date:'Y-m-d' }}{% else %}-{% endif %}<br>
-              <strong>Copyright Date:</strong> {% if book.book.copyrightDate %}{{ book.book.copyrightDate|date:'Y-m-d' }}{% else %}-{% endif %}<br>
-              <strong>Language:</strong> {{ book.book.Language }}<br>
-              <strong>Type:</strong> {{ book.book.Type }}<br>
-              <strong>Accession Number:</strong> {{ book.accessionNumber }}<br>
-              <strong>Call Number:</strong> {{ book.book.callNumber }}<br>
-              {% if book.status == 'Borrowed' %}
-                <hr>
-                <strong>Borrowed By:</strong> {{ book.borrowed_by }}<br>
-                <strong>Student ID:</strong> {{ book.student_id }}<br>
-                <strong>Borrow Date:</strong> {{ book.borrow_date|date:'Y-m-d' }}<br>
-                <strong>Return Date:</strong> {{ book.return_date|date:'Y-m-d' }}<br>
-              {% endif %}
+              <div style='display: flex; gap: 20px;'>
+                <div style='flex: 1;'>
+                  <strong>Title:</strong> {{ book.Title|default:'-' }}<br>
+                  <strong>Main Author:</strong> {{ book.mainAuthor|default:'-' }}<br>
+                  <strong>Co-Author:</strong> {{ book.coAuthor|default:'-' }}<br>
+                  <strong>Edition:</strong> {{ book.Edition|default:'-' }}<br>
+                  <strong>Acquisition Status:</strong> {{ book.acquisitionStatus|default:'-' }}<br>
+                  <strong>Editors:</strong> {{ book.Editors|default:'-' }}<br>
+                  <strong>Publisher:</strong> {{ book.Publisher|default:'-' }}<br>
+                  <strong>Place of Publication:</strong> {{ book.placeofPublication|default:'-' }}<br>
+                  <strong>Publication Date:</strong> {% if book.publicationDate %}{{ book.publicationDate|date:'Y-m-d' }}{% else %}-{% endif %}<br>
+                  <strong>Copyright Date:</strong> {% if book.copyrightDate %}{{ book.copyrightDate|date:'Y-m-d' }}{% else %}-{% endif %}<br>
+                  <strong>Language:</strong> {{ book.Language }}<br>
+                  <strong>Type:</strong> {{ book.Type }}<br>
+                  <strong>Call Number:</strong> {{ book.callNumber }}<br>
+                </div>
+                <div style='flex: 1; padding: 8px; background: #f8f9fa; border-radius: 4px;'>
+                  <strong style='display: block; margin-bottom: 10px;'>All Copies ({{ book.total_copies }} total):</strong>
+                  {% for copy in book.copies %}
+                    <div style='padding: 6px; margin-bottom: 4px; background: white; border-radius: 4px; border-left: 3px solid {% if copy.status == 'Available' %}#28a745{% else %}#dc3545{% endif %};'>
+                      <div style='display: flex; justify-content: space-between; align-items: center;'>
+                        <span style='font-family: monospace; font-weight: bold;'>{{ copy.accessionNumber }}</span>
+                        <span style='padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; {% if copy.status == 'Available' %}background: #d4edda; color: #155724;{% else %}background: #f8d7da; color: #721c24;{% endif %}'>
+                          {{ copy.status }}
+                        </span>
+                      </div>
+                      <div style='font-size: 0.85rem; color: #666; margin-top: 2px;'>{{ copy.Location }}</div>
+                    </div>
+                  {% endfor %}
+                </div>
+              </div>
             ">
-              <td><strong>{{ book.book.Title }}</strong> by {{ book.book.mainAuthor }}</td>
+              <td>
+                <strong>{{ book.Title }}</strong> by {{ book.mainAuthor }}<br>
+                <small style="color: #666;">{{ book.callNumber }}</small>
+              </td>
               <td style="text-align:center;">
-                {% if book.status == 'Processing Borrow' %}
-                  <span>Processing Borrow</span>
-                {% elif book.status == 'Processing Return' %}
-                  <span>Processing Return</span>
-                {% elif book.status == 'Borrowed' %}
-                  <span class="text-danger">Borrowed</span>
-                {% else %}
-                  <span class="text-success">Available</span>
-                {% endif %}
-                <br>
-                <h1 style="font-size: 1.2em;">{{ book.Location|title }}</h1>
+                <div style="font-size: 1.1em;">
+                  <strong style="color: {% if book.available_copies > 0 %}green{% else %}red{% endif %};">
+                    {{ book.available_copies }} available / {{ book.total_copies }} total
+                  </strong>
+                </div>
                 <button class="btn btn-secondary btn-sm mt-2 print-button" onclick="generatePDF(this)">Print</button>
               </td>
             </tr>

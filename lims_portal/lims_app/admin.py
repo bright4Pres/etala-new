@@ -14,6 +14,14 @@ from barcode.writer import ImageWriter
 from PIL import Image
 import base64
 
+# Inline admin for BookCopy - allows adding copies when editing a Book
+class BookCopyInline(admin.TabularInline):
+    model = BookCopy
+    extra = 3  # Show 3 empty copy forms by default
+    fields = ['accessionNumber', 'Location', 'status']
+    verbose_name = "Book Copy"
+    verbose_name_plural = "Physical Copies"
+
 class CirculationAdmin(admin.ModelAdmin):
     change_list_template = "admin/circulation_change_list.html"
 
@@ -240,6 +248,7 @@ class BookAdmin(admin.ModelAdmin):
     search_fields = ['Title', 'mainAuthor', 'coAuthor', 'callNumber', 'Publisher']
     list_display = ['Title', 'mainAuthor', 'coAuthor', 'Publisher', 'Edition', 'callNumber', 'Language', 'Type', 'total_copies_display', 'available_copies_display']
     list_filter = ['Language', 'Type']
+    inlines = [BookCopyInline]  # Add copies inline when editing a book
     
     def total_copies_display(self, obj):
         return obj.get_total_copies()
