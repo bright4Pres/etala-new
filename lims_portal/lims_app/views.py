@@ -335,8 +335,12 @@ def analytics(request):
     overall_gender_proportions = {k: round((v / total_students * 100), 1) if total_students > 0 else 0 for k, v in overall_gender.items()}
 
     # Pie chart data
-    overall_gender_labels = list(overall_gender_proportions.keys())
-    overall_gender_data = list(overall_gender_proportions.values())
+    overall_gender_labels = []
+    overall_gender_data = []
+    for label, value in overall_gender_proportions.items():
+        if value > 0:
+            overall_gender_labels.append(label)
+            overall_gender_data.append(value)
 
     # Gender proportions per batch
     batch_gender_stats = {
@@ -372,16 +376,24 @@ def analytics(request):
         },
     }
     for batch, genders in batch_gender_stats.items():
-        total = sum(genders.values())
+        # Only include the gender keys (Male, Female, Other) - not 'total' or 'proportions'
+        gender_counts = {k: v for k, v in genders.items() if k in ['Male', 'Female', 'Other']}
+        total = sum(gender_counts.values())
         batch_gender_stats[batch]['total'] = total
-        batch_gender_stats[batch]['proportions'] = {k: round((v / total * 100), 1) if total > 0 else 0 for k, v in genders.items()}
+        batch_gender_stats[batch]['proportions'] = {k: round((v / total * 100), 1) if total > 0 else 0 for k, v in gender_counts.items()}
 
     # Pie chart data for batches
     batch_gender_pie_data = {}
     for batch, stats in batch_gender_stats.items():
+        filtered_labels = []
+        filtered_data = []
+        for label, value in stats['proportions'].items():
+            if value > 0:
+                filtered_labels.append(label)
+                filtered_data.append(value)
         batch_gender_pie_data[batch] = {
-            'labels': list(stats['proportions'].keys()),
-            'data': list(stats['proportions'].values())
+            'labels': filtered_labels,
+            'data': filtered_data
         }
 
     # Batch activity (borrows per batch)

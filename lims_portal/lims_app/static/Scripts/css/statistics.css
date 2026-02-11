@@ -39,10 +39,7 @@ body::before {
     left: 0;
     right: 0;
     bottom: 0;
-    background-image: 
-        linear-gradient(rgba(37, 99, 235, 0.03) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(37, 99, 235, 0.03) 1px, transparent 1px);
-    background-size: 20px 20px;
+    background: transparent;
     pointer-events: none;
     z-index: -1;
 }
@@ -256,7 +253,7 @@ main {
     left: 0;
     right: 0;
     height: 3px;
-    background: linear-gradient(90deg, var(--pshs-blue), var(--accent-teal));
+    background: var(--pshs-blue);
 }
 
 .kpi-card:hover {
@@ -343,7 +340,7 @@ main {
     width: 44px;
     height: 44px;
     border-radius: 10px;
-    background: linear-gradient(135deg, rgba(37, 99, 235, 0.1), rgba(13, 148, 136, 0.1));
+    background: rgba(37, 99, 235, 0.1);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -522,7 +519,7 @@ main {
     left: 0;
     right: 0;
     height: 3px;
-    background: linear-gradient(90deg, var(--pshs-blue), var(--accent-teal), var(--accent-green));
+    background: var(--pshs-blue);
 }
 
 .activity-header {
@@ -561,12 +558,12 @@ main {
 }
 
 .activity-list::-webkit-scrollbar-thumb {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: #999;
     border-radius: 3px;
 }
 
 .activity-list::-webkit-scrollbar-thumb:hover {
-    background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+    background: #666;
 }
 
 .activity-item {

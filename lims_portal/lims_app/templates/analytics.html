@@ -22,9 +22,6 @@
         .kpi-grid, .charts-grid {
             margin: 0 0 2rem 0;
         }
-        .app-content {
-            padding: 24px 48px 32px 48px !important;
-        }
         .header-btn {
             background: none;
             border: none;
@@ -56,9 +53,9 @@
             </div>
             <div class="app-header-right">
                 <!-- Period Selector -->
-                <form method="get" style="display: flex; align-items: center; gap: 0.5rem; margin-right: 1rem;">
+                <form method="get" id="period-form" style="display: flex; align-items: center; gap: 0.5rem; margin-right: 1rem;">
                     <label for="period-select" style="font-size: 0.9rem; color: var(--text-secondary);">Period:</label>
-                    <select name="period" id="period-select" style="padding: 0.3rem 0.5rem; border-radius: 4px; background: var(--search-area-bg); color: var(--main-color); border: 1px solid var(--border-light); font-size: 0.9rem;">
+                    <select name="period" id="period-select" onchange="document.getElementById('period-form').submit()" style="padding: 0.3rem 0.5rem; border-radius: 4px; background: var(--search-area-bg); color: var(--main-color); border: 1px solid var(--border-light); font-size: 0.9rem;">
                         <option value="day" {% if request.GET.period == 'day' %}selected{% endif %}>Today</option>
                         <option value="week" {% if request.GET.period == 'week' %}selected{% endif %}>This Week</option>
                         <option value="month" {% if request.GET.period == 'month' or not request.GET.period %}selected{% endif %}>This Month</option>
@@ -144,7 +141,7 @@
                 </a>
             </div>
         
-    <main class="projects-section main-container">
+            <main class="projects-section main-container">
         <!-- ==========================================
              HEADER SECTION
              Contains title and time period selector
@@ -508,25 +505,20 @@
                     <form id="heatmap-range-form" method="get" style="display: flex; align-items: center; gap: 0.5em;">
                         <!-- Preserve current period filter when navigating heatmap -->
                         <input type="hidden" name="period" value="{{ request.GET.period|default_if_none:'' }}">
-                        
                         <!-- Navigate to previous period -->
                         <button type="submit" name="heatmap_offset" value="{{ heatmap_prev_offset }}" class="heatmap-nav-btn" title="Previous" style="font-size:1.2em;">&#8592;</button>
-                        
                         <!-- Select time range (week/month/year) -->
                         <select name="heatmap_range" id="heatmap-range-select" style="padding: 2px 6px;">
                             <option value="week" {% if heatmap_range == 'week' %}selected{% endif %}>Week</option>
                             <option value="month" {% if heatmap_range == 'month' %}selected{% endif %}>Month</option>
                             <option value="year" {% if heatmap_range == 'year' %}selected{% endif %}>Year</option>
                         </select>
-                        
                         <!-- Display current period label (e.g., "November 2025") -->
                         <span style="font-weight: 500;">{{ heatmap_period_label }}</span>
-                        
                         <!-- Navigate to next period (disabled if viewing current/future) -->
                         <button type="submit" name="heatmap_offset" value="{{ heatmap_next_offset }}" class="heatmap-nav-btn" title="Next" style="font-size:1.2em;" {% if not heatmap_can_go_next %}disabled{% endif %}>&#8594;</button>
                     </form>
                 </div>
-                
                 <!-- Heatmap color intensity legend -->
                 <div class="heatmap-legend">
                     <span class="heatmap-legend-label">Less</span>
@@ -612,6 +604,7 @@
             </div>
         </div>
     </main>
+    </div>
 
     <!-- ==========================================
          DATA INJECTION FOR JAVASCRIPT
