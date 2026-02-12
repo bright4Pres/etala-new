@@ -48,14 +48,14 @@ window.toggleSidebarSection = function (sectionName) {
 
   if (sectionName === 'books') {
     if (booksSection.style.display === 'none' || booksSection.style.display === '') {
-      booksSection.style.display = 'block';
+      booksSection.style.display = 'flex';
       usersSection.style.display = 'none';
     } else {
       booksSection.style.display = 'none';
     }
   } else if (sectionName === 'users') {
     if (usersSection.style.display === 'none' || usersSection.style.display === '') {
-      usersSection.style.display = 'block';
+      usersSection.style.display = 'flex';
       booksSection.style.display = 'none';
     } else {
       usersSection.style.display = 'none';

@@ -1062,8 +1062,7 @@ def admin_dashboard(request):
             'copies_json': json.dumps(copies_payload),
         })
     
-    # Get all users from all grade models
-    all_users = []
+    # Get all users from all grade models, organized by grade
     grade_models = [
         (7, grade_Seven),
         (8, grade_Eight),
@@ -1072,10 +1071,14 @@ def admin_dashboard(request):
         (11, grade_Eleven),
         (12, grade_Twelve),
     ]
+    
+    students_by_grade = {}
+    total_users_count = 0
+    
     for grade_num, model in grade_models:
-        # Show most recently created users first so newly-added students appear in the sidebar.
-        for user in model.objects.order_by('-created_at'):  # Get ALL users from each grade
-            all_users.append({
+        students = []
+        for user in model.objects.order_by('name'):  # Alphabetical order
+            students.append({
                 'name': user.name,
                 'school_id': user.school_id,
                 'email': user.email,
@@ -1083,15 +1086,8 @@ def admin_dashboard(request):
                 'grade_num': grade_num,
                 'batch': getattr(user, 'batch', 'N/A'),
             })
-    
-    total_users_count = (
-        grade_Seven.objects.count() + 
-        grade_Eight.objects.count() + 
-        grade_Nine.objects.count() + 
-        grade_Ten.objects.count() + 
-        grade_Eleven.objects.count() + 
-        grade_Twelve.objects.count()
-    )
+        students_by_grade[grade_num] = students
+        total_users_count += len(students)
     
     return render(request, 'cadmin.html', {
         'borrowed_books': borrowed_books,
@@ -1103,7 +1099,7 @@ def admin_dashboard(request):
         'total_copies_count': total_copies_count,
         'all_books': all_books,
         'total_users_count': total_users_count,
-        'all_users': all_users,
+        'students_by_grade': students_by_grade,
         'active_view': active_view,  # Pass the active view to template
         'date_now': timezone.now(),
     })
