@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 
@@ -5,7 +6,7 @@
     <meta charset="UTF-8">
     <title>Library Admin Dashboard - eTala</title>
     <link rel="stylesheet" href="https://public.codepenassets.com/css/normalize-5.0.0.min.css">
-<link rel="stylesheet" href="../static/Scripts/css/cadmin.css">
+    <link rel="stylesheet" href="{% static 'Scripts/css/cadmin.css' %}">
 
   </head>
     
@@ -93,7 +94,10 @@
       <div style="padding: 12px; border-bottom: 1px solid var(--message-box-border);">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
           <h3 style="margin: 0; font-size: 0.9rem; color: var(--main-color); font-weight: 600;">Books</h3>
-          <button onclick="toggleSidebarSection('books'); return false;" style="background: none; border: none; cursor: pointer; color: var(--main-color); font-size: 1.2rem; padding: 0; width: 24px; height: 24px;">&times;</button>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <button type="button" onclick="openBookAddModal(); return false;" style="background: #3368a4; color: white; border: none; border-radius: 6px; padding: 4px 10px; font-size: 0.75rem; cursor: pointer;">Add</button>
+            <button onclick="toggleSidebarSection('books'); return false;" style="background: none; border: none; cursor: pointer; color: var(--main-color); font-size: 1.2rem; padding: 0; width: 24px; height: 24px;">&times;</button>
+          </div>
         </div>
         <div style="display: flex; gap: 8px; margin-bottom: 8px;">
           <span style="background: #3368a4; color: white; padding: 2px 8px; border-radius: 10px; font-size: 0.75rem; display: inline-block;">{{ total_books_count }} Total</span>
@@ -107,7 +111,7 @@
       <div id="booksList" style="max-height: calc(100vh - 290px); overflow-y: auto; padding: 12px;">
         {% for book in all_books %}
         <div class="book-item" data-title="{{ book.Title|lower }}" data-author="{{ book.mainAuthor|lower }}" data-callnumber="{{ book.callNumber|lower }}" style="padding: 12px; margin-bottom: 10px; background: var(--message-box-hover); border-radius: 8px; border-left: 4px solid {% if book.available_copies > 0 %}#28a745{% else %}#dc3545{% endif %}; position: relative;">
-          <button onclick="openBookEditModal('{{ book.id }}', '{{ book.Title|escapejs }}', '{{ book.mainAuthor|escapejs }}', '{{ book.coAuthor|escapejs }}', '{{ book.Publisher|escapejs }}', '{{ book.Edition|escapejs }}', '{{ book.callNumber|escapejs }}', '{{ book.Language }}', '{{ book.Type }}')" style="position: absolute; top: 10px; right: 10px; background: #3368a4; color: white; border: none; border-radius: 4px; padding: 4px 8px; font-size: 0.7rem; cursor: pointer;">Edit</button>
+          <button onclick="openBookEditModal('{{ book.id }}', '{{ book.Title|escapejs }}', '{{ book.mainAuthor|escapejs }}', '{{ book.coAuthor|escapejs }}', '{{ book.Publisher|escapejs }}', '{{ book.Edition|escapejs }}', '{{ book.callNumber|escapejs }}', '{{ book.Language }}', '{{ book.Type }}', '{{ book.copies_json|escapejs }}')" style="position: absolute; top: 10px; right: 10px; background: #3368a4; color: white; border: none; border-radius: 4px; padding: 4px 8px; font-size: 0.7rem; cursor: pointer;">Edit</button>
           
           <div style="font-weight: 600; font-size: 0.9rem; color: var(--main-color); margin-bottom: 6px; padding-right: 50px;">{{ book.Title }}</div>
           <div style="font-size: 0.75rem; color: var(--secondary-color); margin-bottom: 6px;">{{ book.mainAuthor }}</div>
@@ -145,7 +149,10 @@
       <div style="padding: 12px; border-bottom: 1px solid var(--message-box-border);">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
           <h3 style="margin: 0; font-size: 0.9rem; color: var(--main-color); font-weight: 600;">Registered Users</h3>
-          <button onclick="toggleSidebarSection('users'); return false;" style="background: none; border: none; cursor: pointer; color: var(--main-color); font-size: 1.2rem; padding: 0; width: 24px; height: 24px;">&times;</button>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <button type="button" onclick="openUserAddModal(); return false;" style="background: #28a745; color: white; border: none; border-radius: 6px; padding: 4px 10px; font-size: 0.75rem; cursor: pointer;">Add</button>
+            <button onclick="toggleSidebarSection('users'); return false;" style="background: none; border: none; cursor: pointer; color: var(--main-color); font-size: 1.2rem; padding: 0; width: 24px; height: 24px;">&times;</button>
+          </div>
         </div>
         <span style="background: #28a745; color: white; padding: 2px 8px; border-radius: 10px; font-size: 0.75rem; display: inline-block;">{{ total_users_count }} Users</span>
         <div style="margin-top: 12px;">
@@ -155,7 +162,7 @@
       <div id="usersList" style="max-height: calc(100vh - 250px); overflow-y: auto; padding: 12px;">
         {% for user in all_users %}
         <div class="user-item" data-name="{{ user.name|lower }}" data-schoolid="{{ user.school_id|lower }}" data-grade="{{ user.grade|lower }}" data-batch="{{ user.batch|lower }}" style="padding: 10px; margin-bottom: 8px; background: var(--message-box-hover); border-radius: 8px; border-left: 3px solid {% if user.is_activated %}#28a745{% else %}#ffc107{% endif %}; position: relative;">
-          <button onclick="openUserEditModal('{{ user.school_id }}', '{{ user.name|escapejs }}', '{{ user.email|escapejs }}', '{{ user.grade }}', '{{ user.batch|escapejs }}', {{ user.is_activated|lower }})" style="position: absolute; top: 8px; right: 8px; background: #28a745; color: white; border: none; border-radius: 4px; padding: 4px 8px; font-size: 0.7rem; cursor: pointer;">Edit</button>
+          <button onclick="openUserEditModal('{{ user.school_id|escapejs }}', '{{ user.name|escapejs }}', '{{ user.email|escapejs }}', '{{ user.grade_num|escapejs }}', '{{ user.batch|escapejs }}', {{ user.is_activated|yesno:'true,false' }})" style="position: absolute; top: 8px; right: 8px; background: #28a745; color: white; border: none; border-radius: 4px; padding: 4px 8px; font-size: 0.7rem; cursor: pointer;">Edit</button>
           <div style="font-weight: 600; font-size: 0.85rem; color: var(--main-color); margin-bottom: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding-right: 50px;">{{ user.name }}</div>
           <div style="font-size: 0.75rem; color: var(--secondary-color); margin-bottom: 4px;">{{ user.school_id }} • {{ user.grade }}</div>
           <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.7rem;">
@@ -174,7 +181,15 @@
       <div id="borrowed-view" class="view-section">
         <div class="projects-section-header">
           <p>Borrowed Books</p>
-          <p class="time">{{ borrowed_books|length }} Total</p>
+          <div style="display:flex; align-items:center; gap:10px;">
+            <form method="post" action="{% url 'admin_dashboard' %}" style="margin:0;">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="create_backup">
+              <button type="submit" class="btn-secondary" style="height: 34px; padding: 0 12px;">Backup</button>
+            </form>
+            <button type="button" class="btn-secondary" style="height: 34px; padding: 0 12px;" onclick="openMoveUpModal();">Move-Up</button>
+            <p class="time" style="margin:0;">{{ borrowed_books|length }} Total</p>
+          </div>
         </div>
         <div class="projects-section-line">
           <div class="projects-status">
@@ -311,10 +326,7 @@
               <line x1="9" y1="3" x2="9" y2="21"/>
               <line x1="15" y1="3" x2="15" y2="21"/>
             </svg>
-            <div>
-              <h3 style="margin: 0; color: #333; font-size: 1.1rem;">Barcode Scanner</h3>
-              <p style="margin: 0.25rem 0 0 0; color: #666; font-size: 0.9rem;">Scan book barcode or enter accession number</p>
-            </div>
+            <div></div>
           </div>
           <form method="post" action="{% url 'admin_dashboard' %}" id="barcode-return-form">
             {% csrf_token %}
@@ -422,6 +434,173 @@
 </div>
 </div>
 
+    <!-- Add Book Modal -->
+    <div id="addBookModal" class="modal" style="display: none;">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2 style="margin: 0; color: #333;">Add Book</h2>
+          <button onclick="closeBookAddModal()" class="modal-close">&times;</button>
+        </div>
+        <form method="post" action="{% url 'admin_dashboard' %}" id="addBookForm">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="add_book">
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Title *</label>
+              <input type="text" name="title" id="addBookTitle" required>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Main Author *</label>
+              <input type="text" name="main_author" id="addBookMainAuthor" required>
+            </div>
+            <div class="form-group">
+              <label>Co-Author</label>
+              <input type="text" name="co_author" id="addBookCoAuthor">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Publisher</label>
+              <input type="text" name="publisher" id="addBookPublisher">
+            </div>
+            <div class="form-group">
+              <label>Edition</label>
+              <input type="text" name="edition" id="addBookEdition">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Call Number *</label>
+              <input type="text" name="call_number" id="addBookCallNumber" required>
+              <small style="display:block; color: var(--secondary-color); margin-top: 4px;">One Book per Call Number; add multiple copies below (unique Accession Numbers).</small>
+            </div>
+            <div class="form-group">
+              <label>Language</label>
+              <select name="language" id="addBookLanguage">
+                <option value="English">English</option>
+                <option value="Filipino">Filipino</option>
+                <option value="Spanish">Spanish</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Type</label>
+              <select name="type" id="addBookType">
+                <option value="Analytics">Analytics</option>
+                <option value="Article">Article</option>
+                <option value="Books">Books</option>
+                <option value="Thesis">Thesis</option>
+                <option value="DOST Resources">DOST Resources</option>
+                <option value="Journal">Journal</option>
+                <option value="US Reference Materials">US Reference Materials</option>
+                <option value="Other" selected>Other</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group" style="width: 100%;">
+              <label>Copies (one per line) *</label>
+              <textarea name="copies_list" id="addBookCopies" required rows="6" style="width: 100%; padding: 10px; border: 2px solid var(--message-box-border); border-radius: 8px; background: var(--search-area-bg); color: var(--main-color); box-sizing: border-box; resize: vertical;" placeholder="ACC001, Main Library, Available
+ACC002, Main Library, Borrowed
+ACC003, Annex, Unavailable"></textarea>
+              <small style="display:block; color: var(--secondary-color); margin-top: 6px;">Format: AccessionNumber, Location, Status (Available/Unavailable/Borrowed/Lost). Status defaults to Available if omitted.</small>
+            </div>
+          </div>
+
+          <div class="modal-actions">
+            <button type="button" onclick="closeBookAddModal()" class="btn-secondary">Cancel</button>
+            <button type="submit" class="btn-primary">Add Book</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Add User Modal -->
+    <div id="addUserModal" class="modal" style="display: none;">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2 style="margin: 0; color: #333;">Add User</h2>
+          <button onclick="closeUserAddModal()" class="modal-close">&times;</button>
+        </div>
+        <form method="post" action="{% url 'admin_dashboard' %}" id="addUserForm">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="add_user">
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Grade *</label>
+              <select name="grade_num" id="addUserGrade" required>
+                <option value="7">Grade 7</option>
+                <option value="8">Grade 8</option>
+                <option value="9">Grade 9</option>
+                <option value="10">Grade 10</option>
+                <option value="11">Grade 11</option>
+                <option value="12">Grade 12</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Name *</label>
+              <input type="text" name="name" id="addUserName" required>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>School ID *</label>
+              <input type="text" name="school_id" id="addUserSchoolId" required>
+            </div>
+            <div class="form-group">
+              <label>Gender</label>
+              <select name="gender" id="addUserGender">
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="Other" selected>Other</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Email *</label>
+              <input type="email" name="email" id="addUserEmail" required>
+            </div>
+            <div class="form-group">
+              <label>Batch</label>
+              <input type="text" name="batch" id="addUserBatch">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Status</label>
+              <select name="is_activated" id="addUserIsActivated">
+                <option value="true">Active</option>
+                <option value="false" selected>Inactive</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="modal-actions">
+            <button type="button" onclick="closeUserAddModal()" class="btn-secondary">Cancel</button>
+            <button type="submit" class="btn-primary">Add User</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
     <!-- Edit Book Modal -->
     <div id="editBookModal" class="modal" style="display: none;">
       <div class="modal-content">
@@ -483,13 +662,23 @@
             <div class="form-group">
               <label>Type</label>
               <select name="type" id="editBookType">
-                <option value="Fiction">Fiction</option>
-                <option value="Non-Fiction">Non-Fiction</option>
-                <option value="Reference">Reference</option>
-                <option value="Textbook">Textbook</option>
-                <option value="Magazine">Magazine</option>
+                <option value="Analytics">Analytics</option>
+                <option value="Article">Article</option>
+                <option value="Books">Books</option>
+                <option value="Thesis">Thesis</option>
+                <option value="DOST Resources">DOST Resources</option>
+                <option value="Journal">Journal</option>
+                <option value="US Reference Materials">US Reference Materials</option>
                 <option value="Other">Other</option>
               </select>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group" style="width: 100%;">
+              <label>Copies</label>
+              <div id="editBookCopiesContainer" style="display: flex; flex-direction: column; gap: 10px; padding: 12px; background: var(--app-container); border: 2px solid var(--message-box-border); border-radius: 12px;"></div>
+              <small style="display:block; color: var(--secondary-color); margin-top: 6px;">Edit each copy's Status/Location. Deleting a copy is destructive and will ask for confirmation.</small>
             </div>
           </div>
           
@@ -511,8 +700,8 @@
         <form method="post" action="{% url 'admin_dashboard' %}" id="editUserForm">
           {% csrf_token %}
           <input type="hidden" name="action" value="edit_user">
-          <input type="hidden" name="school_id" id="editUserSchoolId">
-          <input type="hidden" name="grade" id="editUserGrade">
+          <input type="hidden" name="old_school_id" id="editUserOldSchoolId">
+          <input type="hidden" name="old_grade_num" id="editUserOldGradeNum">
           
           <div class="form-row">
             <div class="form-group">
@@ -524,14 +713,21 @@
           <div class="form-row">
             <div class="form-group">
               <label>School ID *</label>
-              <input type="text" id="editUserSchoolIdDisplay" readonly>
+              <input type="text" name="school_id" id="editUserSchoolId" required>
             </div>
             <div class="form-group">
               <label>Grade</label>
-              <input type="text" id="editUserGradeDisplay" readonly>
+              <select name="grade_num" id="editUserGradeNum" required>
+                <option value="7">Grade 7</option>
+                <option value="8">Grade 8</option>
+                <option value="9">Grade 9</option>
+                <option value="10">Grade 10</option>
+                <option value="11">Grade 11</option>
+                <option value="12">Grade 12</option>
+              </select>
             </div>
           </div>
-          
+
           <div class="form-row">
             <div class="form-group">
               <label>Email *</label>
@@ -556,72 +752,39 @@
           <div class="modal-actions">
             <button type="button" onclick="closeUserEditModal()" class="btn-secondary">Cancel</button>
             <button type="submit" class="btn-primary">Save Changes</button>
+            <button type="button" onclick="confirmDeleteUser()" class="btn-secondary" style="margin-left: auto; background: #dc3545; color: white; border-color: #dc3545;">Delete User</button>
           </div>
         </form>
       </div>
     </div>
 
-    <script  src="../static/Scripts/js/cadmin.js"></script>
+    <!-- Move-Up Modal -->
+    <div id="moveUpModal" class="modal" style="display: none;">
+      <div class="modal-content" style="max-width: 520px;">
+        <div class="modal-header">
+          <h2 style="margin: 0; color: #333;">Move-Up Students</h2>
+          <button onclick="closeMoveUpModal()" class="modal-close">&times;</button>
+        </div>
+        <form method="post" action="{% url 'admin_dashboard' %}" id="moveUpForm">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="move_up">
+          <div class="form-row">
+            <div class="form-group" style="width:100%;">
+              <label>Confirm with your password</label>
+              <input type="password" name="password" id="moveUpPassword" required placeholder="Enter your password">
+              <small style="display:block; color: var(--secondary-color); margin-top: 6px;">This will move Grade 7→8, 8→9, 9→10, 10→11, 11→12 and graduate Grade 12.</small>
+            </div>
+          </div>
+          <div class="modal-actions">
+            <button type="button" onclick="closeMoveUpModal()" class="btn-secondary">Cancel</button>
+            <button type="submit" class="btn-primary" style="background:#dc3545;">Run Move-Up</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <script src="{% static 'Scripts/js/cadmin.js' %}"></script>
     <script>
-      function showView(viewName) {
-        // Hide all views
-        document.getElementById('borrowed-view').style.display = 'none';
-        document.getElementById('checkout-view').style.display = 'none';
-        document.getElementById('return-view').style.display = 'none';
-        
-        // Hide sidebar sections
-        document.getElementById('sidebar-books').style.display = 'none';
-        document.getElementById('sidebar-users').style.display = 'none';
-        
-        // Show selected view
-        document.getElementById(viewName + '-view').style.display = 'block';
-        
-        // Update sidebar active state
-        document.querySelectorAll('.app-sidebar-link').forEach(link => {
-          link.classList.remove('active');
-        });
-        document.querySelector('[data-view="' + viewName + '"]').classList.add('active');
-        
-        // Auto-focus barcode input when checkout or return view is shown
-        if (viewName === 'checkout') {
-          setTimeout(() => {
-            const checkoutInput = document.getElementById('checkout-barcode-input');
-            if (checkoutInput) {
-              checkoutInput.focus();
-              checkoutInput.select();
-            }
-          }, 100);
-        } else if (viewName === 'return') {
-          setTimeout(() => {
-            const barcodeInput = document.getElementById('barcode-input');
-            if (barcodeInput) {
-              barcodeInput.focus();
-              barcodeInput.select();
-            }
-          }, 100);
-        }
-      }
-      
-      function toggleSidebarSection(sectionName) {
-        const booksSection = document.getElementById('sidebar-books');
-        const usersSection = document.getElementById('sidebar-users');
-        
-        if (sectionName === 'books') {
-          if (booksSection.style.display === 'none' || booksSection.style.display === '') {
-            booksSection.style.display = 'block';
-            usersSection.style.display = 'none';
-          } else {
-            booksSection.style.display = 'none';
-          }
-        } else if (sectionName === 'users') {
-          if (usersSection.style.display === 'none' || usersSection.style.display === '') {
-            usersSection.style.display = 'block';
-            booksSection.style.display = 'none';
-          } else {
-            usersSection.style.display = 'none';
-          }
-        }
-      }
 
       // Barcode scanner handler
       document.addEventListener('DOMContentLoaded', function() {
@@ -664,7 +827,7 @@
       });
       
       // Modal functions
-      function openBookEditModal(id, title, mainAuthor, coAuthor, publisher, edition, callNumber, language, type) {
+      function openBookEditModal(id, title, mainAuthor, coAuthor, publisher, edition, callNumber, language, type, copiesJson) {
         document.getElementById('editBookId').value = id;
         document.getElementById('editBookTitle').value = title;
         document.getElementById('editBookMainAuthor').value = mainAuthor;
@@ -674,6 +837,94 @@
         document.getElementById('editBookCallNumber').value = callNumber;
         document.getElementById('editBookLanguage').value = language;
         document.getElementById('editBookType').value = type;
+
+        // render copies editor
+        const container = document.getElementById('editBookCopiesContainer');
+        container.innerHTML = '';
+        let copies = [];
+        try {
+          copies = copiesJson ? JSON.parse(copiesJson) : [];
+        } catch (e) {
+          copies = [];
+        }
+
+        if (!copies || copies.length === 0) {
+          const empty = document.createElement('div');
+          empty.style.color = 'var(--secondary-color)';
+          empty.style.fontSize = '0.85rem';
+          empty.textContent = 'No copies found for this book.';
+          container.appendChild(empty);
+        } else {
+          copies.forEach((copy) => {
+            const row = document.createElement('div');
+            row.style.display = 'grid';
+            row.style.gridTemplateColumns = '140px 1fr 140px 110px';
+            row.style.gap = '10px';
+            row.style.alignItems = 'center';
+            row.style.padding = '10px';
+            row.style.borderRadius = '10px';
+            row.style.background = 'var(--search-area-bg)';
+            row.style.border = '1px solid var(--message-box-border)';
+
+            const acc = document.createElement('div');
+            acc.style.fontFamily = 'monospace';
+            acc.style.fontSize = '0.85rem';
+            acc.style.color = 'var(--main-color)';
+            acc.textContent = copy.accessionNumber || '';
+
+            const loc = document.createElement('input');
+            loc.type = 'text';
+            loc.name = 'copy_location';
+            loc.value = copy.Location || '';
+            loc.placeholder = 'Location';
+            loc.style.width = '100%';
+            loc.style.padding = '8px 10px';
+            loc.style.border = '2px solid var(--message-box-border)';
+            loc.style.borderRadius = '8px';
+            loc.style.background = 'var(--search-area-bg)';
+            loc.style.color = 'var(--main-color)';
+
+            const status = document.createElement('select');
+            status.name = 'copy_status';
+            status.style.width = '100%';
+            status.style.padding = '8px 10px';
+            status.style.border = '2px solid var(--message-box-border)';
+            status.style.borderRadius = '8px';
+            status.style.background = 'var(--search-area-bg)';
+            status.style.color = 'var(--main-color)';
+            ['Available', 'Unavailable', 'Borrowed', 'Lost'].forEach((opt) => {
+              const o = document.createElement('option');
+              o.value = opt;
+              o.textContent = opt;
+              if ((copy.status || '') === opt) o.selected = true;
+              status.appendChild(o);
+            });
+
+            const hiddenId = document.createElement('input');
+            hiddenId.type = 'hidden';
+            hiddenId.name = 'copy_id';
+            hiddenId.value = copy.id;
+
+            const del = document.createElement('button');
+            del.type = 'button';
+            del.className = 'btn-secondary';
+            del.style.background = '#dc3545';
+            del.style.color = 'white';
+            del.style.borderColor = '#dc3545';
+            del.textContent = 'Delete';
+            del.onclick = function() {
+              confirmDeleteCopy(copy.id, copy.accessionNumber || '');
+            };
+
+            row.appendChild(acc);
+            row.appendChild(loc);
+            row.appendChild(status);
+            row.appendChild(del);
+            row.appendChild(hiddenId);
+            container.appendChild(row);
+          });
+        }
+
         document.getElementById('editBookModal').style.display = 'flex';
       }
       
@@ -681,14 +932,14 @@
         document.getElementById('editBookModal').style.display = 'none';
       }
       
-      function openUserEditModal(schoolId, name, email, grade, batch, isActivated) {
+      function openUserEditModal(schoolId, name, email, gradeNum, batch, isActivated) {
+        document.getElementById('editUserOldSchoolId').value = schoolId;
+        document.getElementById('editUserOldGradeNum').value = String(gradeNum);
         document.getElementById('editUserSchoolId').value = schoolId;
         document.getElementById('editUserName').value = name;
         document.getElementById('editUserEmail').value = email;
-        document.getElementById('editUserSchoolIdDisplay').value = schoolId;
-        document.getElementById('editUserGrade').value = grade;
-        document.getElementById('editUserGradeDisplay').value = grade;
-        document.getElementById('editUserBatch').value = batch;
+        document.getElementById('editUserGradeNum').value = String(gradeNum);
+        document.getElementById('editUserBatch').value = batch || '';
         document.getElementById('editUserIsActivated').value = isActivated ? 'true' : 'false';
         document.getElementById('editUserModal').style.display = 'flex';
       }
@@ -696,15 +947,107 @@
       function closeUserEditModal() {
         document.getElementById('editUserModal').style.display = 'none';
       }
+
+      function openMoveUpModal() {
+        const input = document.getElementById('moveUpPassword');
+        if (input) input.value = '';
+        document.getElementById('moveUpModal').style.display = 'flex';
+        setTimeout(() => {
+          if (input) input.focus();
+        }, 50);
+      }
+
+      function closeMoveUpModal() {
+        document.getElementById('moveUpModal').style.display = 'none';
+      }
+
+      function postAction(fields) {
+        const form = document.createElement('form');
+        form.method = 'post';
+        form.action = '{% url "admin_dashboard" %}';
+
+        const csrf = document.querySelector('input[name=csrfmiddlewaretoken]');
+        if (csrf) {
+          const csrfInput = document.createElement('input');
+          csrfInput.type = 'hidden';
+          csrfInput.name = 'csrfmiddlewaretoken';
+          csrfInput.value = csrf.value;
+          form.appendChild(csrfInput);
+        }
+
+        Object.keys(fields).forEach((k) => {
+          const input = document.createElement('input');
+          input.type = 'hidden';
+          input.name = k;
+          input.value = fields[k];
+          form.appendChild(input);
+        });
+
+        document.body.appendChild(form);
+        form.submit();
+      }
+
+      function confirmDeleteCopy(copyId, accessionNumber) {
+        if (!copyId) return;
+        const ok = confirm('Delete copy ' + accessionNumber + '? This cannot be undone.');
+        if (!ok) return;
+        postAction({
+          action: 'delete_copy',
+          copy_id: String(copyId),
+          confirm_delete: 'yes'
+        });
+      }
+
+      function confirmDeleteUser() {
+        const schoolId = document.getElementById('editUserOldSchoolId')?.value;
+        const gradeNum = document.getElementById('editUserOldGradeNum')?.value;
+        if (!schoolId || !gradeNum) return;
+        const ok = confirm('Delete this user? This cannot be undone.');
+        if (!ok) return;
+        postAction({
+          action: 'delete_user',
+          school_id: schoolId,
+          grade_num: gradeNum,
+          confirm_delete: 'yes'
+        });
+      }
+
+      function openBookAddModal() {
+        // Clear previous values
+        document.getElementById('addBookForm').reset();
+        document.getElementById('addBookModal').style.display = 'flex';
+      }
+
+      function closeBookAddModal() {
+        document.getElementById('addBookModal').style.display = 'none';
+      }
+
+      function openUserAddModal() {
+        document.getElementById('addUserForm').reset();
+        document.getElementById('addUserModal').style.display = 'flex';
+      }
+
+      function closeUserAddModal() {
+        document.getElementById('addUserModal').style.display = 'none';
+      }
       
       // Close modals when clicking outside
       window.onclick = function(event) {
         const bookModal = document.getElementById('editBookModal');
         const userModal = document.getElementById('editUserModal');
+        const addBookModal = document.getElementById('addBookModal');
+        const addUserModal = document.getElementById('addUserModal');
+        const moveUpModal = document.getElementById('moveUpModal');
         if (event.target === bookModal) {
           closeBookEditModal();
         } else if (event.target === userModal) {
           closeUserEditModal();
+        } else if (event.target === addBookModal) {
+          closeBookAddModal();
+        } else if (event.target === addUserModal) {
+          closeUserAddModal();
+        } else if (event.target === moveUpModal) {
+          closeMoveUpModal();
         }
       }
       
@@ -719,7 +1062,7 @@
         for (let i = 0; i < items.length; i++) {
           const title = items[i].getAttribute('data-title');
           const author = items[i].getAttribute('data-author');
-          const accession = items[i].getAttribute('data-accession');
+          const accession = (items[i].getAttribute('data-accession') || '');
           
           if (title.includes(filter) || author.includes(filter) || accession.includes(filter)) {
             items[i].style.display = '';

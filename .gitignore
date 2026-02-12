@@ -10,3 +10,7 @@ db.sqlite3
 celerybeat-schedule
 lims_portal/celerybeat-schedule
 celerybeat-schedule.*
+
+# Backups
+backups/
+lims_portal/backups/

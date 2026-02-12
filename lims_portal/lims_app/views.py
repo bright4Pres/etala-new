@@ -2,9 +2,10 @@ from django.http import JsonResponse
 from django.utils.dateparse import parse_datetime
 from django.utils import timezone
 from django.shortcuts import render, redirect
-from .models import Book, BookCopy, BorrowHistory, grade_Seven, grade_Eight, grade_Nine, grade_Ten, grade_Eleven, grade_Twelve
-from django.views.decorators.csrf import csrf_protect
+from .models import Book, BookCopy, BorrowHistory, StudentActivation, grade_Seven, grade_Eight, grade_Nine, grade_Ten, grade_Eleven, grade_Twelve
+from django.views.decorators.csrf import csrf_protect, ensure_csrf_cookie
 from django.db.models import Count, Q, Avg
+from django.db import transaction, IntegrityError
 from datetime import datetime, timedelta
 import json
 from django.contrib.auth import authenticate, login, logout
@@ -13,7 +14,13 @@ from django.contrib.admin.views.decorators import staff_member_required
 from django.core.cache import cache
 from django.views.decorators.http import require_http_methods, require_POST
 from django.contrib import messages
+from django.core.management import call_command
+from io import StringIO
+from django.conf import settings
+from pathlib import Path
+import shutil
 
+@ensure_csrf_cookie
 def home(request):
     return render(request, "home.html", context={"current_tab": "home"})
 
@@ -706,44 +713,359 @@ def admin_dashboard(request):
                 book.Language = request.POST.get('language', book.Language)
                 book.Type = request.POST.get('type', book.Type)
                 book.save()
+
+                # Update copies (status/location) from modal, if present
+                copy_ids = request.POST.getlist('copy_id')
+                copy_statuses = request.POST.getlist('copy_status')
+                copy_locations = request.POST.getlist('copy_location')
+
+                if copy_ids:
+                    allowed_status = {'Available', 'Unavailable', 'Borrowed', 'Lost'}
+                    for i, copy_id in enumerate(copy_ids):
+                        status = copy_statuses[i] if i < len(copy_statuses) else 'Available'
+                        location = copy_locations[i] if i < len(copy_locations) else ''
+                        if status not in allowed_status:
+                            status = 'Available'
+                        BookCopy.objects.filter(id=copy_id, book=book).update(
+                            status=status,
+                            Location=(location or '').strip(),
+                        )
+
                 messages.success(request, f'Book "{book.Title}" updated successfully.')
             except Book.DoesNotExist:
                 messages.error(request, 'Book not found.')
             except Exception as e:
                 messages.error(request, f'Error updating book: {str(e)}')
+
+        elif action == 'delete_copy':
+            confirm_delete = request.POST.get('confirm_delete', 'no')
+            copy_id = request.POST.get('copy_id')
+            if confirm_delete != 'yes':
+                messages.error(request, 'Delete not confirmed.')
+                return redirect('admin_dashboard')
+            try:
+                copy = BookCopy.objects.select_related('book').get(id=copy_id)
+                accession = copy.accessionNumber
+                title = copy.book.Title
+                copy.delete()
+                messages.success(request, f'Copy {accession} removed from "{title}".')
+            except BookCopy.DoesNotExist:
+                messages.error(request, 'Copy not found.')
+            except Exception as e:
+                messages.error(request, f'Error deleting copy: {str(e)}')
         
         elif action == 'edit_user':
-            school_id = request.POST.get('school_id')
-            grade = request.POST.get('grade')
+            # New modal fields
+            old_school_id = (request.POST.get('old_school_id') or '').strip()
+            old_grade_num = (request.POST.get('old_grade_num') or '').strip()
+            new_school_id = (request.POST.get('school_id') or '').strip()
+            new_grade_num = (request.POST.get('grade_num') or '').strip()
+            
+            # Backward compatibility with the old modal
+            if not old_school_id:
+                old_school_id = new_school_id
+            if not old_grade_num:
+                grade_str = (request.POST.get('grade') or '').strip().lower()
+                if '7' in grade_str or 'seven' in grade_str:
+                    old_grade_num = '7'
+                elif '8' in grade_str or 'eight' in grade_str:
+                    old_grade_num = '8'
+                elif '9' in grade_str or 'nine' in grade_str:
+                    old_grade_num = '9'
+                elif '10' in grade_str or 'ten' in grade_str:
+                    old_grade_num = '10'
+                elif '11' in grade_str or 'eleven' in grade_str:
+                    old_grade_num = '11'
+                elif '12' in grade_str or 'twelve' in grade_str:
+                    old_grade_num = '12'
+            if not new_grade_num:
+                new_grade_num = old_grade_num
+
+            name = (request.POST.get('name') or '').strip()
+            email = (request.POST.get('email') or '').strip()
+            batch = (request.POST.get('batch') or '').strip() or None
+            is_activated = (request.POST.get('is_activated', 'false').lower() == 'true')
+
+            grade_map = {
+                '7': grade_Seven,
+                '8': grade_Eight,
+                '9': grade_Nine,
+                '10': grade_Ten,
+                '11': grade_Eleven,
+                '12': grade_Twelve,
+            }
+            source_model = grade_map.get(old_grade_num)
+            target_model = grade_map.get(new_grade_num)
+            if not source_model or not target_model:
+                messages.error(request, 'Invalid grade.')
+                return redirect('admin_dashboard')
+
             try:
-                # Determine which model to use based on grade
-                grade_model = None
-                if 'Seven' in grade:
-                    grade_model = grade_Seven
-                elif 'Eight' in grade:
-                    grade_model = grade_Eight
-                elif 'Nine' in grade:
-                    grade_model = grade_Nine
-                elif 'Ten' in grade:
-                    grade_model = grade_Ten
-                elif 'Eleven' in grade:
-                    grade_model = grade_Eleven
-                elif 'Twelve' in grade:
-                    grade_model = grade_Twelve
-                
-                if grade_model:
-                    user = grade_model.objects.get(school_id=school_id)
-                    user.name = request.POST.get('name', user.name)
-                    user.email = request.POST.get('email', user.email)
-                    user.batch = request.POST.get('batch', user.batch)
-                    is_activated = request.POST.get('is_activated', 'false')
-                    user.is_activated = is_activated.lower() == 'true'
-                    user.save()
-                    messages.success(request, f'User "{user.name}" updated successfully.')
-                else:
-                    messages.error(request, 'Invalid grade.')
+                with transaction.atomic():
+                    user = source_model.objects.get(school_id=old_school_id)
+
+                    # Unique school_id across all grade tables
+                    if new_school_id != old_school_id:
+                        for model in [grade_Seven, grade_Eight, grade_Nine, grade_Ten, grade_Eleven, grade_Twelve]:
+                            if model is source_model:
+                                continue
+                            if model.objects.filter(school_id=new_school_id).exists():
+                                messages.error(request, 'School ID already exists.')
+                                return redirect('admin_dashboard')
+
+                    # If moving grade, ensure name is not already used in the target table
+                    new_name = name or user.name
+                    if target_model is not source_model:
+                        if target_model.objects.filter(name=new_name).exists():
+                            messages.error(request, 'Name already exists in the selected grade.')
+                            return redirect('admin_dashboard')
+
+                    if target_model is source_model:
+                        user.school_id = new_school_id or user.school_id
+                        user.name = new_name
+                        user.email = email or user.email
+                        user.batch = batch
+                        user.is_activated = is_activated
+                        user.save()
+                    else:
+                        target_model.objects.create(
+                            name=new_name,
+                            school_id=new_school_id or user.school_id,
+                            gender=user.gender,
+                            email=email or user.email,
+                            batch=batch,
+                            is_activated=is_activated,
+                        )
+                        user.delete()
+
+                    # Keep StudentActivation in sync if present
+                    StudentActivation.objects.filter(school_id=old_school_id).update(
+                        school_id=new_school_id or old_school_id,
+                        name=new_name,
+                        email=email or user.email,
+                        batch=(batch or None),
+                        grade=int(new_grade_num) if str(new_grade_num).isdigit() else int(old_grade_num),
+                        is_activated=is_activated,
+                    )
+
+                messages.success(request, 'User updated successfully.')
+            except source_model.DoesNotExist:
+                messages.error(request, 'User not found.')
+            except IntegrityError:
+                messages.error(request, 'Could not update user. Ensure Name and School ID are unique.')
             except Exception as e:
                 messages.error(request, f'Error updating user: {str(e)}')
+
+        elif action == 'delete_user':
+            confirm_delete = request.POST.get('confirm_delete', 'no')
+            school_id = (request.POST.get('school_id') or '').strip()
+            grade_num = (request.POST.get('grade_num') or '').strip()
+            if confirm_delete != 'yes':
+                messages.error(request, 'Delete not confirmed.')
+                return redirect('admin_dashboard')
+
+            grade_map = {
+                '7': grade_Seven,
+                '8': grade_Eight,
+                '9': grade_Nine,
+                '10': grade_Ten,
+                '11': grade_Eleven,
+                '12': grade_Twelve,
+            }
+            model = grade_map.get(grade_num)
+            if not model:
+                messages.error(request, 'Invalid grade.')
+                return redirect('admin_dashboard')
+
+            try:
+                with transaction.atomic():
+                    user = model.objects.get(school_id=school_id)
+                    name = user.name
+                    user.delete()
+                    StudentActivation.objects.filter(school_id=school_id).delete()
+                messages.success(request, f'User "{name}" deleted.')
+            except model.DoesNotExist:
+                messages.error(request, 'User not found.')
+            except Exception as e:
+                messages.error(request, f'Error deleting user: {str(e)}')
+
+        elif action == 'move_up':
+            password = request.POST.get('password', '')
+            if not request.user.check_password(password):
+                messages.error(request, 'Password verification failed.')
+                return redirect('admin_dashboard')
+            try:
+                output = StringIO()
+                call_command('moveup_students', stdout=output)
+                messages.success(request, 'Move-up complete.')
+            except Exception as e:
+                messages.error(request, f'Error during move-up: {str(e)}')
+
+        elif action == 'create_backup':
+            try:
+                backups_dir = Path(settings.BASE_DIR) / 'backups'
+                backups_dir.mkdir(parents=True, exist_ok=True)
+                ts = timezone.now().strftime('%Y%m%d_%H%M%S')
+                run_dir = backups_dir / ts
+                run_dir.mkdir(parents=True, exist_ok=True)
+
+                db_path = Path(settings.BASE_DIR) / 'db.sqlite3'
+                if db_path.exists():
+                    shutil.copy2(db_path, run_dir / 'db.sqlite3')
+
+                books_data = list(Book.objects.all().values())
+                copies_data = list(BookCopy.objects.all().values())
+                (run_dir / 'books.json').write_text(json.dumps(books_data, default=str, indent=2), encoding='utf-8')
+                (run_dir / 'book_copies.json').write_text(json.dumps(copies_data, default=str, indent=2), encoding='utf-8')
+
+                users = {
+                    'grade7': list(grade_Seven.objects.all().values()),
+                    'grade8': list(grade_Eight.objects.all().values()),
+                    'grade9': list(grade_Nine.objects.all().values()),
+                    'grade10': list(grade_Ten.objects.all().values()),
+                    'grade11': list(grade_Eleven.objects.all().values()),
+                    'grade12': list(grade_Twelve.objects.all().values()),
+                }
+                (run_dir / 'users.json').write_text(json.dumps(users, default=str, indent=2), encoding='utf-8')
+                (run_dir / 'grade12_graduating.json').write_text(json.dumps(users['grade12'], default=str, indent=2), encoding='utf-8')
+
+                messages.success(request, f'Backup created: {run_dir.name}')
+            except Exception as e:
+                messages.error(request, f'Backup failed: {str(e)}')
+
+        elif action == 'add_book':
+            title = request.POST.get('title', '').strip()
+            main_author = request.POST.get('main_author', '').strip()
+            co_author = request.POST.get('co_author', '').strip()
+            publisher = request.POST.get('publisher', '').strip()
+            edition = request.POST.get('edition', '').strip()
+            call_number = request.POST.get('call_number', '').strip()
+            language = request.POST.get('language', '').strip() or 'English'
+            book_type = request.POST.get('type', '').strip() or 'Other'
+
+            copies_raw = request.POST.get('copies_list', '').strip()
+
+            if not title or not main_author or not call_number:
+                messages.error(request, 'Title, Main Author, and Call Number are required.')
+                return redirect('admin_dashboard')
+
+            if not copies_raw:
+                messages.error(request, 'Please provide at least one copy (accession number, location, status).')
+                return redirect('admin_dashboard')
+
+            allowed_status = {'Available', 'Unavailable', 'Borrowed', 'Lost'}
+            copies_to_create = []
+            for line in copies_raw.splitlines():
+                line = line.strip()
+                if not line:
+                    continue
+
+                # Accept: ACC,Location,Status  OR  ACC | Location | Status
+                parts = [p.strip() for p in (line.split('|') if '|' in line else line.split(','))]
+                parts = [p for p in parts if p]
+                if len(parts) < 2:
+                    messages.error(request, f'Invalid copy line: "{line}". Use "ACC, Location, Status".')
+                    return redirect('admin_dashboard')
+
+                accession = parts[0]
+                location = parts[1]
+                status = parts[2] if len(parts) >= 3 else 'Available'
+                if status not in allowed_status:
+                    status = 'Available'
+
+                copies_to_create.append((accession, location, status))
+
+            if not copies_to_create:
+                messages.error(request, 'No valid copy lines found.')
+                return redirect('admin_dashboard')
+
+            try:
+                with transaction.atomic():
+                    # One Book per call number; copies are BookCopy rows.
+                    book, created = Book.objects.get_or_create(
+                        callNumber=call_number,
+                        defaults={
+                            'Title': title,
+                            'mainAuthor': main_author,
+                            'coAuthor': co_author or None,
+                            'Publisher': publisher or None,
+                            'Edition': edition or None,
+                            'Language': language,
+                            'Type': book_type,
+                        }
+                    )
+
+                    if not created:
+                        # Update core fields (keep it simple: overwrite with provided non-empty values)
+                        book.Title = title or book.Title
+                        book.mainAuthor = main_author or book.mainAuthor
+                        book.coAuthor = co_author or book.coAuthor
+                        book.Publisher = publisher or book.Publisher
+                        book.Edition = edition or book.Edition
+                        book.Language = language or book.Language
+                        book.Type = book_type or book.Type
+                        book.save()
+
+                    for accession, location, status in copies_to_create:
+                        BookCopy.objects.create(
+                            book=book,
+                            accessionNumber=accession,
+                            Location=location,
+                            status=status,
+                        )
+
+                messages.success(request, f'Book "{title}" saved and {len(copies_to_create)} copy/copies added.')
+            except IntegrityError:
+                messages.error(request, 'Could not save book/copies. Accession numbers and call numbers must be unique.')
+            except Exception as e:
+                messages.error(request, f'Error adding book: {str(e)}')
+
+        elif action == 'add_user':
+            grade_num = request.POST.get('grade_num', '').strip()
+            name = request.POST.get('name', '').strip()
+            school_id = request.POST.get('school_id', '').strip()
+            email = request.POST.get('email', '').strip()
+            batch = request.POST.get('batch', '').strip()
+            gender = request.POST.get('gender', 'Other').strip() or 'Other'
+            is_activated = request.POST.get('is_activated', 'false').lower() == 'true'
+
+            if not grade_num or not name or not school_id or not email:
+                messages.error(request, 'Grade, Name, School ID, and Email are required.')
+                return redirect('admin_dashboard')
+
+            grade_model = {
+                '7': grade_Seven,
+                '8': grade_Eight,
+                '9': grade_Nine,
+                '10': grade_Ten,
+                '11': grade_Eleven,
+                '12': grade_Twelve,
+            }.get(grade_num)
+
+            if not grade_model:
+                messages.error(request, 'Invalid grade selected.')
+                return redirect('admin_dashboard')
+
+            # Prevent duplicate school IDs across all grades
+            for model in [grade_Seven, grade_Eight, grade_Nine, grade_Ten, grade_Eleven, grade_Twelve]:
+                if model.objects.filter(school_id=school_id).exists():
+                    messages.error(request, 'School ID already exists.')
+                    return redirect('admin_dashboard')
+
+            try:
+                grade_model.objects.create(
+                    name=name,
+                    school_id=school_id,
+                    email=email,
+                    batch=batch or None,
+                    gender=gender,
+                    is_activated=is_activated,
+                )
+                messages.success(request, f'User "{name}" added successfully.')
+            except IntegrityError:
+                messages.error(request, 'Could not add user. Name and School ID must be unique.')
+            except Exception as e:
+                messages.error(request, f'Error adding user: {str(e)}')
         
         return redirect('admin_dashboard')
     
@@ -760,6 +1082,17 @@ def admin_dashboard(request):
     all_books = []
     for book in Book.objects.all().order_by('-id')[:50]:
         copies = book.copies.all()
+        copies_payload = [
+            {
+                'id': c.id,
+                'accessionNumber': c.accessionNumber,
+                'status': c.status,
+                'Location': c.Location,
+                'borrowed_by': c.borrowed_by,
+                'student_id': c.student_id,
+            }
+            for c in copies
+        ]
         all_books.append({
             'id': book.id,
             'Title': book.Title,
@@ -773,18 +1106,28 @@ def admin_dashboard(request):
             'total_copies': book.get_total_copies(),
             'available_copies': book.get_available_copies(),
             'borrowed_copies': book.get_borrowed_copies(),
-            'copies': [{'accessionNumber': c.accessionNumber, 'status': c.status, 'Location': c.Location} for c in copies]
+            'copies': copies_payload,
+            'copies_json': json.dumps(copies_payload),
         })
     
     # Get all users from all grade models
     all_users = []
-    for model in [grade_Seven, grade_Eight, grade_Nine, grade_Ten, grade_Eleven, grade_Twelve]:
+    grade_models = [
+        (7, grade_Seven),
+        (8, grade_Eight),
+        (9, grade_Nine),
+        (10, grade_Ten),
+        (11, grade_Eleven),
+        (12, grade_Twelve),
+    ]
+    for grade_num, model in grade_models:
         for user in model.objects.all()[:20]:  # Get up to 20 from each grade
             all_users.append({
                 'name': user.name,
                 'school_id': user.school_id,
                 'email': user.email,
-                'grade': model.__name__.replace('grade_', 'Grade '),
+                'grade': f'Grade {grade_num}',
+                'grade_num': grade_num,
                 'batch': getattr(user, 'batch', 'N/A'),
                 'is_activated': user.is_activated,
             })

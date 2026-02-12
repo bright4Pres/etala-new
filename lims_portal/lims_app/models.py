@@ -331,6 +331,7 @@ type_CHOICES = (
 
 STATUS_CHOICES = [
     ('Available', 'Available'),
+    ('Unavailable', 'Unavailable'),
     ('Borrowed', 'Borrowed'),
     ('Lost', 'Lost'),
 ]

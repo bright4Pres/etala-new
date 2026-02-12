@@ -13,12 +13,7 @@ app.config_from_object('django.conf:settings', namespace='CELERY')
 app.autodiscover_tasks()
 
 # Define periodic tasks
-app.conf.beat_schedule = {
-    'send-due-reminders-daily': {
-        'task': 'lims_app.tasks.send_due_reminders_task',
-        'schedule': crontab(hour=9, minute=0),  # Run at 9:00 AM daily
-    },
-}
+app.conf.beat_schedule = {}
 
 @app.task(bind=True)
 def debug_task(self):
