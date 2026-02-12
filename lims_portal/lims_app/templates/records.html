@@ -117,6 +117,7 @@
       transform: translateX(-50%);
       width: 600px;
       max-width: 600px;
+      z-index: 100;
     }
     .search-suggestions {
       display: none;
@@ -124,15 +125,16 @@
       top: calc(100% + 8px);
       left: 0;
       right: 0;
-      background: var(--content-bg);
+      background: var(--projects-section);
+      border: 1px solid var(--message-box-border);
       border-radius: 12px;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.3);
       max-height: 400px;
       overflow-y: auto;
-      z-index: 1000;
+      z-index: 10000;
     }
     .search-suggestions.show {
-      display: block;
+      display: block !important;
     }
     .search-suggestion-item {
       padding: 1rem 1.5rem;
@@ -177,6 +179,31 @@
       border-radius: 0 0 10px 10px;
       font-size: 0.9em;
       background: var(--message-box-hover);
+    }
+    .book-row {
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+    }
+    .book-row:hover {
+      background-color: var(--message-box-hover) !important;
+    }
+    .expand-icon {
+      display: inline-block;
+      margin-left: 8px;
+      transition: transform 0.2s ease;
+      color: var(--main-color);
+      opacity: 0.6;
+      vertical-align: middle;
+      flex-shrink: 0;
+    }
+    .book-row.shown .expand-icon {
+      transform: rotate(180deg);
+    }
+    tr.shown {
+      background-color: var(--message-box-hover) !important;
+    }
+    tr.shown > * {
+      background-color: var(--message-box-hover) !important;
     }
     tr.shown {
       background-color: var(--message-box-hover) !important;
@@ -362,11 +389,12 @@
               <tr>
                 <th>Book Details</th>
                 <th>Status</th>
+                <th style="display:none;">Search</th>
               </tr>
             </thead>
             <tbody>
               {% for book in recorded_books %}
-              <tr class="book-row" data-search="{{ book.Title }} {{ book.mainAuthor }} {{ book.coAuthor }} {{ book.Edition }} {{ book.Publisher }} {{ book.placeofPublication }} {{ book.publicationDate|date:'Y-m-d' }} {{ book.copyrightDate|date:'Y-m-d' }} {{ book.Language }} {{ book.Type }} {{ book.callNumber }} {{ book.Editors }} {{ book.acquisitionStatus }}{% for copy in book.copies %} {{ copy.accessionNumber }} {{ copy.Location }}{% endfor %}" data-details="
+              <tr class="book-row" data-search="{{ book.Title }} {{ book.mainAuthor }} {{ book.coAuthor }} {{ book.Edition }} {{ book.Publisher }} {{ book.placeofPublication }} {{ book.publicationDate|date:'Y-m-d' }} {{ book.copyrightDate|date:'Y-m-d' }} {{ book.Language }} {{ book.Type }} {{ book.callNumber }} {{ book.Editors }} {{ book.acquisitionStatus }}{% for copy in book.copies %} {{ copy.accessionNumber }} {{ copy.Location }} {{ copy.status }} {{ copy.borrowed_by }}{% endfor %}" data-details="
                 <div style='display: flex; gap: 20px;'>
                   <div style='flex: 1;'>
                     <strong>Main Author:</strong> {{ book.mainAuthor|default:'-' }}<br>
@@ -399,13 +427,20 @@
                 </div>
               ">
                 <td>
-                  <strong>{{ book.Title }}</strong> by {{ book.mainAuthor }}<br>
+                  <strong>{{ book.Title }}</strong> by {{ book.mainAuthor }}
+                  <svg class="expand-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                  </svg>
+                  <br>
                   <small style="color: var(--secondary-color);">{{ book.callNumber }}</small>
                 </td>
                 <td style="text-align:center;">
                   <strong style="color: {% if book.available_copies > 0 %}#28a745{% else %}#dc3545{% endif %};">
                     {{ book.available_copies }} / {{ book.total_copies }}
                   </strong>
+                </td>
+                <td style="display:none;">
+                  {{ book.Title }} {{ book.mainAuthor }} {{ book.coAuthor }} {{ book.Edition }} {{ book.Publisher }} {{ book.placeofPublication }} {{ book.publicationDate|date:'Y-m-d' }} {{ book.copyrightDate|date:'Y-m-d' }} {{ book.Language }} {{ book.Type }} {{ book.callNumber }} {{ book.Editors }} {{ book.acquisitionStatus }}{% for copy in book.copies %} {{ copy.accessionNumber }} {{ copy.Location }} {{ copy.status }} {{ copy.borrowed_by }}{% endfor %}
                 </td>
               </tr>
               {% endfor %}
@@ -450,25 +485,55 @@
         const query = this.value.trim();
         
         clearTimeout(searchTimeout);
-        
-        if (query.length < 2) {
+
+        // Reset immediately when cleared
+        if (!query) {
+          applySearch('');
           suggestionsContainer.classList.remove('show');
           return;
         }
-        
+
+        // Apply filtering as user types (debounced)
         searchTimeout = setTimeout(() => {
+          applySearch(query);
+          if (query.length < 2) {
+            suggestionsContainer.classList.remove('show');
+            return;
+          }
           fetchSearchSuggestions(query);
-        }, 300);
+        }, 200);
       });
 
       searchInput.addEventListener('keypress', function(event) {
         if (event.key === 'Enter') {
+          event.preventDefault();
           const query = this.value.trim();
-          if (query) {
-            window.location.href = `/records/?search=${encodeURIComponent(query)}`;
-          }
+          applySearch(query);
         }
       });
+    }
+
+    function applySearch(query) {
+      suggestionsContainer.classList.remove('show');
+
+      // Keep search in URL like YouTube (no full reload)
+      const url = new URL(window.location.href);
+      if (query) {
+        url.searchParams.set('search', query);
+      } else {
+        url.searchParams.delete('search');
+      }
+      window.history.replaceState({}, '', url);
+
+      if (!dataTable) return;
+      dataTable.search(query || '').draw();
+    }
+
+    // Used by suggestion click handlers (safe: encoded)
+    function applySearchFromEncoded(encodedQuery) {
+      const decoded = decodeURIComponent(encodedQuery || '');
+      if (searchInput) searchInput.value = decoded;
+      applySearch(decoded);
     }
 
     function fetchSearchSuggestions(query) {
@@ -512,11 +577,53 @@
         if (book.Publisher && book.Publisher.toLowerCase().includes(queryLower)) {
           matches.push(`<span class="suggestion-match">Publisher</span>: ${highlightMatch(book.Publisher, query)}`);
         }
+        if (book.Edition && book.Edition.toLowerCase().includes(queryLower)) {
+          matches.push(`<span class="suggestion-match">Edition</span>: ${highlightMatch(book.Edition, query)}`);
+        }
+        if (book.Language && book.Language.toLowerCase().includes(queryLower)) {
+          matches.push(`<span class="suggestion-match">Language</span>: ${highlightMatch(book.Language, query)}`);
+        }
+        if (book.Type && book.Type.toLowerCase().includes(queryLower)) {
+          matches.push(`<span class="suggestion-match">Type</span>: ${highlightMatch(book.Type, query)}`);
+        }
+        if (book.placeofPublication && book.placeofPublication.toLowerCase().includes(queryLower)) {
+          matches.push(`<span class="suggestion-match">Place</span>: ${highlightMatch(book.placeofPublication, query)}`);
+        }
+        if (book.Editors && book.Editors.toLowerCase().includes(queryLower)) {
+          matches.push(`<span class="suggestion-match">Editors</span>: ${highlightMatch(book.Editors, query)}`);
+        }
+        if (book.acquisitionStatus && book.acquisitionStatus.toLowerCase().includes(queryLower)) {
+          matches.push(`<span class="suggestion-match">Acquisition</span>: ${highlightMatch(book.acquisitionStatus, query)}`);
+        }
+        if (book.copyrightDate && String(book.copyrightDate).toLowerCase().includes(queryLower)) {
+          matches.push(`<span class="suggestion-match">Copyright</span>: ${highlightMatch(String(book.copyrightDate), query)}`);
+        }
+        if (book.publicationDate && String(book.publicationDate).toLowerCase().includes(queryLower)) {
+          matches.push(`<span class="suggestion-match">Published</span>: ${highlightMatch(String(book.publicationDate), query)}`);
+        }
         
-        const matchDetails = matches.length > 0 ? matches.join(' • ') : 'Match found';
+        // Check copies for accession numbers, locations, and status
+        if (book.copies && Array.isArray(book.copies)) {
+          book.copies.forEach(copy => {
+            if (copy.accessionNumber && copy.accessionNumber.toLowerCase().includes(queryLower)) {
+              matches.push(`<span class="suggestion-match">Accession</span>: ${highlightMatch(copy.accessionNumber, query)}`);
+            }
+            if (copy.Location && copy.Location.toLowerCase().includes(queryLower)) {
+              matches.push(`<span class="suggestion-match">Location</span>: ${highlightMatch(copy.Location, query)}`);
+            }
+            if (copy.status && copy.status.toLowerCase().includes(queryLower)) {
+              matches.push(`<span class="suggestion-match">Status</span>: ${highlightMatch(copy.status, query)}`);
+            }
+            if (copy.borrowed_by && copy.borrowed_by.toLowerCase().includes(queryLower)) {
+              matches.push(`<span class="suggestion-match">Borrower</span>: ${highlightMatch(copy.borrowed_by, query)}`);
+            }
+          });
+        }
+        
+        const matchDetails = matches.length > 0 ? matches.slice(0, 3).join(' • ') : 'Match found';
         
         return `
-          <div class="search-suggestion-item" onclick="goToRecords('${encodeURIComponent(query)}')">
+          <div class="search-suggestion-item" onclick="applySearchFromEncoded('${encodeURIComponent(query)}')">
             <div class="suggestion-title">${escapeHtml(book.Title)}</div>
             <div class="suggestion-details">
               ${matchDetails}<br>
@@ -546,10 +653,6 @@
       return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     }
 
-    function goToRecords(query) {
-      window.location.href = `/records/?search=${query}`;
-    }
-
     document.addEventListener('click', function(event) {
       if (!event.target.closest('.search-wrapper')) {
         suggestionsContainer.classList.remove('show');
@@ -558,74 +661,158 @@
 
     // DataTable with expandable rows
     $(document).ready(function() {
+      let expandedRows = new Set();
+      
+      // Store original HTML content of cells
+      const cellOriginalContent = new Map();
+      
       dataTable = $('#booksTable').DataTable({
         order: [],
-        columnDefs: [{ orderable: false, targets: "_all" }],
-        language: {
-          search: "Quick Filter:",
-          searchPlaceholder: "Find books here!"
+        columnDefs: [
+          { orderable: false, targets: "_all" },
+          // Only the hidden column is searchable; visible columns stay display-only.
+          { searchable: false, targets: [0, 1] },
+          { visible: false, searchable: true, targets: 2 }
+        ],
+        // Remove built-in DataTables search UI (we use the header search input)
+        dom: 'rtip',
+        deferRender: false,
+        createdRow: function(row, data, dataIndex) {
+          // Ensure book-row class is always present
+          $(row).addClass('book-row');
+        },
+        drawCallback: function() {
+          const api = this.api();
+          const searchTerm = api.search().toLowerCase();
+          
+          // Restore expanded rows after redraw
+          expandedRows.forEach(function(rowId) {
+            const row = api.row('#' + rowId);
+            if (row.length) {
+              const tr = $(row.node());
+              if (!row.child.isShown()) {
+                let detailsHTML = tr.attr('data-details');
+                if (searchTerm) {
+                  detailsHTML = highlightTextInHTML(detailsHTML, searchTerm);
+                }
+                row.child(`<div class='details-container' style='display:block;'>${detailsHTML}</div>`).show();
+                tr.addClass('shown');
+              }
+            }
+          });
+          
+          // Apply highlighting to visible cells - be careful to preserve structure
+          if (searchTerm) {
+            $('#booksTable tbody tr.book-row').each(function() {
+              const tr = $(this);
+              const rowIndex = tr.index();
+              
+              tr.find('td').each(function(colIndex) {
+                const cell = $(this);
+
+                // Skip hidden search-index column
+                if (!cell.is(':visible')) {
+                  return;
+                }
+                const cellId = rowIndex + '_' + colIndex;
+                
+                if (!cellOriginalContent.has(cellId)) {
+                  cellOriginalContent.set(cellId, cell.html());
+                }
+                
+                const originalHtml = cellOriginalContent.get(cellId);
+                const highlighted = highlightTextInHTML(originalHtml, searchTerm);
+                cell.html(highlighted);
+              });
+            });
+          } else {
+            // Restore original content when search is cleared
+            cellOriginalContent.forEach((originalHtml, cellId) => {
+              const [rowIdx, colIdx] = cellId.split('_').map(Number);
+              const cell = $(`#booksTable tbody tr.book-row:eq(${rowIdx}) td:eq(${colIdx})`);
+              if (cell.length) {
+                cell.html(originalHtml);
+              }
+            });
+            cellOriginalContent.clear();
+          }
         }
       });
 
-      // Custom search function to highlight matches
-      $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
-        const searchTerm = dataTable.search().toLowerCase();
-        if (!searchTerm) return true;
-
-        const row = dataTable.row(dataIndex).node();
-        const searchData = $(row).attr('data-search') || '';
+      // Restore search state from URL on first load
+      try {
+        const url = new URL(window.location.href);
+        const initial = (url.searchParams.get('search') || '').trim();
+        if (initial && searchInput) {
+          searchInput.value = initial;
+          applySearch(initial);
+        }
+      } catch (e) {
+        // ignore
+      }
+      
+      // Function to highlight text while preserving HTML structure
+      function highlightTextInHTML(html, searchTerm) {
+        if (!searchTerm) return html;
         
-        return searchData.toLowerCase().includes(searchTerm);
-      });
-
-      // Highlight matches in table cells
-      dataTable.on('search.dt', function() {
-        const searchTerm = dataTable.search().toLowerCase();
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = html;
         
-        // Highlight in table cells
-        $('#booksTable tbody td').each(function() {
-          const cell = $(this);
-          const text = cell.text();
-          if (searchTerm && text.toLowerCase().includes(searchTerm)) {
-            const highlighted = text.replace(new RegExp(`(${escapeRegex(searchTerm)})`, 'gi'), '<mark>$1</mark>');
-            cell.html(highlighted);
-          } else {
-            cell.html(text);
+        function highlightTextNodes(node) {
+          if (node.nodeType === 3) { // Text node
+            const text = node.textContent;
+            if (text.toLowerCase().includes(searchTerm)) {
+              const span = document.createElement('span');
+              const regex = new RegExp(`(${escapeRegex(searchTerm)})`, 'gi');
+              span.innerHTML = text.replace(regex, '<mark>$1</mark>');
+              node.parentNode.replaceChild(span, node);
+            }
+          } else if (node.nodeType === 1 && node.tagName !== 'MARK') { // Element node
+            Array.from(node.childNodes).forEach(highlightTextNodes);
           }
-        });
+        }
         
-        // Highlight in expanded details
-        $('#booksTable tbody tr.shown .details-container').each(function() {
-          const container = $(this);
-          const originalHTML = container.html().replace(/<mark>|<\/mark>/g, ''); // Remove existing marks
-          if (searchTerm) {
-            const highlighted = originalHTML.replace(new RegExp(`(${escapeRegex(searchTerm)})`, 'gi'), '<mark>$1</mark>');
-            container.html(highlighted);
-          } else {
-            container.html(originalHTML);
-          }
-        });
-      });
+        highlightTextNodes(tempDiv);
+        return tempDiv.innerHTML;
+      }
 
-      $('#booksTable tbody').on('click', 'tr.book-row', function() {
+      // Event delegation for row clicks - use tbody to ensure it works after redraws
+      $('#booksTable tbody').on('click', 'tr', function(e) {
         const tr = $(this);
+        
+        // Skip if this is a child row (details row)
+        if (tr.hasClass('child')) return;
+        
         const row = dataTable.row(tr);
+        
+        // Check if this row has data-details, if not, skip
+        const detailsAttr = tr.attr('data-details');
+        if (!detailsAttr) {
+          return;
+        }
+        
+        const rowId = tr.attr('id') || 'row_' + row.index();
+        
+        if (!tr.attr('id')) {
+          tr.attr('id', rowId);
+        }
 
         if (row.child.isShown()) {
           $('div.details-container', row.child()).slideUp(250, function() {
             row.child.hide();
             tr.removeClass('shown');
+            expandedRows.delete(rowId);
           });
         } else {
-          let detailsHTML = tr.attr('data-details');
+          let detailsHTML = detailsAttr;
           const searchTerm = dataTable.search().toLowerCase();
           if (searchTerm) {
-            // Highlight matches in details
-            detailsHTML = detailsHTML.replace(new RegExp(`(${escapeRegex(searchTerm)})`, 'gi'), '<mark>$1</mark>');
+            detailsHTML = highlightTextInHTML(detailsHTML, searchTerm);
           }
           row.child(`<div class='details-container'>${detailsHTML}</div>`).show();
           $('div.details-container', row.child()).slideDown(250);
           tr.addClass('shown');
+          expandedRows.add(rowId);
         }
       });
     });

@@ -9,6 +9,9 @@ from datetime import datetime, timedelta
 import json
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
+from django.contrib.admin.views.decorators import staff_member_required
+from django.core.cache import cache
+from django.views.decorators.http import require_http_methods, require_POST
 from django.contrib import messages
 
 def home(request):
@@ -111,8 +114,19 @@ def records(request):
             Q(Title__icontains=search_query) | 
             Q(mainAuthor__icontains=search_query) | 
             Q(coAuthor__icontains=search_query) |
-            Q(callNumber__icontains=search_query)
-        )
+            Q(callNumber__icontains=search_query) |
+            Q(Publisher__icontains=search_query) |
+            Q(Edition__icontains=search_query) |
+            Q(Editors__icontains=search_query) |
+            Q(placeofPublication__icontains=search_query) |
+            Q(Language__icontains=search_query) |
+            Q(Type__icontains=search_query) |
+            Q(acquisitionStatus__icontains=search_query) |
+            Q(copies__accessionNumber__icontains=search_query) |
+            Q(copies__Location__icontains=search_query) |
+            Q(copies__status__icontains=search_query) |
+            Q(copies__borrowed_by__icontains=search_query)
+        ).distinct()
     
     # If location filter, only include books that have copies in that location
     if location:
@@ -142,8 +156,8 @@ def records(request):
             'Language': book.Language,
             'Type': book.Type,
             'placeofPublication': book.placeofPublication,
-            'copyrightDate': book.copyrightDate,
-            'publicationDate': book.publicationDate,
+            'copyrightDate': str(book.copyrightDate) if book.copyrightDate else None,
+            'publicationDate': str(book.publicationDate) if book.publicationDate else None,
             'Editors': book.Editors,
             'acquisitionStatus': book.acquisitionStatus,
             'total_copies': total_copies,
@@ -155,8 +169,8 @@ def records(request):
                 'status': c.status,
                 'borrowed_by': c.borrowed_by,
                 'student_id': c.student_id,
-                'borrow_date': c.borrow_date,
-                'return_date': c.return_date
+                'borrow_date': str(c.borrow_date) if c.borrow_date else None,
+                'return_date': str(c.return_date) if c.return_date else None
             } for c in copies]
         })
 
@@ -564,22 +578,32 @@ def analytics(request):
 # Admin Views
 def admin_login(request):
     if request.method == 'POST':
-        username = request.POST.get('username')
-        password = request.POST.get('password')
+        # Rate limiting: block after 5 failed attempts for 15 minutes
+        ip = request.META.get('REMOTE_ADDR', '')
+        rate_key = f'login_attempts_{ip}'
+        attempts = cache.get(rate_key, 0)
+        if attempts >= 5:
+            messages.error(request, 'Too many failed login attempts. Please try again in 15 minutes.')
+            return render(request, 'admin_login.html')
+
+        username = request.POST.get('username', '').strip()
+        password = request.POST.get('password', '')
         user = authenticate(request, username=username, password=password)
         if user is not None and user.is_staff:
+            cache.delete(rate_key)  # Reset on successful login
             login(request, user)
             return redirect('admin_dashboard')
         else:
+            cache.set(rate_key, attempts + 1, 900)  # 15 min lockout
             messages.error(request, 'Invalid credentials or not authorized.')
     return render(request, 'admin_login.html')
 
-@login_required
+@staff_member_required
 def admin_logout(request):
     logout(request)
     return redirect('admin_login')
 
-@login_required
+@staff_member_required
 def admin_dashboard(request):
     if request.method == 'POST':
         action = request.POST.get('action')
@@ -785,7 +809,8 @@ def admin_dashboard(request):
         'all_users': all_users,
     })
 
-@login_required
+@staff_member_required
+@require_http_methods(["GET", "POST"])
 def admin_checkout(request):
     if request.method == 'POST':
         book_id = request.POST.get('book_id')
@@ -800,7 +825,8 @@ def admin_checkout(request):
     book_copies = BookCopy.objects.filter(status='Available').select_related('book')
     return render(request, 'admin_checkout.html', {'books': book_copies})
 
-@login_required
+@staff_member_required
+@require_http_methods(["GET", "POST"])
 def admin_return(request):
     if request.method == 'POST':
         borrow_id = request.POST.get('borrow_id')
@@ -841,7 +867,7 @@ def admin_return(request):
     borrowed_books = BorrowHistory.objects.filter(returned=False)
     return render(request, 'admin_return.html', {'borrowed_books': borrowed_books})
 
-@login_required
+@staff_member_required
 def admin_accounts(request):
     # Get all students grouped by grade
     all_students = {}
@@ -851,7 +877,7 @@ def admin_accounts(request):
         all_students[grade_num] = students
     return render(request, 'admin_accounts.html', {'all_students': all_students})
 
-@login_required
+@staff_member_required
 def admin_books(request):
     search_query = request.GET.get('search', '')
     books = Book.objects.all()
@@ -863,9 +889,13 @@ def admin_books(request):
         )
     return render(request, 'admin_books.html', {'books': books, 'search_query': search_query})
 
-@login_required
+@staff_member_required
 def admin_edit_book(request, book_id):
-    book = Book.objects.get(id=book_id)
+    try:
+        book = Book.objects.get(id=book_id)
+    except Book.DoesNotExist:
+        messages.error(request, 'Book not found.')
+        return redirect('admin_books')
     if request.method == 'POST':
         book.Title = request.POST.get('Title')
         book.mainAuthor = request.POST.get('mainAuthor')

@@ -151,3 +151,12 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # Custom login URL for @login_required decorator
 LOGIN_URL = '/library-admin/login/'
+
+# ============ SECURITY SETTINGS ============
+SESSION_COOKIE_HTTPONLY = True       # Prevent JS access to session cookie
+CSRF_COOKIE_HTTPONLY = True          # Prevent JS access to CSRF cookie
+X_FRAME_OPTIONS = 'DENY'            # Prevent clickjacking
+SECURE_BROWSER_XSS_FILTER = True    # Enable browser XSS protection
+SECURE_CONTENT_TYPE_NOSNIFF = True  # Prevent MIME-type sniffing
+SESSION_COOKIE_AGE = 3600           # Session expires after 1 hour of inactivity
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True  # Session ends when browser closes
