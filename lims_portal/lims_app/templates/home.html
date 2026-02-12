@@ -1,12 +1,165 @@
-{%  extends 'base_portal.html' %}
+{% extends 'base_portal.html' %}
+{% load static %}
+{% block title %}Home - eTala OPAC{% endblock %}
 
-{% block title %}eTala - Library Portal{% endblock %}
+{% block extra_head %}
+  <style>
+    .landing-section {
+      text-align: center;
+      padding: 2rem 2rem 4rem 2rem;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .landing-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+      padding: 0 0rem;
+    }
+    .landing-title {
+      flex: 1;
+      text-align: center;
+    }
+    .landing-section h1 {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+      color: var(--main-color);
+      font-weight: 700;
+    }
+    .landing-section h2 {
+      font-size: 1.5rem;
+      margin-bottom: 2rem;
+      color: var(--secondary-color);
+      font-weight: 500;
+    }
+    .landing-section p {
+      font-size: 1.2rem;
+      margin-bottom: 3rem;
+      color: var(--main-color);
+      line-height: 1.6;
+    }
+    .cta-button {
+      display: inline-block;
+      padding: 1rem 2rem;
+      background: #3368a4;
+      color: white;
+      text-decoration: none;
+      border-radius: 50px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      transition: background 0.3s ease;
+      border: 2px solid #3368a4;
+    }
+    .cta-button:hover {
+      background: #285a8c;
+      border-color: #285a8c;
+    }
+    .features {
+      display: flex;
+      justify-content: space-around;
+      margin-top: 3rem;
+      flex-wrap: wrap;
+    }
+    .feature {
+      flex: 1;
+      min-width: 200px;
+      margin: 1rem;
+      padding: 1.5rem;
+      background: var(--message-box-bg);
+      border-radius: 15px;
+      text-align: center;
+      border: 1px solid var(--message-box-border);
+    }
+    .feature h3 {
+      margin-bottom: 0.5rem;
+      color: var(--main-color);
+      font-size: 1.3rem;
+    }
+    .feature p {
+      color: var(--secondary-color);
+      font-size: 1rem;
+    }
+    .about-section {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 3rem 2rem;
+      background: var(--projects-section);
+      border-radius: 20px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+      border: 1px solid var(--border-color);
+    }
+    .logo-placeholder {
+      display: inline-block;
+      width: 120px;
+      height: 120px;
+      margin: 0 0rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--secondary-color);
+      font-size: 0.9rem;
+    }
+    .about-heading {
+      text-align: center;
+      font-size: 2.5rem;
+      margin-bottom: 2rem;
+      color: var(--main-color);
+      font-weight: 700;
+    }
+    .about-text {
+      font-size: 1.1rem;
+      line-height: 1.7;
+      margin-bottom: 2rem;
+      color: var(--main-color);
+    }
+    .highlight {
+      color: var(--link-color);
+      font-weight: 600;
+    }
+  </style>
+{% endblock %}
 
 {% block content %}
-  <div class="projects-section-header">
-    <p>Home</p>
-  </div>
-  <div class="projects-section-line">
-    <p style="color: var(--secondary-color);">Welcome to the eTala Library Management System</p>
+  <div class="projects-section">
+    <!-- Landing Section -->
+    <div class="landing-section">
+      <div class="landing-header">
+        <div class="logo-placeholder" style="background-image: url('{% static 'img/etalalogo.svg' %}'); background-size: cover; background-position: center;"></div>
+        <div class="landing-title">
+          <h1>Welcome to eTala OPAC</h1>
+          <h2>Philippine Science High School ZRC in Dipolog City</h2>
+        </div>
+        <div class="logo-placeholder" style="background-image: url('{% static 'img/pisaylogo.svg' %}'); background-size: cover; background-position: center;"></div>
+      </div>
+      <p>Discover, search, and access our extensive collection of books and resources through our  Online Public Access Catalogue.</p>
+      <a href="{% url 'records' %}" class="cta-button">Explore Books</a>
+      
+      <div class="features">
+        <div class="feature">
+          <h3>Easy Search</h3>
+          <p>Find books quickly with our advanced search functionality.</p>
+        </div>
+        <div class="feature">
+          <h3>Real-time Availability</h3>
+          <p>Check book availability and reserve items instantly.</p>
+        </div>
+        <div class="feature">
+          <h3>Digital Access</h3>
+          <p>Access library resources from anywhere, anytime.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- About Section -->
+    <div class="about-section">
+      <h1 class="about-heading">About eTALA</h1>
+      <p class="about-text">
+        Project <span class="highlight">eTALA</span> began as an initiative by PSHS–ZRC in Dipolog City, six scholars from batch Antuilan who envisioned a modern, digital solution to improve the library's traditional paper-based cataloging system. Under the supervision of the Campus Librarian and Computer Science advisers, the team developed the concept into a functional OPAC platform designed to enhance accessibility, organization, and efficiency.
+      </p>
+      <p class="about-text">
+        The project was formalized under the name <span class="highlight">Enhanced Technology-Assisted Library Access</span> and approved through the SCALE Program, marking its transition from proposal to full implementation. Beyond technical modernization, eTALA supports SDG 4 (Quality Education) and SDG 9 (Industry, Innovation, and Infrastructure) by improving access to learning resources and strengthening the school's information systems for the benefit of the entire PSHS-ZRC community.
+      </p>
+    </div>
   </div>
 {% endblock %}
