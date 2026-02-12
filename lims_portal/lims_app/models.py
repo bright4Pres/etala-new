@@ -102,24 +102,21 @@ class BorrowHistory(models.Model):
     returned = models.BooleanField(default=False)
 
     def clean(self):
-        """Validate that bookID and accountID exist in their respective models."""
-        from lims_app.models import Book  # adjust app name if needed
-        from itertools import chain
-
-        # --- Validate Book ---
-        try:
-            book = Book.objects.get(accessionNumber=self.bookID)
-            self.bookTitle = book.Title
+        """Validate that book_copy and accountID exist in their respective models."""
+        # --- Validate BookCopy ---
+        if self.book_copy:
+            self.bookTitle = self.book_copy.book.Title
             
-            # Check if book is already borrowed
-            if book.status == "Borrowed" and not self.returned:
-                raise ValidationError({
-                    "bookID": f"Book '{self.bookID}' is already borrowed."
-                })
-                
-        except Book.DoesNotExist:
+            # Check if book copy is already borrowed
+            if self.book_copy.status == "Borrowed" and not self.returned:
+                # Allow if this is an update to an existing borrow record
+                if not self.pk:  # Only raise if this is a new record
+                    raise ValidationError({
+                        "book_copy": f"Book copy '{self.book_copy.accessionNumber}' is already borrowed."
+                    })
+        else:
             raise ValidationError({
-                "bookID": f"No book found with accession number '{self.bookID}'."
+                "book_copy": "Book copy is required."
             })
         
         # --- Validate Account (search across all grade models) ---
@@ -139,7 +136,11 @@ class BorrowHistory(models.Model):
         
     def save(self, *args, **kwargs):
         """Auto-fill fields, validate, and compute return date."""
-        self.full_clean()  # Ensures clean() runs every time before save()
+        # Skip validation if explicitly requested
+        skip_validation = kwargs.pop('skip_validation', False)
+        
+        if not skip_validation:
+            self.full_clean()  # Ensures clean() runs every time before save()
 
         # --- Compute return date if missing ---
         if self.borrow_date and not self.return_date:
@@ -156,20 +157,6 @@ class BorrowHistory(models.Model):
                 proposed_return += timedelta(days=1)
 
             self.return_date = proposed_return
-
-        # --- Update Book record when borrowed ---
-        from lims_app.models import Book
-        try:
-            book = Book.objects.get(accessionNumber=self.bookID)
-            book.status = "Borrowed"
-            book.borrowed_by = self.accountName
-            book.student_id = self.accountID
-            book.borrow_date = self.borrow_date
-            book.return_date = self.return_date
-            book.save()
-        except Book.DoesNotExist:
-            # The ValidationError in clean() already handles this, so this won't normally happen
-            pass
 
         super().save(*args, **kwargs)
 

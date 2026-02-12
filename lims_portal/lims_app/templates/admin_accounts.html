@@ -37,28 +37,73 @@
       box-sizing: border-box;
     }
     .grade-section {
-      margin-bottom: 2rem;
-    }
-    .grade-section h2 {
-      color: #3368a4;
-      font-size: 1.3rem;
       margin-bottom: 1rem;
-      padding-bottom: 0.5rem;
-      border-bottom: 2px solid #3368a4;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .grade-section details {
+      background: white;
+    }
+    .grade-section summary {
+      cursor: pointer;
+      padding: 1rem 1.5rem;
+      background: linear-gradient(135deg, #3368a4 0%, #2a5785 100%);
+      color: white;
+      font-size: 1.1rem;
+      font-weight: 600;
+      user-select: none;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: background 0.3s ease;
+    }
+    .grade-section summary:hover {
+      background: linear-gradient(135deg, #2a5785 0%, #1e4268 100%);
+    }
+    .grade-section summary::marker {
+      content: '';
+    }
+    .grade-section summary .arrow {
+      transition: transform 0.3s ease;
+      font-size: 1.2rem;
+    }
+    .grade-section details[open] summary .arrow {
+      transform: rotate(90deg);
+    }
+    .student-count {
+      background: rgba(255,255,255,0.2);
+      padding: 0.25rem 0.75rem;
+      border-radius: 20px;
+      font-size: 0.9rem;
+      margin-left: 1rem;
+    }
+    .grade-content {
+      padding: 0;
     }
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-bottom: 2rem;
+      margin: 0;
     }
     th, td {
-      padding: 0.75rem;
+      padding: 0.75rem 1.5rem;
       text-align: left;
       border-bottom: 1px solid #e0e0e0;
     }
     th {
       background: #f8f9fa;
       font-weight: 600;
+      color: #555;
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    tr:hover {
+      background: #f8f9fa;
+    }
+    tr:last-child td {
+      border-bottom: none;
     }
     .btn {
       padding: 0.5rem 1rem;
@@ -68,6 +113,8 @@
       border-radius: 4px;
       font-size: 0.9rem;
       display: inline-block;
+      border: none;
+      cursor: pointer;
     }
     .btn:hover {
       background: #2a5785;
@@ -76,20 +123,35 @@
       background: #6c757d;
       margin-right: 1rem;
     }
-    .status-active {
-      color: #28a745;
-      font-weight: 600;
+    .btn-expand-all {
+      background: #28a745;
+      margin-left: 0.5rem;
     }
-    .status-inactive {
-      color: #dc3545;
-      font-weight: 600;
+    .empty-state {
+      text-align: center;
+      padding: 2rem;
+      color: #999;
+      font-style: italic;
+    }
+    .header-controls {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
     }
   </style>
 </head>
 <body>
   <div class="accounts-container">
     <h1>Active Accounts</h1>
-    <a href="{% url 'admin_dashboard' %}" class="btn btn-secondary">Back to Dashboard</a>
+    
+    <div class="header-controls">
+      <a href="{% url 'admin_dashboard' %}" class="btn btn-secondary">Back to Dashboard</a>
+      <div>
+        <button onclick="expandAll()" class="btn btn-expand-all">Expand All</button>
+        <button onclick="collapseAll()" class="btn">Collapse All</button>
+      </div>
+    </div>
     
     <div class="search-box">
       <input type="text" placeholder="Search accounts by name, email, or school ID..." id="search-input">
@@ -97,43 +159,53 @@
 
     {% for grade, students in all_students.items %}
     <div class="grade-section" data-grade="{{ grade }}">
-      <h2>Grade {{ grade }}</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>School ID</th>
-            <th>Email</th>
-            <th>Batch</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for student in students %}
-            <tr>
-              <td>{{ student.name }}</td>
-              <td>{{ student.school_id }}</td>
-              <td>{{ student.email }}</td>
-              <td>{{ student.batch|default:"N/A" }}</td>
-            </tr>
-          {% empty %}
-            <tr>
-              <td colspan="4" style="text-align: center; padding: 2rem;">No students in this grade.</td>
-            </tr>
-          {% endfor %}
-        </tbody>
-      </table>
+      <details>
+        <summary>
+          <div style="display: flex; align-items: center;">
+            <span class="arrow">▶</span>
+            <span style="margin-left: 1rem;">Grade {{ grade }}</span>
+            <span class="student-count">{{ students|length }} student{{ students|length|pluralize }}</span>
+          </div>
+        </summary>
+        <div class="grade-content">
+          <table>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>School ID</th>
+                <th>Email</th>
+                <th>Batch</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for student in students %}
+                <tr class="student-row">
+                  <td>{{ student.name }}</td>
+                  <td>{{ student.school_id }}</td>
+                  <td>{{ student.email }}</td>
+                  <td>{{ student.batch|default:"N/A" }}</td>
+                </tr>
+              {% empty %}
+                <tr>
+                  <td colspan="4" class="empty-state">No students in this grade.</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </details>
     </div>
     {% endfor %}
   </div>
 
   <script>
-    // Real-time search filter
-    document.getElementById('search-input').addEventListener('input', function(e) {
-      const searchTerm = e.target.value.toLowerCase();
+    // Search functionality
+    document.getElementById('searchInput').addEventListener('input', function() {
+      const searchTerm = this.value.toLowerCase();
       const sections = document.querySelectorAll('.grade-section');
       
       sections.forEach(section => {
-        const rows = section.querySelectorAll('tbody tr');
+        const rows = section.querySelectorAll('.student-row');
         let visibleRows = 0;
         
         rows.forEach(row => {
@@ -146,14 +218,32 @@
           }
         });
         
-        // Hide entire grade section if no visible rows
-        if (visibleRows === 0) {
+        // Auto-expand grade section if it has matches, otherwise hide it
+        const details = section.querySelector('details');
+        if (visibleRows === 0 && searchTerm !== '') {
           section.style.display = 'none';
         } else {
           section.style.display = '';
+          if (visibleRows > 0 && searchTerm !== '') {
+            details.open = true;
+          }
         }
       });
     });
+
+    // Expand all sections
+    function expandAll() {
+      document.querySelectorAll('.grade-section details').forEach(details => {
+        details.open = true;
+      });
+    }
+
+    // Collapse all sections
+    function collapseAll() {
+      document.querySelectorAll('.grade-section details').forEach(details => {
+        details.open = false;
+      });
+    }
   </script>
 </body>
 </html>

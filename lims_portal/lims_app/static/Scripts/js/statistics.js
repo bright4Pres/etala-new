@@ -567,7 +567,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 label.textContent = dayLabels[i];
                 label.style.height = `${cellSize}px`;
                 label.style.display = 'flex';
-                label.style.alignItems = 'center';
+                label.style.alignItems = 'flex-start';
+                label.style.paddingTop = '2px';
                 labelsContainer.appendChild(label);
             }
             

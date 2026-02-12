@@ -578,8 +578,12 @@ def admin_logout(request):
 
 @staff_member_required
 def admin_dashboard(request):
+    # Track which view to show after POST processing
+    active_view = 'borrowed'  # default view
+    
     if request.method == 'POST':
         action = request.POST.get('action')
+        active_view = request.POST.get('active_view', 'borrowed')  # Get the view that was active
         
         if action == 'checkout':
             accession_number = request.POST.get('book_id', '').strip()
@@ -1015,7 +1019,7 @@ def admin_dashboard(request):
             except Exception as e:
                 messages.error(request, f'Error adding user: {str(e)}')
         
-        return redirect('admin_dashboard')
+        # Don't redirect - render the page with messages visible
     
     borrowed_books = BorrowHistory.objects.filter(returned=False).select_related()
     overdue_books = [b for b in borrowed_books if b.is_overdue()]
@@ -1028,7 +1032,7 @@ def admin_dashboard(request):
     total_copies_count = BookCopy.objects.count()
     # Get all books with their copies information
     all_books = []
-    for book in Book.objects.all().order_by('-id')[:50]:
+    for book in Book.objects.all().order_by('-id'):
         copies = book.copies.all()
         copies_payload = [
             {
@@ -1069,7 +1073,8 @@ def admin_dashboard(request):
         (12, grade_Twelve),
     ]
     for grade_num, model in grade_models:
-        for user in model.objects.all()[:20]:  # Get up to 20 from each grade
+        # Show most recently created users first so newly-added students appear in the sidebar.
+        for user in model.objects.order_by('-created_at'):  # Get ALL users from each grade
             all_users.append({
                 'name': user.name,
                 'school_id': user.school_id,
@@ -1099,6 +1104,8 @@ def admin_dashboard(request):
         'all_books': all_books,
         'total_users_count': total_users_count,
         'all_users': all_users,
+        'active_view': active_view,  # Pass the active view to template
+        'date_now': timezone.now(),
     })
 
 @staff_member_required

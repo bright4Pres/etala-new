@@ -165,7 +165,7 @@ class Command(BaseCommand):
         # Display sample students from each grade
         self.stdout.write('\nSample students created:')
         for model, grade_num, grade_name in grade_models:
-            sample_students = model.objects.filter(is_activated=False).order_by('-id')[:2]
+            sample_students = model.objects.order_by('-id')[:2]
             if sample_students:
                 self.stdout.write(f'\n  {grade_name}:')
                 for student in sample_students:
@@ -176,7 +176,7 @@ class Command(BaseCommand):
         self.stdout.write('\n' + '='*60)
         self.stdout.write(
             self.style.SUCCESS(
-                '💡 Tip: Students start as "not activated". Use the admin interface to activate them!'
+                '💡 Tip: Use the admin interface to manage students!'
             )
         )
         self.stdout.write('='*60)

@@ -86,12 +86,13 @@
             <button onclick="toggleSidebarSection('books'); return false;" style="background: none; border: none; cursor: pointer; color: var(--main-color); font-size: 1.2rem; padding: 0; width: 24px; height: 24px;">&times;</button>
           </div>
         </div>
-        <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+        <div style="display: flex; gap: 8px; margin-bottom: 8px; flex-wrap: wrap;">
           <span style="background: #3368a4; color: white; padding: 2px 8px; border-radius: 10px; font-size: 0.75rem; display: inline-block;">{{ total_books_count }} Total</span>
           <span style="background: #28a745; color: white; padding: 2px 8px; border-radius: 10px; font-size: 0.75rem; display: inline-block;">{{ available_books_count }} Available</span>
           <span style="background: #dc3545; color: white; padding: 2px 8px; border-radius: 10px; font-size: 0.75rem; display: inline-block;">{{ borrowed_books|length }} Borrowed</span>
+          <a href="{% url 'admin_books' %}" style="background: #3368a4; color: white; padding: 2px 8px; border-radius: 10px; font-size: 0.7rem; text-decoration: none; cursor: pointer;">View All</a>
         </div>
-        <div style="margin-top: 12px;">
+        <div style="margin-top: 8px;">
           <input type="text" id="bookSearch" placeholder="Search books..." onkeyup="searchBooks()" style="width: 100%; padding: 8px 12px; border: 2px solid var(--message-box-border); border-radius: 8px; background: var(--search-area-bg); color: var(--main-color); font-size: 0.85rem; box-sizing: border-box;">
         </div>
       </div>
@@ -141,8 +142,11 @@
             <button onclick="toggleSidebarSection('users'); return false;" style="background: none; border: none; cursor: pointer; color: var(--main-color); font-size: 1.2rem; padding: 0; width: 24px; height: 24px;">&times;</button>
           </div>
         </div>
-        <span style="background: #28a745; color: white; padding: 2px 8px; border-radius: 10px; font-size: 0.75rem; display: inline-block;">{{ total_users_count }} Users</span>
-        <div style="margin-top: 12px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+          <span style="background: #28a745; color: white; padding: 2px 8px; border-radius: 10px; font-size: 0.75rem; display: inline-block;">{{ total_users_count }} Users</span>
+          <a href="{% url 'admin_accounts' %}" style="background: #3368a4; color: white; padding: 4px 10px; border-radius: 6px; font-size: 0.7rem; text-decoration: none; cursor: pointer;">View All</a>
+        </div>
+        <div style="margin-top: 4px;">
           <input type="text" id="userSearch" placeholder="Search users..." onkeyup="searchUsers()" style="width: 100%; padding: 8px 12px; border: 2px solid var(--message-box-border); border-radius: 8px; background: var(--search-area-bg); color: var(--main-color); font-size: 0.85rem; box-sizing: border-box;">
         </div>
       </div>
@@ -177,6 +181,24 @@
             <p class="time" style="margin:0;">{{ borrowed_books|length }} Total</p>
           </div>
         </div>
+        
+        <!-- Messages for borrowed view -->
+        {% if messages %}
+          <div class="messages" style="margin: 1rem 0;">
+            {% for message in messages %}
+              {% if message.tags == 'success' %}
+                <div style="color: #155724; background: #d4edda; padding: 0.75rem; border-radius: 6px; border-left: 4px solid #28a745; margin-bottom: 0.5rem;">
+                  <strong>✓ Success:</strong> {{ message }}
+                </div>
+              {% else %}
+                <div style="color: #721c24; background: #f8d7da; padding: 0.75rem; border-radius: 6px; border-left: 4px solid #dc3545; margin-bottom: 0.5rem;">
+                  <strong>✗ Error:</strong> {{ message }}
+                </div>
+              {% endif %}
+            {% endfor %}
+          </div>
+        {% endif %}
+        
         <div class="projects-section-line">
           <div class="projects-status">
             <div class="item-status">
@@ -266,20 +288,29 @@
         <div class="projects-section-header">
           <p>Checkout Book</p>
         </div>
+        
+        <!-- Dynamic Status Message -->
+        <div id="checkout-status" style="margin: 1rem 0; display: none;"></div>
+        
         {% if messages %}
           <div class="messages" style="margin: 1rem 0;">
             {% for message in messages %}
               {% if message.tags == 'success' %}
-                <div style="color: #155724; background: #d4edda; padding: 0.75rem; border-radius: 6px; border-left: 4px solid #28a745;">{{ message }}</div>
+                <div style="color: #155724; background: #d4edda; padding: 0.75rem; border-radius: 6px; border-left: 4px solid #28a745; margin-bottom: 0.5rem;">
+                  <strong>✓ Success:</strong> {{ message }}
+                </div>
               {% else %}
-                <div style="color: #721c24; background: #f8d7da; padding: 0.75rem; border-radius: 6px; border-left: 4px solid #dc3545;">{{ message }}</div>
+                <div style="color: #721c24; background: #f8d7da; padding: 0.75rem; border-radius: 6px; border-left: 4px solid #dc3545; margin-bottom: 0.5rem;">
+                  <strong>✗ Error:</strong> {{ message }}
+                </div>
               {% endif %}
             {% endfor %}
           </div>
         {% endif %}
-        <form method="post" action="{% url 'admin_dashboard' %}" style="background: white; padding: 2rem; border-radius: 8px; border: 2px solid #3368a4;">
+        <form method="post" action="{% url 'admin_dashboard' %}" id="checkout-form" style="background: white; padding: 2rem; border-radius: 8px; border: 2px solid #3368a4;">
           {% csrf_token %}
           <input type="hidden" name="action" value="checkout">
+          <input type="hidden" name="active_view" value="checkout">
           <div style="margin-bottom: 1.5rem;">
             <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Scan Barcode</label>
             <input 
@@ -294,7 +325,7 @@
             <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Student School ID</label>
             <input type="text" name="student_id" id="checkout-student-input" placeholder="Enter student ID" required style="width: 100%; padding: 0.75rem; border: 2px solid #e0e0e0; border-radius: 6px; font-size: 1rem; box-sizing: border-box;">
           </div>
-          <button type="submit" style="padding: 0.75rem 1.5rem; background: #3368a4; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 1rem; font-weight: 600;">Checkout Book</button>
+          <button type="submit" id="checkout-submit-btn" style="padding: 0.75rem 1.5rem; background: #3368a4; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 1rem; font-weight: 600;">Checkout Book</button>
         </form>
       </div>
 
@@ -304,6 +335,9 @@
           <p>Return Book</p>
         </div>
         
+        <!-- Dynamic Status Message -->
+        <div id="return-status" style="margin: 1rem 0; display: none;"></div>
+        
         <!-- Barcode Scanner Section -->
         <div style="background: white; padding: 1.5rem; border-radius: 8px; margin-bottom: 1.5rem; border: 2px solid #3368a4;">
           <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
@@ -312,11 +346,15 @@
               <line x1="9" y1="3" x2="9" y2="21"/>
               <line x1="15" y1="3" x2="15" y2="21"/>
             </svg>
-            <div></div>
+            <div style="flex: 1;">
+              <h4 style="margin: 0 0 0.25rem 0; color: #3368a4;">Quick Return via Barcode</h4>
+              <p style="margin: 0; font-size: 0.85rem; color: #666;">Scan the book's accession number to return</p>
+            </div>
           </div>
           <form method="post" action="{% url 'admin_dashboard' %}" id="barcode-return-form">
             {% csrf_token %}
             <input type="hidden" name="action" value="return_barcode">
+            <input type="hidden" name="active_view" value="return">
             <div style="display: flex; gap: 1rem;">
               <input 
                 type="text" 
@@ -325,19 +363,23 @@
                 placeholder="Scan or type accession number..." 
                 autofocus
                 style="flex: 1; padding: 0.75rem; border: 2px solid #e0e0e0; border-radius: 6px; font-size: 1rem; box-sizing: border-box; font-family: monospace;">
-              <button type="submit" style="padding: 0.75rem 1.5rem; background: #dc3545; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 1rem; font-weight: 600; white-space: nowrap;">Return Book</button>
+              <button type="submit" id="return-submit-btn" style="padding: 0.75rem 1.5rem; background: #dc3545; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 1rem; font-weight: 600; white-space: nowrap;">Return Book</button>
             </div>
           </form>
-          <div id="barcode-status" style="margin-top: 0.75rem; padding: 0.5rem; border-radius: 4px; display: none;"></div>
+          <div id="barcode-status" style="margin-top: 0.75rem; padding: 0.75rem; border-radius: 4px; display: none;"></div>
         </div>
 
         {% if messages %}
           <div class="messages" style="margin: 1rem 0;">
             {% for message in messages %}
               {% if message.tags == 'success' %}
-                <div style="color: #155724; background: #d4edda; padding: 0.75rem; border-radius: 6px; border-left: 4px solid #28a745;">{{ message }}</div>
+                <div style="color: #155724; background: #d4edda; padding: 0.75rem; border-radius: 6px; border-left: 4px solid #28a745; margin-bottom: 0.5rem;">
+                  <strong>✓ Success:</strong> {{ message }}
+                </div>
               {% else %}
-                <div style="color: #721c24; background: #f8d7da; padding: 0.75rem; border-radius: 6px; border-left: 4px solid #dc3545;">{{ message }}</div>
+                <div style="color: #721c24; background: #f8d7da; padding: 0.75rem; border-radius: 6px; border-left: 4px solid #dc3545; margin-bottom: 0.5rem;">
+                  <strong>✗ Error:</strong> {{ message }}
+                </div>
               {% endif %}
             {% endfor %}
           </div>
@@ -371,6 +413,7 @@
                 <form method="post" action="{% url 'admin_dashboard' %}" style="display: inline;">
                   {% csrf_token %}
                   <input type="hidden" name="action" value="return">
+                  <input type="hidden" name="active_view" value="borrowed">
                   <input type="hidden" name="borrow_id" value="{{ borrow.id }}">
                   <button type="submit" style="padding: 0.5rem 1rem; background: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.9rem;">Return</button>
                 </form>
@@ -752,43 +795,190 @@ ACC003, Annex, Unavailable"></textarea>
     <script src="{% static 'Scripts/js/cadmin.js' %}"></script>
     <script>
 
-      // Barcode scanner handler
+      // Form validation and status handlers
       document.addEventListener('DOMContentLoaded', function() {
+        // Check if we need to show a specific view after POST
+        const activeView = '{{ active_view|default:"borrowed" }}';
+        if (activeView !== 'borrowed') {
+          // Hide all views first
+          document.querySelectorAll('.view-section').forEach(v => v.style.display = 'none');
+          
+          // Show the active view
+          const viewToShow = document.getElementById(activeView + '-view');
+          if (viewToShow) {
+            viewToShow.style.display = 'block';
+            
+            // Update sidebar active state
+            document.querySelectorAll('.app-sidebar-link').forEach(link => {
+              link.classList.remove('active');
+              if (link.getAttribute('data-view') === activeView) {
+                link.classList.add('active');
+              }
+            });
+          }
+        }
+        
+        // Checkout form handler
+        const checkoutForm = document.getElementById('checkout-form');
+        const checkoutBarcodeInput = document.getElementById('checkout-barcode-input');
+        const checkoutStudentInput = document.getElementById('checkout-student-input');
+        const checkoutStatusDiv = document.getElementById('checkout-status');
+        const checkoutSubmitBtn = document.getElementById('checkout-submit-btn');
+
+        if (checkoutForm) {
+          checkoutForm.addEventListener('submit', function(e) {
+            const barcode = checkoutBarcodeInput.value.trim();
+            const studentId = checkoutStudentInput.value.trim();
+            
+            if (!barcode || !studentId) {
+              e.preventDefault();
+              showCheckoutStatus('Please fill in all fields', 'error');
+              return;
+            }
+            
+            // Show loading state
+            checkoutSubmitBtn.disabled = true;
+            checkoutSubmitBtn.textContent = 'Processing...';
+            showCheckoutStatus('Processing checkout...', 'info');
+          });
+
+          // Clear status on input
+          checkoutBarcodeInput.addEventListener('input', clearCheckoutStatus);
+          checkoutStudentInput.addEventListener('input', clearCheckoutStatus);
+        }
+
+        function showCheckoutStatus(message, type) {
+          checkoutStatusDiv.innerHTML = '';
+          checkoutStatusDiv.style.display = 'block';
+          checkoutStatusDiv.style.padding = '0.75rem';
+          checkoutStatusDiv.style.borderRadius = '6px';
+          checkoutStatusDiv.style.marginBottom = '0.5rem';
+          
+          if (type === 'success') {
+            checkoutStatusDiv.style.background = '#d4edda';
+            checkoutStatusDiv.style.color = '#155724';
+            checkoutStatusDiv.style.borderLeft = '4px solid #28a745';
+            checkoutStatusDiv.innerHTML = '<strong>✓ Success:</strong> ' + message;
+          } else if (type === 'error') {
+            checkoutStatusDiv.style.background = '#f8d7da';
+            checkoutStatusDiv.style.color = '#721c24';
+            checkoutStatusDiv.style.borderLeft = '4px solid #dc3545';
+            checkoutStatusDiv.innerHTML = '<strong>✗ Error:</strong> ' + message;
+          } else {
+            checkoutStatusDiv.style.background = '#d1ecf1';
+            checkoutStatusDiv.style.color = '#0c5460';
+            checkoutStatusDiv.style.borderLeft = '4px solid #17a2b8';
+            checkoutStatusDiv.innerHTML = '<strong>ℹ Info:</strong> ' + message;
+          }
+        }
+
+        function clearCheckoutStatus() {
+          checkoutStatusDiv.style.display = 'none';
+          if (checkoutSubmitBtn) {
+            checkoutSubmitBtn.disabled = false;
+            checkoutSubmitBtn.textContent = 'Checkout Book';
+          }
+        }
+
+        // Return form (barcode) handler
         const barcodeForm = document.getElementById('barcode-return-form');
         const barcodeInput = document.getElementById('barcode-input');
-        const statusDiv = document.getElementById('barcode-status');
+        const barcodeStatusDiv = document.getElementById('barcode-status');
+        const returnSubmitBtn = document.getElementById('return-submit-btn');
+        const returnStatusDiv = document.getElementById('return-status');
 
         if (barcodeForm && barcodeInput) {
-          // Clear input and refocus after submission
           barcodeForm.addEventListener('submit', function(e) {
             const accessionNumber = barcodeInput.value.trim();
             if (!accessionNumber) {
               e.preventDefault();
-              showStatus('Please enter or scan a barcode', 'error');
+              showBarcodeStatus('Please enter or scan a barcode', 'error');
               return;
             }
+            
+            // Show loading state
+            returnSubmitBtn.disabled = true;
+            returnSubmitBtn.textContent = 'Processing...';
+            showBarcodeStatus('Processing return...', 'info');
           });
 
-          // Auto-clear status message after successful scan
+          // Auto-clear status message on input
           barcodeInput.addEventListener('input', function() {
-            if (statusDiv.style.display === 'block') {
-              statusDiv.style.display = 'none';
-            }
+            clearBarcodeStatus();
           });
         }
 
-        function showStatus(message, type) {
-          statusDiv.textContent = message;
-          statusDiv.style.display = 'block';
+        function showBarcodeStatus(message, type) {
+          barcodeStatusDiv.innerHTML = '';
+          barcodeStatusDiv.style.display = 'block';
+          barcodeStatusDiv.style.padding = '0.75rem';
+          barcodeStatusDiv.style.borderRadius = '6px';
+          
           if (type === 'success') {
-            statusDiv.style.background = '#d4edda';
-            statusDiv.style.color = '#155724';
-            statusDiv.style.borderLeft = '4px solid #28a745';
+            barcodeStatusDiv.style.background = '#d4edda';
+            barcodeStatusDiv.style.color = '#155724';
+            barcodeStatusDiv.style.borderLeft = '4px solid #28a745';
+            barcodeStatusDiv.innerHTML = '<strong>✓ Success:</strong> ' + message;
+            // Clear input on success
+            setTimeout(() => {
+              if (barcodeInput) {
+                barcodeInput.value = '';
+                barcodeInput.focus();
+              }
+              clearBarcodeStatus();
+            }, 2000);
+          } else if (type === 'error') {
+            barcodeStatusDiv.style.background = '#f8d7da';
+            barcodeStatusDiv.style.color = '#721c24';
+            barcodeStatusDiv.style.borderLeft = '4px solid #dc3545';
+            barcodeStatusDiv.innerHTML = '<strong>✗ Error:</strong> ' + message;
           } else {
-            statusDiv.style.background = '#f8d7da';
-            statusDiv.style.color = '#721c24';
-            statusDiv.style.borderLeft = '4px solid #dc3545';
+            barcodeStatusDiv.style.background = '#d1ecf1';
+            barcodeStatusDiv.style.color = '#0c5460';
+            barcodeStatusDiv.style.borderLeft = '4px solid #17a2b8';
+            barcodeStatusDiv.innerHTML = '<strong>ℹ Info:</strong> ' + message;
           }
+        }
+
+        function clearBarcodeStatus() {
+          barcodeStatusDiv.style.display = 'none';
+          if (returnSubmitBtn) {
+            returnSubmitBtn.disabled = false;
+            returnSubmitBtn.textContent = 'Return Book';
+          }
+        }
+
+        // Auto-clear form and refocus after successful checkout
+        const messagesDiv = document.querySelector('.messages');
+        
+        if (messagesDiv) {
+          const hasSuccess = messagesDiv.innerHTML.includes('Success');
+          
+          // If on checkout view with success, clear and refocus
+          if (hasSuccess && activeView === 'checkout' && checkoutBarcodeInput) {
+            setTimeout(() => {
+              checkoutBarcodeInput.value = '';
+              checkoutStudentInput.value = '';
+              checkoutBarcodeInput.focus();
+            }, 100);
+          }
+          
+          // If on return view with success, clear and refocus
+          if (hasSuccess && activeView === 'return' && barcodeInput) {
+            setTimeout(() => {
+              barcodeInput.value = '';
+              barcodeInput.focus();
+            }, 100);
+          }
+          
+          // Auto-fade messages after 5 seconds
+          setTimeout(() => {
+            messagesDiv.style.transition = 'opacity 0.5s';
+            messagesDiv.style.opacity = '0';
+            setTimeout(() => {
+              messagesDiv.style.display = 'none';
+            }, 500);
+          }, 5000);
         }
       });
       
