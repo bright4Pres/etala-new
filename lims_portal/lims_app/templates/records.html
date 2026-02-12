@@ -264,6 +264,14 @@
     #booksTable td small {
       color: var(--secondary-color) !important;
     }
+    /* Highlight search matches */
+    mark {
+      background-color: rgba(37, 99, 235, 0.15);
+      color: var(--link-color);
+      padding: 0.1rem 0.3rem;
+      border-radius: 3px;
+      font-weight: 500;
+    }
     /* DataTables sorting headers */
     table.dataTable thead .sorting,
     table.dataTable thead .sorting_asc,
@@ -358,7 +366,7 @@
             </thead>
             <tbody>
               {% for book in recorded_books %}
-              <tr class="book-row" data-details="
+              <tr class="book-row" data-search="{{ book.Title }} {{ book.mainAuthor }} {{ book.coAuthor }} {{ book.Edition }} {{ book.Publisher }} {{ book.placeofPublication }} {{ book.publicationDate|date:'Y-m-d' }} {{ book.copyrightDate|date:'Y-m-d' }} {{ book.Language }} {{ book.Type }} {{ book.callNumber }} {{ book.Editors }} {{ book.acquisitionStatus }}{% for copy in book.copies %} {{ copy.accessionNumber }} {{ copy.Location }}{% endfor %}" data-details="
                 <div style='display: flex; gap: 20px;'>
                   <div style='flex: 1;'>
                     <strong>Main Author:</strong> {{ book.mainAuthor|default:'-' }}<br>
@@ -559,6 +567,46 @@
         }
       });
 
+      // Custom search function to highlight matches
+      $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
+        const searchTerm = dataTable.search().toLowerCase();
+        if (!searchTerm) return true;
+
+        const row = dataTable.row(dataIndex).node();
+        const searchData = $(row).attr('data-search') || '';
+        
+        return searchData.toLowerCase().includes(searchTerm);
+      });
+
+      // Highlight matches in table cells
+      dataTable.on('search.dt', function() {
+        const searchTerm = dataTable.search().toLowerCase();
+        
+        // Highlight in table cells
+        $('#booksTable tbody td').each(function() {
+          const cell = $(this);
+          const text = cell.text();
+          if (searchTerm && text.toLowerCase().includes(searchTerm)) {
+            const highlighted = text.replace(new RegExp(`(${escapeRegex(searchTerm)})`, 'gi'), '<mark>$1</mark>');
+            cell.html(highlighted);
+          } else {
+            cell.html(text);
+          }
+        });
+        
+        // Highlight in expanded details
+        $('#booksTable tbody tr.shown .details-container').each(function() {
+          const container = $(this);
+          const originalHTML = container.html().replace(/<mark>|<\/mark>/g, ''); // Remove existing marks
+          if (searchTerm) {
+            const highlighted = originalHTML.replace(new RegExp(`(${escapeRegex(searchTerm)})`, 'gi'), '<mark>$1</mark>');
+            container.html(highlighted);
+          } else {
+            container.html(originalHTML);
+          }
+        });
+      });
+
       $('#booksTable tbody').on('click', 'tr.book-row', function() {
         const tr = $(this);
         const row = dataTable.row(tr);
@@ -569,7 +617,12 @@
             tr.removeClass('shown');
           });
         } else {
-          const detailsHTML = tr.attr('data-details');
+          let detailsHTML = tr.attr('data-details');
+          const searchTerm = dataTable.search().toLowerCase();
+          if (searchTerm) {
+            // Highlight matches in details
+            detailsHTML = detailsHTML.replace(new RegExp(`(${escapeRegex(searchTerm)})`, 'gi'), '<mark>$1</mark>');
+          }
           row.child(`<div class='details-container'>${detailsHTML}</div>`).show();
           $('div.details-container', row.child()).slideDown(250);
           tr.addClass('shown');
