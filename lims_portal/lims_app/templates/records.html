@@ -33,6 +33,7 @@
       background-color: var(--button-bg) !important;
       color: var(--main-color) !important;
       border-color: var(--message-box-border) !important;
+      font-weight: 600;
     }
     .table tbody,
     .table tbody tr,
@@ -45,6 +46,7 @@
       background-color: var(--projects-section) !important;
       color: var(--main-color) !important;
       border-color: var(--message-box-border) !important;
+      font-weight: 500;
     }
     /* Striped rows with highest specificity */
     .table-striped tbody tr:nth-of-type(odd) > *,
@@ -121,6 +123,7 @@
       background: var(--button-bg) !important;
       color: var(--main-color) !important;
       border-color: var(--message-box-border) !important;
+      font-weight: 600;
     }
     table.dataTable tbody tr,
     table.table tbody tr {
@@ -136,6 +139,7 @@
     table.table tbody td {
       color: var(--main-color) !important;
       border-color: var(--message-box-border) !important;
+      font-weight: 500;
     }
     table.dataTable {
       border-color: var(--message-box-border);
@@ -235,10 +239,10 @@
             <div style='flex: 1; padding: 8px; background: var(--message-box-hover); border-radius: 4px;'>
               <strong style='display: block; margin-bottom: 10px;'>All Copies ({{ book.total_copies }} total):</strong>
               {% for copy in book.copies %}
-                <div style='padding: 6px; margin-bottom: 4px; background: var(--projects-section); border-radius: 4px; border-left: 3px solid {% if copy.status == 'Available' %}#28a745{% else %}#dc3545{% endif %};'>
+                <div style='padding: 6px; margin-bottom: 4px; background: var(--projects-section); border-radius: 4px; border-left: 3px solid {% if copy.status == 'Available' %}#16a34a{% else %}#dc2626{% endif %};'>
                   <div style='display: flex; justify-content: space-between; align-items: center;'>
                     <span style='font-family: monospace; font-weight: bold; color: var(--main-color);'>{{ copy.accessionNumber }}</span>
-                    <span style='padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; {% if copy.status == 'Available' %}background: #d4edda; color: #155724;{% else %}background: #f8d7da; color: #721c24;{% endif %}'>
+                    <span style='padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; {% if copy.status == 'Available' %}background: #16a34a; color: white;{% else %}background: #dc2626; color: white;{% endif %}'>
                       {{ copy.status }}
                     </span>
                   </div>
@@ -257,7 +261,7 @@
             <small style="color: var(--secondary-color);">{{ book.callNumber }}</small>
           </td>
           <td style="text-align:center;">
-            <strong style="color: {% if book.available_copies > 0 %}#28a745{% else %}#dc3545{% endif %};">
+            <strong style="color: {% if book.available_copies > 0 %}#16a34a{% else %}#dc2626{% endif %};">
               {{ book.available_copies }} / {{ book.total_copies }}
             </strong>
           </td>
