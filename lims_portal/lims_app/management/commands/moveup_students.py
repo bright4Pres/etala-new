@@ -6,8 +6,7 @@ from django.core.management.base import BaseCommand
 from django.db import transaction
 from lims_app.models import (
     grade_Seven, grade_Eight, grade_Nine, 
-    grade_Ten, grade_Eleven, grade_Twelve,
-    StudentActivation
+    grade_Ten, grade_Eleven, grade_Twelve
 )
 
 
@@ -66,17 +65,8 @@ class Command(BaseCommand):
                             school_id=student.school_id,
                             gender=student.gender,
                             email=student.email,
-                            is_activated=student.is_activated,
                             created_at=student.created_at
                         )
-                        
-                        # Update StudentActivation record if exists
-                        try:
-                            activation = StudentActivation.objects.get(school_id=student.school_id)
-                            activation.grade = target_grade
-                            activation.save()
-                        except StudentActivation.DoesNotExist:
-                            pass
                         
                         # Delete from source grade
                         if not dry_run:
@@ -112,13 +102,6 @@ class Command(BaseCommand):
                     graduated_count += 1
                     total_graduated += 1
                     
-                    # Delete StudentActivation record for graduated students
-                    try:
-                        activation = StudentActivation.objects.get(school_id=student.school_id)
-                        if not dry_run:
-                            activation.delete()
-                    except StudentActivation.DoesNotExist:
-                        pass
                     
                     if not dry_run:
                         student.delete()

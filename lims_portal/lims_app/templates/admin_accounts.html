@@ -104,7 +104,7 @@
             <th>Name</th>
             <th>School ID</th>
             <th>Email</th>
-            <th>Status</th>
+            <th>Batch</th>
           </tr>
         </thead>
         <tbody>
@@ -113,9 +113,7 @@
               <td>{{ student.name }}</td>
               <td>{{ student.school_id }}</td>
               <td>{{ student.email }}</td>
-              <td class="{% if student.is_activated %}status-active{% else %}status-inactive{% endif %}">
-                {% if student.is_activated %}Active{% else %}Inactive{% endif %}
-              </td>
+              <td>{{ student.batch|default:"N/A" }}</td>
             </tr>
           {% empty %}
             <tr>

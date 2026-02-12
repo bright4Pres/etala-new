@@ -161,13 +161,12 @@
       </div>
       <div id="usersList" style="max-height: calc(100vh - 250px); overflow-y: auto; padding: 12px;">
         {% for user in all_users %}
-        <div class="user-item" data-name="{{ user.name|lower }}" data-schoolid="{{ user.school_id|lower }}" data-grade="{{ user.grade|lower }}" data-batch="{{ user.batch|lower }}" style="padding: 10px; margin-bottom: 8px; background: var(--message-box-hover); border-radius: 8px; border-left: 3px solid {% if user.is_activated %}#28a745{% else %}#ffc107{% endif %}; position: relative;">
-          <button onclick="openUserEditModal('{{ user.school_id|escapejs }}', '{{ user.name|escapejs }}', '{{ user.email|escapejs }}', '{{ user.grade_num|escapejs }}', '{{ user.batch|escapejs }}', {{ user.is_activated|yesno:'true,false' }})" style="position: absolute; top: 8px; right: 8px; background: #28a745; color: white; border: none; border-radius: 4px; padding: 4px 8px; font-size: 0.7rem; cursor: pointer;">Edit</button>
+        <div class="user-item" data-name="{{ user.name|lower }}" data-schoolid="{{ user.school_id|lower }}" data-grade="{{ user.grade|lower }}" data-batch="{{ user.batch|lower }}" style="padding: 10px; margin-bottom: 8px; background: var(--message-box-hover); border-radius: 8px; border-left: 3px solid #28a745; position: relative;">
+          <button onclick="openUserEditModal('{{ user.school_id|escapejs }}', '{{ user.name|escapejs }}', '{{ user.email|escapejs }}', '{{ user.grade_num|escapejs }}', '{{ user.batch|escapejs }}')" style="position: absolute; top: 8px; right: 8px; background: #28a745; color: white; border: none; border-radius: 4px; padding: 4px 8px; font-size: 0.7rem; cursor: pointer;">Edit</button>
           <div style="font-weight: 600; font-size: 0.85rem; color: var(--main-color); margin-bottom: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding-right: 50px;">{{ user.name }}</div>
           <div style="font-size: 0.75rem; color: var(--secondary-color); margin-bottom: 4px;">{{ user.school_id }} • {{ user.grade }}</div>
           <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.7rem;">
             <span style="color: var(--secondary-color);">{{ user.batch }}</span>
-            <span style="padding: 2px 6px; border-radius: 6px; {% if user.is_activated %}background: #d4edda; color: #155724;{% else %}background: #fff3cd; color: #856404;{% endif %}">{% if user.is_activated %}Active{% else %}Inactive{% endif %}</span>
           </div>
         </div>
         {% empty %}
@@ -583,16 +582,6 @@ ACC003, Annex, Unavailable"></textarea>
             </div>
           </div>
 
-          <div class="form-row">
-            <div class="form-group">
-              <label>Status</label>
-              <select name="is_activated" id="addUserIsActivated">
-                <option value="true">Active</option>
-                <option value="false" selected>Inactive</option>
-              </select>
-            </div>
-          </div>
-
           <div class="modal-actions">
             <button type="button" onclick="closeUserAddModal()" class="btn-secondary">Cancel</button>
             <button type="submit" class="btn-primary">Add User</button>
@@ -736,16 +725,6 @@ ACC003, Annex, Unavailable"></textarea>
             <div class="form-group">
               <label>Batch</label>
               <input type="text" name="batch" id="editUserBatch">
-            </div>
-          </div>
-          
-          <div class="form-row">
-            <div class="form-group">
-              <label>Status</label>
-              <select name="is_activated" id="editUserIsActivated">
-                <option value="true">Active</option>
-                <option value="false">Inactive</option>
-              </select>
             </div>
           </div>
           
@@ -932,7 +911,7 @@ ACC003, Annex, Unavailable"></textarea>
         document.getElementById('editBookModal').style.display = 'none';
       }
       
-      function openUserEditModal(schoolId, name, email, gradeNum, batch, isActivated) {
+      function openUserEditModal(schoolId, name, email, gradeNum, batch) {
         document.getElementById('editUserOldSchoolId').value = schoolId;
         document.getElementById('editUserOldGradeNum').value = String(gradeNum);
         document.getElementById('editUserSchoolId').value = schoolId;
@@ -940,7 +919,6 @@ ACC003, Annex, Unavailable"></textarea>
         document.getElementById('editUserEmail').value = email;
         document.getElementById('editUserGradeNum').value = String(gradeNum);
         document.getElementById('editUserBatch').value = batch || '';
-        document.getElementById('editUserIsActivated').value = isActivated ? 'true' : 'false';
         document.getElementById('editUserModal').style.display = 'flex';
       }
       

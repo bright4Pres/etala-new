@@ -130,7 +130,6 @@ class Command(BaseCommand):
                         gender=gender,
                         email=email,
                         batch=batch,
-                        is_activated=False  # Start as not activated
                     )
                     created_count += 1
                     

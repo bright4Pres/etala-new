@@ -2,7 +2,7 @@ from django.http import JsonResponse
 from django.utils.dateparse import parse_datetime
 from django.utils import timezone
 from django.shortcuts import render, redirect
-from .models import Book, BookCopy, BorrowHistory, StudentActivation, grade_Seven, grade_Eight, grade_Nine, grade_Ten, grade_Eleven, grade_Twelve
+from .models import Book, BookCopy, BorrowHistory, grade_Seven, grade_Eight, grade_Nine, grade_Ten, grade_Eleven, grade_Twelve
 from django.views.decorators.csrf import csrf_protect, ensure_csrf_cookie
 from django.db.models import Count, Q, Avg
 from django.db import transaction, IntegrityError
@@ -56,42 +56,6 @@ def books(request):
             "search_query": search_query,
         }
     )
-def register_account(request):
-    if request.method == 'POST':
-        data = json.loads(request.body)
-        name = data.get('name')
-        id_number = data.get('idNumber')
-        email = data.get('email')
-        batch = data.get('batch')
-
-        # Check if student already exists in any grade
-        for model in [grade_Seven, grade_Eight, grade_Nine, grade_Ten, grade_Eleven, grade_Twelve]:
-            if model.objects.filter(school_id=id_number).exists():
-                return JsonResponse({'error': 'ID Number already exists.'}, status=400)
-            if model.objects.filter(name=name).exists():
-                return JsonResponse({'error': 'Name already exists.'}, status=400)
-
-        # Note: This function is no longer needed with the new OTP registration flow
-        # Students are now created via CSV import and OTP activation
-        return JsonResponse({'error': 'Please use the new registration flow with OTP verification.'}, status=400)
-    return JsonResponse({'error': 'Invalid request method.'}, status=405)
-
-def check_duplicate(request):
-    if request.method == 'POST':
-        data = json.loads(request.body)
-        id_number = data.get('idNumber')
-        name = data.get('name')
-
-        # Check if student exists in any grade
-        duplicate = False
-        for model in [grade_Seven, grade_Eight, grade_Nine, grade_Ten, grade_Eleven, grade_Twelve]:
-            if model.objects.filter(school_id=id_number).exists() or model.objects.filter(name=name).exists():
-                duplicate = True
-                break
-        
-        return JsonResponse({'duplicate': duplicate})
-    return JsonResponse({'error': 'Invalid request method.'}, status=405)
-
 def records(request):
     # Capture user-selected filters
     book_type = request.GET.get('book_type')
@@ -784,7 +748,6 @@ def admin_dashboard(request):
             name = (request.POST.get('name') or '').strip()
             email = (request.POST.get('email') or '').strip()
             batch = (request.POST.get('batch') or '').strip() or None
-            is_activated = (request.POST.get('is_activated', 'false').lower() == 'true')
 
             grade_map = {
                 '7': grade_Seven,
@@ -825,7 +788,6 @@ def admin_dashboard(request):
                         user.name = new_name
                         user.email = email or user.email
                         user.batch = batch
-                        user.is_activated = is_activated
                         user.save()
                     else:
                         target_model.objects.create(
@@ -834,19 +796,8 @@ def admin_dashboard(request):
                             gender=user.gender,
                             email=email or user.email,
                             batch=batch,
-                            is_activated=is_activated,
                         )
                         user.delete()
-
-                    # Keep StudentActivation in sync if present
-                    StudentActivation.objects.filter(school_id=old_school_id).update(
-                        school_id=new_school_id or old_school_id,
-                        name=new_name,
-                        email=email or user.email,
-                        batch=(batch or None),
-                        grade=int(new_grade_num) if str(new_grade_num).isdigit() else int(old_grade_num),
-                        is_activated=is_activated,
-                    )
 
                 messages.success(request, 'User updated successfully.')
             except source_model.DoesNotExist:
@@ -882,7 +833,6 @@ def admin_dashboard(request):
                     user = model.objects.get(school_id=school_id)
                     name = user.name
                     user.delete()
-                    StudentActivation.objects.filter(school_id=school_id).delete()
                 messages.success(request, f'User "{name}" deleted.')
             except model.DoesNotExist:
                 messages.error(request, 'User not found.')
@@ -1027,7 +977,6 @@ def admin_dashboard(request):
             email = request.POST.get('email', '').strip()
             batch = request.POST.get('batch', '').strip()
             gender = request.POST.get('gender', 'Other').strip() or 'Other'
-            is_activated = request.POST.get('is_activated', 'false').lower() == 'true'
 
             if not grade_num or not name or not school_id or not email:
                 messages.error(request, 'Grade, Name, School ID, and Email are required.')
@@ -1059,7 +1008,6 @@ def admin_dashboard(request):
                     email=email,
                     batch=batch or None,
                     gender=gender,
-                    is_activated=is_activated,
                 )
                 messages.success(request, f'User "{name}" added successfully.')
             except IntegrityError:
@@ -1129,7 +1077,6 @@ def admin_dashboard(request):
                 'grade': f'Grade {grade_num}',
                 'grade_num': grade_num,
                 'batch': getattr(user, 'batch', 'N/A'),
-                'is_activated': user.is_activated,
             })
     
     total_users_count = (
