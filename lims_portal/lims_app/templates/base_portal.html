@@ -1,0 +1,188 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}eTala Library{% endblock %}</title>
+  <script>
+    (function() {
+      const theme = localStorage.getItem('theme') || 'light';
+      document.documentElement.classList.add(theme);
+    })();
+  </script>
+  <link rel="stylesheet" href="https://public.codepenassets.com/css/normalize-5.0.0.min.css">
+  <link rel="stylesheet" href="{% static 'Scripts/css/cadmin.css' %}">
+  <style>
+    html, body {
+      background-color: var(--app-container) !important;
+    }
+    .app-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: relative;
+    }
+    .app-header-left {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      width: 300px;
+      margin-left: -8px;
+    }
+    .app-header-right {
+      width: 80px;
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .search-wrapper {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 600px;
+      max-width: 600px;
+      z-index: 100;
+    }
+    .app-logo {
+      width: 36px;
+      height: 36px;
+      object-fit: contain;
+      flex-shrink: 0;
+      transition: transform 0.2s ease;
+    }
+    .app-logo:hover {
+      transform: scale(1.05);
+    }
+    .app-name {
+      margin: 0;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    .search-suggestions {
+      display: none;
+      position: absolute;
+      top: calc(100% + 8px);
+      left: 0;
+      right: 0;
+      background: var(--content-bg);
+      border-radius: 12px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+      max-height: 400px;
+      overflow-y: auto;
+      z-index: 1000;
+    }
+    .search-suggestions.show {
+      display: block;
+    }
+    .search-suggestion-item {
+      padding: 1rem 1.5rem;
+      border-bottom: 1px solid var(--border-color);
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+    .search-suggestion-item:last-child {
+      border-bottom: none;
+    }
+    .search-suggestion-item:hover {
+      background: var(--message-box-hover);
+    }
+    .suggestion-title {
+      font-weight: 600;
+      font-size: 1rem;
+      color: var(--main-color);
+      margin-bottom: 0.3rem;
+    }
+    .suggestion-details {
+      font-size: 0.85rem;
+      color: var(--secondary-color);
+      line-height: 1.4;
+    }
+    .suggestion-match {
+      background: rgba(37, 99, 235, 0.15);
+      padding: 0.1rem 0.3rem;
+      border-radius: 3px;
+      font-weight: 500;
+      color: var(--link-color);
+    }
+    .no-results {
+      padding: 2rem;
+      text-align: center;
+      color: var(--secondary-color);
+    }
+  </style>
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+  <div class="app-container">
+    <div class="app-header">
+      <div class="app-header-left">
+        <img src="{% static 'img/etalalogo.svg' %}" alt="eTala Logo" class="app-logo">
+        <p class="app-name">eTala Library</p>
+        <div class="search-wrapper">
+          <input class="search-input" type="text" id="portalSearchInput" placeholder="Search books..." autocomplete="off">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="feather feather-search" viewBox="0 0 24 24">
+            <circle cx="11" cy="11" r="8"></circle>
+            <path d="M21 21l-4.35-4.35"></path>
+          </svg>
+          <div class="search-suggestions" id="portalSearchSuggestions"></div>
+        </div>
+      </div>
+
+      {% block header_right %}
+      <div class="app-header-right">
+        <button class="mode-switch" title="Switch Theme">
+          <svg class="moon" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" width="24" height="24" viewBox="0 0 24 24">
+            <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"></path>
+          </svg>
+        </button>
+      </div>
+      {% endblock %}
+
+      {% block header_action %}{% endblock %}
+    </div>
+
+    <div class="app-content">
+      {% include 'partials/portal_sidebar.html' %}
+      {% block main %}
+      <div class="projects-section">
+        {% block content %}{% endblock %}
+      </div>
+      {% endblock %}
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      const modeSwitch = document.querySelector('.mode-switch');
+      if (!modeSwitch) return;
+      modeSwitch.addEventListener('click', function() {
+        if (document.documentElement.classList.contains('dark')) {
+          document.documentElement.classList.remove('dark');
+          document.documentElement.classList.add('light');
+          localStorage.setItem('theme', 'light');
+        } else {
+          document.documentElement.classList.remove('light');
+          document.documentElement.classList.add('dark');
+          localStorage.setItem('theme', 'dark');
+        }
+      });
+    })();
+  </script>
+
+  {% block portal_search_init %}
+  <script src="{% static 'Scripts/js/portal_search.js' %}"></script>
+  <script>
+    if (window.initPortalSearch) {
+      window.initPortalSearch({
+        inputId: 'portalSearchInput',
+        suggestionsId: 'portalSearchSuggestions'
+      });
+    }
+  </script>
+  {% endblock %}
+
+  {% block extra_scripts %}{% endblock %}
+</body>
+</html>

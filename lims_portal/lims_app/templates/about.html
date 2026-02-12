@@ -1,115 +1,14 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>About - eTala Library</title>
-  <script>
-    // Set theme immediately to prevent flash
-    (function() {
-      const theme = localStorage.getItem('theme') || 'light';
-      document.documentElement.classList.add(theme);
-    })();
-  </script>
-  <link rel="stylesheet" href="https://public.codepenassets.com/css/normalize-5.0.0.min.css">
-  <link rel="stylesheet" href="../static/Scripts/css/cadmin.css">
+{% extends 'base_portal.html' %}
+
+{% block title %}About - eTala Library{% endblock %}
+
+{% block extra_head %}
   <style>
     html, body {
-      background-color: var(--app-container) !important;
       overflow: hidden;
     }
-    .app-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      position: relative;
-    }
-    .app-header-left {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      width: 300px;
-      margin-left: -8px;
-    }
-    .app-header-right {
-      width: 80px;
-      display: flex;
-      justify-content: flex-end;
-    }
-    .search-wrapper {
-      position: absolute;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 600px;
-      max-width: 600px;
-    }
-    .app-logo {
-      width: 36px;
-      height: 36px;
-      object-fit: contain;
-      flex-shrink: 0;
-      transition: transform 0.2s ease;
-    }
-    .app-logo:hover {
-      transform: scale(1.05);
-    }
-    .app-name {
-      margin: 0;
-      font-weight: 600;
-      white-space: nowrap;
-    }
-    .search-suggestions {
-      display: none;
-      position: absolute;
-      top: calc(100% + 8px);
-      left: 0;
-      right: 0;
-      background: var(--content-bg);
-      border-radius: 12px;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.15);
-      max-height: 400px;
-      overflow-y: auto;
-      z-index: 1000;
-    }
-    .search-suggestions.show {
-      display: block;
-    }
-    .search-suggestion-item {
-      padding: 1rem 1.5rem;
-      border-bottom: 1px solid var(--border-color);
-      cursor: pointer;
-      transition: background 0.2s ease;
-    }
-    .search-suggestion-item:last-child {
-      border-bottom: none;
-    }
-    .search-suggestion-item:hover {
-      background: var(--message-box-hover);
-    }
-    .suggestion-title {
-      font-weight: 600;
-      font-size: 1rem;
-      color: var(--main-color);
-      margin-bottom: 0.3rem;
-    }
-    .suggestion-details {
-      font-size: 0.85rem;
-      color: var(--secondary-color);
-      line-height: 1.4;
-    }
-    .suggestion-match {
-      background: rgba(37, 99, 235, 0.15);
-      padding: 0.1rem 0.3rem;
-      border-radius: 3px;
-      font-weight: 500;
-      color: var(--link-color);
-    }
-    .no-results {
-      padding: 2rem;
-      text-align: center;
-      color: var(--secondary-color);
-    }
 
-    /* Slider Styles */
+    /* Slider Styles (page-specific) */
     .projects-section {
       flex: 1;
       padding: 0;
@@ -261,285 +160,82 @@
       padding: 0 3px 0 0;
     }
   </style>
-</head>
-<body>
-  <div class="app-container">
-    <div class="app-header">
-      <div class="app-header-left">
-        <img src="../static/img/etalalogo.svg" alt="eTala Logo" class="app-logo">
-        <p class="app-name">eTala Library</p>
-        <div class="search-wrapper">
-          <input class="search-input" type="text" id="aboutSearchInput" placeholder="Search books..." autocomplete="off">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="feather feather-search" viewBox="0 0 24 24">
-            <defs></defs>
-            <circle cx="11" cy="11" r="8"></circle>
-            <path d="M21 21l-4.35-4.35"></path>
-          </svg>
-          <div class="search-suggestions" id="aboutSearchSuggestions"></div>
+{% endblock %}
+
+{% block content %}
+  <div class="slider-container">
+    <div class="slide">
+      <div class="item" style="background-image: url('https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=1074&auto=format&fit=crop');">
+        <div class="content">
+          <div class="name">Lorenz P. Wee</div>
+          <div class="des">Team Member - Contributing to project documentation and support.</div>
         </div>
       </div>
-      <div class="app-header-right">
-        <button class="mode-switch" title="Switch Theme">
-          <svg class="moon" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" width="24" height="24" viewBox="0 0 24 24">
-            <defs></defs>
-            <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"></path>
-          </svg>
-        </button>
+
+      <div class="item" style="background-image: url('https://images.unsplash.com/photo-1557862921-37829c790f19?q=80&w=1171&auto=format&fit=crop');">
+        <div class="content">
+          <div class="name">Bright R. Bastasa</div>
+          <div class="des">Fullstack Developer & Designer - Created this entire site, handling all development and design work.</div>
+        </div>
+      </div>
+
+      <div class="item" style="background-image: url('https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?q=80&w=1074&auto=format&fit=crop');">
+        <div class="content">
+          <div class="name">Jared John C. Campricio</div>
+          <div class="des">Project Lead - Coordinating team efforts and project management.</div>
+        </div>
+      </div>
+
+      <div class="item" style="background-image: url('https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?q=80&w=1074&auto=format&fit=crop');">
+        <div class="content">
+          <div class="name">Gabriel Dominic Bobita</div>
+          <div class="des">Secretary - Managing project documentation and meeting notes.</div>
+        </div>
+      </div>
+
+      <div class="item" style="background-image: url('https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=1074&auto=format&fit=crop');">
+        <div class="content">
+          <div class="name">Rover Opay</div>
+          <div class="des">Team Member - Supporting project initiatives and team collaboration.</div>
+        </div>
+      </div>
+
+      <div class="item" style="background-image: url('https://images.unsplash.com/photo-1531427186611-ecfd6d936c79?q=80&w=1074&auto=format&fit=crop');">
+        <div class="content">
+          <div class="name">Juan Miguel Realiza</div>
+          <div class="des">Quality Officer - Ensuring project standards and quality control.</div>
+        </div>
       </div>
     </div>
-    <div class="app-content">
-      <div class="app-sidebar">
-        <a href="{% url 'home' %}" class="app-sidebar-link" title="Home">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-home">
-            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-            <polyline points="9 22 9 12 15 12 15 22" /></svg>
-        </a>
-        <a href="{% url 'records' %}" class="app-sidebar-link" title="Records">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-book">
-            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
-            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
-          </svg>
-        </a>
-        <a href="{% url 'about' %}" class="app-sidebar-link active" title="About">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-info">
-            <circle cx="12" cy="12" r="10"></circle>
-            <line x1="12" y1="16" x2="12" y2="12"></line>
-            <line x1="12" y1="8" x2="12.01" y2="8"></line>
-          </svg>
-        </a>
-        <a href="{% url 'analytics' %}" class="app-sidebar-link" title="Statistics">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-bar-chart-2">
-            <line x1="18" y1="20" x2="18" y2="10"></line>
-            <line x1="12" y1="20" x2="12" y2="4"></line>
-            <line x1="6" y1="20" x2="6" y2="14"></line>
-          </svg>
-        </a>
-        <a href="#" class="app-sidebar-link" onclick="alert('Activation portal coming soon!'); return false;" title="Activate Account">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-user-check">
-            <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-            <circle cx="8.5" cy="7" r="4"></circle>
-            <polyline points="17 11 19 13 23 9"></polyline>
-          </svg>
-        </a>
-      </div>
 
-      <div class="projects-section">
-        <div class="slider-container">
-          <div class="slide">
-            <div class="item" style="background-image: url('https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=1074&auto=format&fit=crop');">
-              <div class="content">
-                <div class="name">Lorenz P. Wee</div>
-                <div class="des">
-                  Team Member - Contributing to project documentation and support.
-                </div>
-              </div>
-            </div>
-
-            <div class="item" style="background-image: url('https://images.unsplash.com/photo-1557862921-37829c790f19?q=80&w=1171&auto=format&fit=crop');">
-              <div class="content">
-                <div class="name">Bright R. Bastasa</div>
-                <div class="des">
-                  Fullstack Developer & Designer - Created this entire site, handling all development and design work.
-                </div>
-              </div>
-            </div>
-
-            <div class="item" style="background-image: url('https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?q=80&w=1074&auto=format&fit=crop');">
-              <div class="content">
-                <div class="name">Jared John C. Campricio</div>
-                <div class="des">
-                  Project Lead - Coordinating team efforts and project management.
-                </div>
-              </div>
-            </div>
-
-            <div class="item" style="background-image: url('https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?q=80&w=1074&auto=format&fit=crop');">
-              <div class="content">
-                <div class="name">Gabriel Dominic Bobita</div>
-                <div class="des">
-                  Secretary - Managing project documentation and meeting notes.
-                </div>
-              </div>
-            </div>
-
-            <div class="item" style="background-image: url('https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=1074&auto=format&fit=crop');">
-              <div class="content">
-                <div class="name">Rover Opay</div>
-                <div class="des">
-                  Team Member - Supporting project initiatives and team collaboration.
-                </div>
-              </div>
-            </div>
-
-            <div class="item" style="background-image: url('https://images.unsplash.com/photo-1531427186611-ecfd6d936c79?q=80&w=1074&auto=format&fit=crop');">
-              <div class="content">
-                <div class="name">Juan Miguel Realiza</div>
-                <div class="des">
-                  Quality Officer - Ensuring project standards and quality control.
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="button">
-            <button class="prev">◁</button>
-            <button class="next">▷</button>
-          </div>
-        </div>
-      </div>
+    <div class="button">
+      <button class="prev">◁</button>
+      <button class="next">▷</button>
     </div>
   </div>
+{% endblock %}
 
+{% block extra_scripts %}
   <script>
-    // Theme switcher
-    document.querySelector(".mode-switch").addEventListener("click", function() {
-      if (document.documentElement.classList.contains('dark')) {
-        document.documentElement.classList.remove('dark');
-        document.documentElement.classList.add('light');
-        localStorage.setItem('theme', 'light');
-      } else {
-        document.documentElement.classList.remove('light');
-        document.documentElement.classList.add('dark');
-        localStorage.setItem('theme', 'dark');
-      }
-    });
-    
-    // Search functionality with YouTube-style suggestions
-    const aboutSearchInput = document.getElementById('aboutSearchInput');
-    const aboutSuggestionsContainer = document.getElementById('aboutSearchSuggestions');
-    let aboutSearchTimeout;
+    const next = document.querySelector('.next');
+    const prev = document.querySelector('.prev');
 
-    if (aboutSearchInput && aboutSuggestionsContainer) {
-      aboutSearchInput.addEventListener('input', function() {
-        const query = this.value.trim();
-        clearTimeout(aboutSearchTimeout);
-        
-        if (query.length < 2) {
-          aboutSuggestionsContainer.classList.remove('show');
-          return;
-        }
-        
-        aboutSearchTimeout = setTimeout(() => {
-          fetchSearchSuggestions(query, aboutSuggestionsContainer);
-        }, 300);
-      });
-
-      aboutSearchInput.addEventListener('keypress', function(event) {
-        if (event.key === 'Enter') {
-          const query = this.value.trim();
-          if (query) {
-            window.location.href = `/records/?search=${encodeURIComponent(query)}`;
-          }
+    if (next && prev) {
+      next.addEventListener('click', function () {
+        const items = document.querySelectorAll('.item');
+        const slide = document.querySelector('.slide');
+        if (slide && items.length) {
+          slide.appendChild(items[0]);
         }
       });
 
-      document.addEventListener('click', function(event) {
-        if (!event.target.closest('.search-wrapper')) {
-          aboutSuggestionsContainer.classList.remove('show');
+      prev.addEventListener('click', function () {
+        const items = document.querySelectorAll('.item');
+        const slide = document.querySelector('.slide');
+        if (slide && items.length) {
+          slide.prepend(items[items.length - 1]);
         }
       });
     }
-
-    function fetchSearchSuggestions(query, container) {
-      fetch(`/records/?search=${encodeURIComponent(query)}`, {
-        headers: {
-          'X-Requested-With': 'XMLHttpRequest',
-          'Accept': 'application/json'
-        }
-      })
-      .then(response => {
-        if (!response.ok) {
-          throw new Error('Network response was not ok');
-        }
-        return response.json();
-      })
-      .then(data => {
-        if (data && data.books) {
-          displaySuggestions(data.books, query, container);
-        } else {
-          container.innerHTML = '<div class="search-suggestion-item" style="cursor: default;">No books found</div>';
-          container.classList.add('show');
-        }
-      })
-      .catch(error => {
-        console.error('Search error:', error);
-        container.innerHTML = '<div class="search-suggestion-item" style="cursor: default;">Error loading suggestions</div>';
-        container.classList.add('show');
-      });
-    }
-
-    function displaySuggestions(books, query, container) {
-      if (!books || books.length === 0) {
-        container.innerHTML = '<div class="search-suggestion-item" style="cursor: default; opacity: 0.7;">No books found</div>';
-        container.classList.add('show');
-        return;
-      }
-
-      const queryLower = query.toLowerCase();
-      const html = books.slice(0, 8).map(book => {
-        const matches = [];
-        
-        if (book.Title && book.Title.toLowerCase().includes(queryLower)) {
-          matches.push(`<span class="suggestion-match">Title</span>: ${highlightMatch(book.Title, query)}`);
-        }
-        if (book.mainAuthor && book.mainAuthor.toLowerCase().includes(queryLower)) {
-          matches.push(`<span class="suggestion-match">Author</span>: ${highlightMatch(book.mainAuthor, query)}`);
-        }
-        if (book.callNumber && book.callNumber.toLowerCase().includes(queryLower)) {
-          matches.push(`<span class="suggestion-match">Call Number</span>: ${highlightMatch(book.callNumber, query)}`);
-        }
-        
-        const matchDetails = matches.length > 0 ? matches.join(' • ') : 'Match found';
-        const availableCopies = book.available_copies || 0;
-        const totalCopies = book.total_copies || 0;
-        
-        return `
-          <div class="search-suggestion-item" onclick="goToRecords('${escapeHtml(query).replace(/'/g, "&apos;")}')">
-            <div class="suggestion-title">${escapeHtml(book.Title || 'Untitled')}</div>
-            <div class="suggestion-details">
-              ${matchDetails}<br>
-              Available: <strong>${availableCopies}/${totalCopies}</strong> copies
-            </div>
-          </div>
-        `;
-      }).join('');
-
-      container.innerHTML = html;
-      container.classList.add('show');
-    }
-
-    function highlightMatch(text, query) {
-      if (!text) return '';
-      const regex = new RegExp(`(${escapeRegex(query)})`, 'gi');
-      return escapeHtml(text).replace(regex, '<span class="suggestion-match">$1</span>');
-    }
-
-    function escapeHtml(text) {
-      const div = document.createElement('div');
-      div.textContent = text;
-      return div.innerHTML;
-    }
-
-    function escapeRegex(string) {
-      return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    }
-
-    function goToRecords(query) {
-      window.location.href = `/records/?search=${query}`;
-    }
-
-    // Image Slider functionality
-    let next = document.querySelector(".next");
-    let prev = document.querySelector(".prev");
-
-    next.addEventListener("click", function () {
-      let items = document.querySelectorAll(".item");
-      document.querySelector(".slide").appendChild(items[0]);
-    });
-
-    prev.addEventListener("click", function () {
-      let items = document.querySelectorAll(".item");
-      document.querySelector(".slide").prepend(items[items.length - 1]);
-    });
   </script>
-</body>
-</html>
+{% endblock %}

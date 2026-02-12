@@ -809,116 +809,15 @@
         }
       });
     </script>
-    <script>
-      // Search functionality with YouTube-style suggestions
-      const analyticsSearchInput = document.getElementById('analyticsSearchInput');
-      const analyticsSuggestionsContainer = document.getElementById('analyticsSearchSuggestions');
-      let analyticsSearchTimeout;
-
-      if (analyticsSearchInput && analyticsSuggestionsContainer) {
-        analyticsSearchInput.addEventListener('input', function() {
-          const query = this.value.trim();
-          clearTimeout(analyticsSearchTimeout);
-          
-          if (query.length < 2) {
-            analyticsSuggestionsContainer.classList.remove('show');
-            return;
-          }
-          
-          analyticsSearchTimeout = setTimeout(() => {
-            fetchSearchSuggestions(query, analyticsSuggestionsContainer);
-          }, 300);
-        });
-
-        analyticsSearchInput.addEventListener('keypress', function(event) {
-          if (event.key === 'Enter') {
-            const query = this.value.trim();
-            if (query) {
-              window.location.href = `/records/?search=${encodeURIComponent(query)}`;
+        <script src="../static/Scripts/js/portal_search.js"></script>
+        <script>
+            if (window.initPortalSearch) {
+                window.initPortalSearch({
+                    inputId: 'analyticsSearchInput',
+                    suggestionsId: 'analyticsSearchSuggestions'
+                });
             }
-          }
-        });
-
-        document.addEventListener('click', function(event) {
-          if (!event.target.closest('.search-wrapper')) {
-            analyticsSuggestionsContainer.classList.remove('show');
-          }
-        });
-      }
-
-      function fetchSearchSuggestions(query, container) {
-        fetch(`/records/?search=${encodeURIComponent(query)}`, {
-          headers: {
-            'X-Requested-With': 'XMLHttpRequest'
-          }
-        })
-        .then(response => response.json())
-        .then(data => {
-          displaySuggestions(data.books, query, container);
-        })
-        .catch(error => {
-          console.error('Search error:', error);
-        });
-      }
-
-      function displaySuggestions(books, query, container) {
-        if (!books || books.length === 0) {
-          container.innerHTML = '<div class="no-results">No books found</div>';
-          container.classList.add('show');
-          return;
-        }
-
-        const queryLower = query.toLowerCase();
-        const html = books.slice(0, 8).map(book => {
-          const matches = [];
-          
-          if (book.Title && book.Title.toLowerCase().includes(queryLower)) {
-            matches.push(`<span class="suggestion-match">Title</span>: ${highlightMatch(book.Title, query)}`);
-          }
-          if (book.mainAuthor && book.mainAuthor.toLowerCase().includes(queryLower)) {
-            matches.push(`<span class="suggestion-match">Author</span>: ${highlightMatch(book.mainAuthor, query)}`);
-          }
-          if (book.callNumber && book.callNumber.toLowerCase().includes(queryLower)) {
-            matches.push(`<span class="suggestion-match">Call Number</span>: ${highlightMatch(book.callNumber, query)}`);
-          }
-          
-          const matchDetails = matches.length > 0 ? matches.join(' • ') : 'Match found';
-          
-          return `
-            <div class="search-suggestion-item" onclick="goToRecords('${encodeURIComponent(query)}')">
-              <div class="suggestion-title">${escapeHtml(book.Title)}</div>
-              <div class="suggestion-details">
-                ${matchDetails}<br>
-                Available: <strong>${book.available_copies}/${book.total_copies}</strong> copies
-              </div>
-            </div>
-          `;
-        }).join('');
-
-        container.innerHTML = html;
-        container.classList.add('show');
-      }
-
-      function highlightMatch(text, query) {
-        if (!text) return '';
-        const regex = new RegExp(`(${escapeRegex(query)})`, 'gi');
-        return escapeHtml(text).replace(regex, '<span class="suggestion-match">$1</span>');
-      }
-
-      function escapeHtml(text) {
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
-      }
-
-      function escapeRegex(string) {
-        return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      }
-
-      function goToRecords(query) {
-        window.location.href = `/records/?search=${query}`;
-      }
-    </script>
+        </script>
     </div>
   </div>
 </body>

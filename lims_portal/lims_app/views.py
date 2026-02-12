@@ -195,6 +195,7 @@ def records(request):
         return JsonResponse({"books": all_books})
 
     return render(request, "records.html", {
+        "current_tab": "records",
         "recorded_books": all_books,
         "distinct_languages": distinct_languages,
         "distinct_publishers": distinct_publishers,
@@ -525,6 +526,7 @@ def analytics(request):
     }
 
     context = {
+        "current_tab": "analytics",
         # Core counts
         "total_books_count": total_books_count,
         "total_accounts": total_accounts,

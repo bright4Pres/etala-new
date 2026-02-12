@@ -1,39 +1,16 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Records - eTala Library</title>
-  <script>
-    // Set theme immediately to prevent flash
-    (function() {
-      const theme = localStorage.getItem('theme') || 'light';
-      document.documentElement.classList.add(theme);
-    })();
-  </script>
-  <link rel="stylesheet" href="https://public.codepenassets.com/css/normalize-5.0.0.min.css">
-  <link rel="stylesheet" href="../static/Scripts/css/cadmin.css">
-  <link rel="stylesheet" href="../static/Scripts/css/dataTables.bootstrap5.min.css">
-  <link rel="stylesheet" href="../static/Scripts/css/bootstrap.min.css">
+{% extends 'base_portal.html' %}
+{% load static %}
+
+{% block title %}Records - eTala Library{% endblock %}
+
+{# Records manages its own search behavior (in-page DataTable filtering + URL sync),
+   so we disable the base portal_search init for this page. #}
+{% block portal_search_init %}{% endblock %}
+
+{% block extra_head %}
+  <link rel="stylesheet" href="{% static 'Scripts/css/dataTables.bootstrap5.min.css' %}">
+  <link rel="stylesheet" href="{% static 'Scripts/css/bootstrap.min.css' %}">
   <style>
-    /* Override bootstrap white backgrounds for theme support */
-    html, body {
-      background-color: var(--app-container) !important;
-    }
-    .app-logo {
-      width: 36px;
-      height: 36px;
-      object-fit: contain;
-      flex-shrink: 0;
-      transition: transform 0.2s ease;
-    }
-    .app-logo:hover {
-      transform: scale(1.05);
-    }
-    .app-name {
-      margin: 0;
-      font-weight: 600;
-      white-space: nowrap;
-    }
     /* Force all table backgrounds and text */
     .table,
     .table-striped,
@@ -93,84 +70,7 @@
       background-color: var(--message-box-hover) !important;
       color: var(--main-color) !important;
     }
-    .app-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      position: relative;
-    }
-    .app-header-left {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      width: 300px;
-      margin-left: -8px;
-    }
-    .app-header-right {
-      width: 80px;
-      display: flex;
-      justify-content: flex-end;
-    }
-    .search-wrapper {
-      position: absolute;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 600px;
-      max-width: 600px;
-      z-index: 100;
-    }
-    .search-suggestions {
-      display: none;
-      position: absolute;
-      top: calc(100% + 8px);
-      left: 0;
-      right: 0;
-      background: var(--projects-section);
-      border: 1px solid var(--message-box-border);
-      border-radius: 12px;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.3);
-      max-height: 400px;
-      overflow-y: auto;
-      z-index: 10000;
-    }
-    .search-suggestions.show {
-      display: block !important;
-    }
-    .search-suggestion-item {
-      padding: 1rem 1.5rem;
-      border-bottom: 1px solid var(--border-color);
-      cursor: pointer;
-      transition: background 0.2s ease;
-    }
-    .search-suggestion-item:last-child {
-      border-bottom: none;
-    }
-    .search-suggestion-item:hover {
-      background: var(--message-box-hover);
-    }
-    .suggestion-title {
-      font-weight: 600;
-      font-size: 1rem;
-      color: var(--main-color);
-      margin-bottom: 0.3rem;
-    }
-    .suggestion-details {
-      font-size: 0.85rem;
-      color: var(--secondary-color);
-      line-height: 1.4;
-    }
-    .suggestion-match {
-      background: rgba(37, 99, 235, 0.15);
-      padding: 0.1rem 0.3rem;
-      border-radius: 3px;
-      font-weight: 500;
-      color: var(--link-color);
-    }
-    .no-results {
-      padding: 2rem;
-      text-align: center;
-      color: var(--secondary-color);
-    }
+
     .details-container {
       display: none;
       overflow: hidden;
@@ -199,18 +99,15 @@
     .book-row.shown .expand-icon {
       transform: rotate(180deg);
     }
-    tr.shown {
-      background-color: var(--message-box-hover) !important;
-    }
+    tr.shown,
     tr.shown > * {
       background-color: var(--message-box-hover) !important;
     }
-    tr.shown {
-      background-color: var(--message-box-hover) !important;
-    }
+
     .dataTables_wrapper {
       color: var(--main-color);
     }
+
     /* Force override Bootstrap table styles */
     table.dataTable,
     table.table,
@@ -240,26 +137,13 @@
       color: var(--main-color) !important;
       border-color: var(--message-box-border) !important;
     }
-    /* Override striped rows */
-    table.table-striped tbody tr:nth-of-type(odd) {
-      background: var(--projects-section) !important;
-    }
-    table.table-striped tbody tr:nth-of-type(even) {
-      background: var(--message-box-hover) !important;
-    }
     table.dataTable {
       border-color: var(--message-box-border);
     }
     .dataTables_wrapper .dataTables_length,
-    .dataTables_wrapper .dataTables_filter,
     .dataTables_wrapper .dataTables_info,
     .dataTables_wrapper .dataTables_paginate {
       color: var(--main-color);
-    }
-    .dataTables_wrapper .dataTables_filter input {
-      background: var(--search-area-bg);
-      color: var(--main-color);
-      border: 1px solid var(--message-box-border);
     }
     .dataTables_wrapper .dataTables_paginate .paginate_button {
       color: var(--main-color) !important;
@@ -275,6 +159,7 @@
       background: var(--link-color-active-bg) !important;
       border-color: var(--message-box-border) !important;
     }
+
     /* Force text colors inside table */
     .table strong,
     .table small,
@@ -291,6 +176,7 @@
     #booksTable td small {
       color: var(--secondary-color) !important;
     }
+
     /* Highlight search matches */
     mark {
       background-color: rgba(37, 99, 235, 0.15);
@@ -299,6 +185,7 @@
       border-radius: 3px;
       font-weight: 500;
     }
+
     /* DataTables sorting headers */
     table.dataTable thead .sorting,
     table.dataTable thead .sorting_asc,
@@ -310,226 +197,127 @@
       color: var(--main-color) !important;
     }
   </style>
-</head>
-<body>
-  <div class="app-container">
-    <div class="app-header">
-      <div class="app-header-left">
-        <img src="../static/img/etalalogo.svg" alt="eTala Logo" class="app-logo">
-        <p class="app-name">eTala Library</p>
-        <div class="search-wrapper">
-          <input class="search-input" type="text" id="recordsSearchInput" placeholder="Search books..." autocomplete="off">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="feather feather-search" viewBox="0 0 24 24">
-            <defs></defs>
-            <circle cx="11" cy="11" r="8"></circle>
-            <path d="M21 21l-4.35-4.35"></path>
-          </svg>
-          <div class="search-suggestions" id="searchSuggestions"></div>
-        </div>
-      </div>
-      <div class="app-header-right">
-        <button class="mode-switch" title="Switch Theme">
-          <svg class="moon" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" width="24" height="24" viewBox="0 0 24 24">
-            <defs></defs>
-            <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"></path>
-          </svg>
-        </button>
-      </div>
-      <button class="messages-btn" onclick="toggleFilters()">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-filter">
-          <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
-        </svg>
-      </button>
-    </div>
-    <div class="app-content">
-      <div class="app-sidebar">
-        <a href="{% url 'home' %}" class="app-sidebar-link" title="Home">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-home">
-            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-            <polyline points="9 22 9 12 15 12 15 22" /></svg>
-        </a>
-        <a href="{% url 'records' %}" class="app-sidebar-link active" title="Records">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-book">
-            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
-            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
-          </svg>
-        </a>
-        <a href="{% url 'about' %}" class="app-sidebar-link" title="About">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-info">
-            <circle cx="12" cy="12" r="10"></circle>
-            <line x1="12" y1="16" x2="12" y2="12"></line>
-            <line x1="12" y1="8" x2="12.01" y2="8"></line>
-          </svg>
-        </a>
-        <a href="{% url 'analytics' %}" class="app-sidebar-link" title="Statistics">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-bar-chart-2">
-            <line x1="18" y1="20" x2="18" y2="10"></line>
-            <line x1="12" y1="20" x2="12" y2="4"></line>
-            <line x1="6" y1="20" x2="6" y2="14"></line>
-          </svg>
-        </a>
-        <a href="#" class="app-sidebar-link" onclick="alert('Activation portal coming soon!'); return false;" title="Activate Account">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-user-check">
-            <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-            <circle cx="8.5" cy="7" r="4"></circle>
-            <polyline points="17 11 19 13 23 9"></polyline>
-          </svg>
-        </a>
-      </div>
-    
-      <div class="projects-section">
-        <div class="projects-section-header">
-          <p>Book Records</p>
-          <p class="time">{{ recorded_books|length }} Books</p>
-        </div>
-        
-        <div style="background: var(--projects-section); padding: 2rem; border-radius: 12px;">
-          <table id="booksTable" class="table table-striped table-bordered" style="width: 100%;">
-            <thead class="table-dark">
-              <tr>
-                <th>Book Details</th>
-                <th>Status</th>
-                <th style="display:none;">Search</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for book in recorded_books %}
-              <tr class="book-row" data-search="{{ book.Title }} {{ book.mainAuthor }} {{ book.coAuthor }} {{ book.Edition }} {{ book.Publisher }} {{ book.placeofPublication }} {{ book.publicationDate|date:'Y-m-d' }} {{ book.copyrightDate|date:'Y-m-d' }} {{ book.Language }} {{ book.Type }} {{ book.callNumber }} {{ book.Editors }} {{ book.acquisitionStatus }}{% for copy in book.copies %} {{ copy.accessionNumber }} {{ copy.Location }} {{ copy.status }} {{ copy.borrowed_by }}{% endfor %}" data-details="
-                <div style='display: flex; gap: 20px;'>
-                  <div style='flex: 1;'>
-                    <strong>Main Author:</strong> {{ book.mainAuthor|default:'-' }}<br>
-                    <strong>Co-Author:</strong> {{ book.coAuthor|default:'-' }}<br>
-                    <strong>Edition:</strong> {{ book.Edition|default:'-' }}<br>
-                    <strong>Publisher:</strong> {{ book.Publisher|default:'-' }}<br>
-                    <strong>Place of Publication:</strong> {{ book.placeofPublication|default:'-' }}<br>
-                    <strong>Publication Date:</strong> {{ book.publicationDate|date:'Y-m-d'|default:'-' }}<br>
-                    <strong>Copyright Date:</strong> {{ book.copyrightDate|date:'Y-m-d'|default:'-' }}<br>
-                    <strong>Language:</strong> {{ book.Language }}<br>
-                    <strong>Type:</strong> {{ book.Type }}<br>
-                    <strong>Call Number:</strong> {{ book.callNumber }}<br>
-                    <strong>Editors:</strong> {{ book.Editors|default:'-' }}<br>
-                    <strong>Acquisition Status:</strong> {{ book.acquisitionStatus|default:'-' }}<br>
+{% endblock %}
+
+{% block content %}
+  <div class="projects-section-header">
+    <p>Book Records</p>
+    <p class="time">{{ recorded_books|length }} Books</p>
+  </div>
+
+  <div style="background: var(--projects-section); padding: 2rem; border-radius: 12px;">
+    <table id="booksTable" class="table table-striped table-bordered" style="width: 100%;">
+      <thead class="table-dark">
+        <tr>
+          <th>Book Details</th>
+          <th>Status</th>
+          <th style="display:none;">Search</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for book in recorded_books %}
+        <tr class="book-row" data-search="{{ book.Title }} {{ book.mainAuthor }} {{ book.coAuthor }} {{ book.Edition }} {{ book.Publisher }} {{ book.placeofPublication }} {{ book.publicationDate|date:'Y-m-d' }} {{ book.copyrightDate|date:'Y-m-d' }} {{ book.Language }} {{ book.Type }} {{ book.callNumber }} {{ book.Editors }} {{ book.acquisitionStatus }}{% for copy in book.copies %} {{ copy.accessionNumber }} {{ copy.Location }} {{ copy.status }} {{ copy.borrowed_by }}{% endfor %}" data-details="
+          <div style='display: flex; gap: 20px;'>
+            <div style='flex: 1;'>
+              <strong>Main Author:</strong> {{ book.mainAuthor|default:'-' }}<br>
+              <strong>Co-Author:</strong> {{ book.coAuthor|default:'-' }}<br>
+              <strong>Edition:</strong> {{ book.Edition|default:'-' }}<br>
+              <strong>Publisher:</strong> {{ book.Publisher|default:'-' }}<br>
+              <strong>Place of Publication:</strong> {{ book.placeofPublication|default:'-' }}<br>
+              <strong>Publication Date:</strong> {{ book.publicationDate|date:'Y-m-d'|default:'-' }}<br>
+              <strong>Copyright Date:</strong> {{ book.copyrightDate|date:'Y-m-d'|default:'-' }}<br>
+              <strong>Language:</strong> {{ book.Language }}<br>
+              <strong>Type:</strong> {{ book.Type }}<br>
+              <strong>Call Number:</strong> {{ book.callNumber }}<br>
+              <strong>Editors:</strong> {{ book.Editors|default:'-' }}<br>
+              <strong>Acquisition Status:</strong> {{ book.acquisitionStatus|default:'-' }}<br>
+            </div>
+            <div style='flex: 1; padding: 8px; background: var(--message-box-hover); border-radius: 4px;'>
+              <strong style='display: block; margin-bottom: 10px;'>All Copies ({{ book.total_copies }} total):</strong>
+              {% for copy in book.copies %}
+                <div style='padding: 6px; margin-bottom: 4px; background: var(--projects-section); border-radius: 4px; border-left: 3px solid {% if copy.status == 'Available' %}#28a745{% else %}#dc3545{% endif %};'>
+                  <div style='display: flex; justify-content: space-between; align-items: center;'>
+                    <span style='font-family: monospace; font-weight: bold; color: var(--main-color);'>{{ copy.accessionNumber }}</span>
+                    <span style='padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; {% if copy.status == 'Available' %}background: #d4edda; color: #155724;{% else %}background: #f8d7da; color: #721c24;{% endif %}'>
+                      {{ copy.status }}
+                    </span>
                   </div>
-                  <div style='flex: 1; padding: 8px; background: var(--message-box-hover); border-radius: 4px;'>
-                    <strong style='display: block; margin-bottom: 10px;'>All Copies ({{ book.total_copies }} total):</strong>
-                    {% for copy in book.copies %}
-                      <div style='padding: 6px; margin-bottom: 4px; background: var(--projects-section); border-radius: 4px; border-left: 3px solid {% if copy.status == 'Available' %}#28a745{% else %}#dc3545{% endif %};'>
-                        <div style='display: flex; justify-content: space-between; align-items: center;'>
-                          <span style='font-family: monospace; font-weight: bold; color: var(--main-color);'>{{ copy.accessionNumber }}</span>
-                          <span style='padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; {% if copy.status == 'Available' %}background: #d4edda; color: #155724;{% else %}background: #f8d7da; color: #721c24;{% endif %}'>
-                            {{ copy.status }}
-                          </span>
-                        </div>
-                        <div style='font-size: 0.85rem; color: var(--secondary-color); margin-top: 2px;'>{{ copy.Location }}</div>
-                      </div>
-                    {% endfor %}
-                  </div>
+                  <div style='font-size: 0.85rem; color: var(--secondary-color); margin-top: 2px;'>{{ copy.Location }}</div>
                 </div>
-              ">
-                <td>
-                  <strong>{{ book.Title }}</strong> by {{ book.mainAuthor }}
-                  <svg class="expand-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="6 9 12 15 18 9"></polyline>
-                  </svg>
-                  <br>
-                  <small style="color: var(--secondary-color);">{{ book.callNumber }}</small>
-                </td>
-                <td style="text-align:center;">
-                  <strong style="color: {% if book.available_copies > 0 %}#28a745{% else %}#dc3545{% endif %};">
-                    {{ book.available_copies }} / {{ book.total_copies }}
-                  </strong>
-                </td>
-                <td style="display:none;">
-                  {{ book.Title }} {{ book.mainAuthor }} {{ book.coAuthor }} {{ book.Edition }} {{ book.Publisher }} {{ book.placeofPublication }} {{ book.publicationDate|date:'Y-m-d' }} {{ book.copyrightDate|date:'Y-m-d' }} {{ book.Language }} {{ book.Type }} {{ book.callNumber }} {{ book.Editors }} {{ book.acquisitionStatus }}{% for copy in book.copies %} {{ copy.accessionNumber }} {{ copy.Location }} {{ copy.status }} {{ copy.borrowed_by }}{% endfor %}
-                </td>
-              </tr>
               {% endfor %}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-    
-  <script src="../static/Scripts/js/jquery-3.6.0.min.js"></script>
-  <script src="../static/Scripts/js/bootstrap.bundle.min.js"></script>
-  <script src="../static/Scripts/js/jquery.dataTables.min.js"></script>
-  <script src="../static/Scripts/js/dataTables.bootstrap5.min.js"></script>
+            </div>
+          </div>
+        ">
+          <td>
+            <strong>{{ book.Title }}</strong> by {{ book.mainAuthor }}
+            <svg class="expand-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+            <br>
+            <small style="color: var(--secondary-color);">{{ book.callNumber }}</small>
+          </td>
+          <td style="text-align:center;">
+            <strong style="color: {% if book.available_copies > 0 %}#28a745{% else %}#dc3545{% endif %};">
+              {{ book.available_copies }} / {{ book.total_copies }}
+            </strong>
+          </td>
+          <td style="display:none;">
+            {{ book.Title }} {{ book.mainAuthor }} {{ book.coAuthor }} {{ book.Edition }} {{ book.Publisher }} {{ book.placeofPublication }} {{ book.publicationDate|date:'Y-m-d' }} {{ book.copyrightDate|date:'Y-m-d' }} {{ book.Language }} {{ book.Type }} {{ book.callNumber }} {{ book.Editors }} {{ book.acquisitionStatus }}{% for copy in book.copies %} {{ copy.accessionNumber }} {{ copy.Location }} {{ copy.status }} {{ copy.borrowed_by }}{% endfor %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% endblock %}
+
+{% block extra_scripts %}
+  <script src="{% static 'Scripts/js/jquery-3.6.0.min.js' %}"></script>
+  <script src="{% static 'Scripts/js/bootstrap.bundle.min.js' %}"></script>
+  <script src="{% static 'Scripts/js/jquery.dataTables.min.js' %}"></script>
+  <script src="{% static 'Scripts/js/dataTables.bootstrap5.min.js' %}"></script>
 
   <script>
-    // Theme switcher (theme already loaded in head)
-    document.querySelector(".mode-switch").addEventListener("click", function() {
-      if (document.documentElement.classList.contains('dark')) {
-        document.documentElement.classList.remove('dark');
-        document.documentElement.classList.add('light');
-        localStorage.setItem('theme', 'light');
-      } else {
-        document.documentElement.classList.remove('light');
-        document.documentElement.classList.add('dark');
-        localStorage.setItem('theme', 'dark');
-      }
-    });
-    
-    // Filter toggle
-    function toggleFilters() {
-      document.getElementById("filter-section").classList.toggle("show");
-    }
-
-    // Search functionality with suggestions
-    const searchInput = document.getElementById('recordsSearchInput');
-    const suggestionsContainer = document.getElementById('searchSuggestions');
+    const searchInput = document.getElementById('portalSearchInput');
+    const suggestionsContainer = document.getElementById('portalSearchSuggestions');
     let searchTimeout;
     let dataTable;
 
-    if (searchInput) {
-      searchInput.addEventListener('input', function() {
-        const query = this.value.trim();
-        
-        clearTimeout(searchTimeout);
+    function escapeRegex(string) {
+      return String(string || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }
 
-        // Reset immediately when cleared
-        if (!query) {
-          applySearch('');
-          suggestionsContainer.classList.remove('show');
-          return;
-        }
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text == null ? '' : String(text);
+      return div.innerHTML;
+    }
 
-        // Apply filtering as user types (debounced)
-        searchTimeout = setTimeout(() => {
-          applySearch(query);
-          if (query.length < 2) {
-            suggestionsContainer.classList.remove('show');
-            return;
-          }
-          fetchSearchSuggestions(query);
-        }, 200);
-      });
-
-      searchInput.addEventListener('keypress', function(event) {
-        if (event.key === 'Enter') {
-          event.preventDefault();
-          const query = this.value.trim();
-          applySearch(query);
-        }
-      });
+    function highlightMatch(text, query) {
+      if (!text) return '';
+      const regex = new RegExp(`(${escapeRegex(query)})`, 'gi');
+      return escapeHtml(text).replace(regex, '<span class="suggestion-match">$1</span>');
     }
 
     function applySearch(query) {
-      suggestionsContainer.classList.remove('show');
-
-      // Keep search in URL like YouTube (no full reload)
-      const url = new URL(window.location.href);
-      if (query) {
-        url.searchParams.set('search', query);
-      } else {
-        url.searchParams.delete('search');
+      if (suggestionsContainer) {
+        suggestionsContainer.classList.remove('show');
       }
-      window.history.replaceState({}, '', url);
+
+      try {
+        const url = new URL(window.location.href);
+        if (query) {
+          url.searchParams.set('search', query);
+        } else {
+          url.searchParams.delete('search');
+        }
+        window.history.replaceState({}, '', url);
+      } catch (e) {}
 
       if (!dataTable) return;
       dataTable.search(query || '').draw();
     }
 
-    // Used by suggestion click handlers (safe: encoded)
     function applySearchFromEncoded(encodedQuery) {
       const decoded = decodeURIComponent(encodedQuery || '');
       if (searchInput) searchInput.value = decoded;
@@ -538,9 +326,7 @@
 
     function fetchSearchSuggestions(query) {
       fetch(`/records/?search=${encodeURIComponent(query)}`, {
-        headers: {
-          'X-Requested-With': 'XMLHttpRequest'
-        }
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
       })
       .then(response => response.json())
       .then(data => {
@@ -552,6 +338,8 @@
     }
 
     function displaySuggestions(books, query) {
+      if (!suggestionsContainer) return;
+
       if (!books || books.length === 0) {
         suggestionsContainer.innerHTML = '<div class="no-results">No books found</div>';
         suggestionsContainer.classList.add('show');
@@ -561,7 +349,7 @@
       const queryLower = query.toLowerCase();
       const html = books.slice(0, 8).map(book => {
         const matches = [];
-        
+
         if (book.Title && book.Title.toLowerCase().includes(queryLower)) {
           matches.push(`<span class="suggestion-match">Title</span>: ${highlightMatch(book.Title, query)}`);
         }
@@ -601,8 +389,7 @@
         if (book.publicationDate && String(book.publicationDate).toLowerCase().includes(queryLower)) {
           matches.push(`<span class="suggestion-match">Published</span>: ${highlightMatch(String(book.publicationDate), query)}`);
         }
-        
-        // Check copies for accession numbers, locations, and status
+
         if (book.copies && Array.isArray(book.copies)) {
           book.copies.forEach(copy => {
             if (copy.accessionNumber && copy.accessionNumber.toLowerCase().includes(queryLower)) {
@@ -619,9 +406,9 @@
             }
           });
         }
-        
+
         const matchDetails = matches.length > 0 ? matches.slice(0, 3).join(' • ') : 'Match found';
-        
+
         return `
           <div class="search-suggestion-item" onclick="applySearchFromEncoded('${encodeURIComponent(query)}')">
             <div class="suggestion-title">${escapeHtml(book.Title)}</div>
@@ -637,55 +424,61 @@
       suggestionsContainer.classList.add('show');
     }
 
-    function highlightMatch(text, query) {
-      if (!text) return '';
-      const regex = new RegExp(`(${escapeRegex(query)})`, 'gi');
-      return escapeHtml(text).replace(regex, '<span class="suggestion-match">$1</span>');
-    }
+    if (searchInput) {
+      searchInput.addEventListener('input', function() {
+        const query = this.value.trim();
+        clearTimeout(searchTimeout);
 
-    function escapeHtml(text) {
-      const div = document.createElement('div');
-      div.textContent = text;
-      return div.innerHTML;
-    }
+        if (!query) {
+          applySearch('');
+          if (suggestionsContainer) suggestionsContainer.classList.remove('show');
+          return;
+        }
 
-    function escapeRegex(string) {
-      return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        searchTimeout = setTimeout(() => {
+          applySearch(query);
+          if (query.length < 2) {
+            if (suggestionsContainer) suggestionsContainer.classList.remove('show');
+            return;
+          }
+          fetchSearchSuggestions(query);
+        }, 200);
+      });
+
+      searchInput.addEventListener('keypress', function(event) {
+        if (event.key === 'Enter') {
+          event.preventDefault();
+          applySearch(this.value.trim());
+        }
+      });
     }
 
     document.addEventListener('click', function(event) {
       if (!event.target.closest('.search-wrapper')) {
-        suggestionsContainer.classList.remove('show');
+        if (suggestionsContainer) suggestionsContainer.classList.remove('show');
       }
     });
 
-    // DataTable with expandable rows
     $(document).ready(function() {
       let expandedRows = new Set();
-      
-      // Store original HTML content of cells
       const cellOriginalContent = new Map();
-      
+
       dataTable = $('#booksTable').DataTable({
         order: [],
         columnDefs: [
           { orderable: false, targets: "_all" },
-          // Only the hidden column is searchable; visible columns stay display-only.
           { searchable: false, targets: [0, 1] },
           { visible: false, searchable: true, targets: 2 }
         ],
-        // Remove built-in DataTables search UI (we use the header search input)
         dom: 'rtip',
         deferRender: false,
-        createdRow: function(row, data, dataIndex) {
-          // Ensure book-row class is always present
+        createdRow: function(row) {
           $(row).addClass('book-row');
         },
         drawCallback: function() {
           const api = this.api();
           const searchTerm = api.search().toLowerCase();
-          
-          // Restore expanded rows after redraw
+
           expandedRows.forEach(function(rowId) {
             const row = api.row('#' + rowId);
             if (row.length) {
@@ -700,46 +493,37 @@
               }
             }
           });
-          
-          // Apply highlighting to visible cells - be careful to preserve structure
+
           if (searchTerm) {
             $('#booksTable tbody tr.book-row').each(function() {
               const tr = $(this);
               const rowIndex = tr.index();
-              
+
               tr.find('td').each(function(colIndex) {
                 const cell = $(this);
+                if (!cell.is(':visible')) return;
 
-                // Skip hidden search-index column
-                if (!cell.is(':visible')) {
-                  return;
-                }
                 const cellId = rowIndex + '_' + colIndex;
-                
                 if (!cellOriginalContent.has(cellId)) {
                   cellOriginalContent.set(cellId, cell.html());
                 }
-                
+
                 const originalHtml = cellOriginalContent.get(cellId);
                 const highlighted = highlightTextInHTML(originalHtml, searchTerm);
                 cell.html(highlighted);
               });
             });
           } else {
-            // Restore original content when search is cleared
             cellOriginalContent.forEach((originalHtml, cellId) => {
               const [rowIdx, colIdx] = cellId.split('_').map(Number);
               const cell = $(`#booksTable tbody tr.book-row:eq(${rowIdx}) td:eq(${colIdx})`);
-              if (cell.length) {
-                cell.html(originalHtml);
-              }
+              if (cell.length) cell.html(originalHtml);
             });
             cellOriginalContent.clear();
           }
         }
       });
 
-      // Restore search state from URL on first load
       try {
         const url = new URL(window.location.href);
         const initial = (url.searchParams.get('search') || '').trim();
@@ -747,55 +531,42 @@
           searchInput.value = initial;
           applySearch(initial);
         }
-      } catch (e) {
-        // ignore
-      }
-      
-      // Function to highlight text while preserving HTML structure
+      } catch (e) {}
+
       function highlightTextInHTML(html, searchTerm) {
         if (!searchTerm) return html;
-        
+
         const tempDiv = document.createElement('div');
         tempDiv.innerHTML = html;
-        
-        function highlightTextNodes(node) {
-          if (node.nodeType === 3) { // Text node
+
+        function walk(node) {
+          if (node.nodeType === 3) {
             const text = node.textContent;
-            if (text.toLowerCase().includes(searchTerm)) {
+            if (text && text.toLowerCase().includes(searchTerm)) {
               const span = document.createElement('span');
               const regex = new RegExp(`(${escapeRegex(searchTerm)})`, 'gi');
               span.innerHTML = text.replace(regex, '<mark>$1</mark>');
               node.parentNode.replaceChild(span, node);
             }
-          } else if (node.nodeType === 1 && node.tagName !== 'MARK') { // Element node
-            Array.from(node.childNodes).forEach(highlightTextNodes);
+          } else if (node.nodeType === 1 && node.tagName !== 'MARK') {
+            Array.from(node.childNodes).forEach(walk);
           }
         }
-        
-        highlightTextNodes(tempDiv);
+
+        Array.from(tempDiv.childNodes).forEach(walk);
         return tempDiv.innerHTML;
       }
 
-      // Event delegation for row clicks - use tbody to ensure it works after redraws
-      $('#booksTable tbody').on('click', 'tr', function(e) {
+      $('#booksTable tbody').on('click', 'tr', function() {
         const tr = $(this);
-        
-        // Skip if this is a child row (details row)
         if (tr.hasClass('child')) return;
-        
+
         const row = dataTable.row(tr);
-        
-        // Check if this row has data-details, if not, skip
         const detailsAttr = tr.attr('data-details');
-        if (!detailsAttr) {
-          return;
-        }
-        
+        if (!detailsAttr) return;
+
         const rowId = tr.attr('id') || 'row_' + row.index();
-        
-        if (!tr.attr('id')) {
-          tr.attr('id', rowId);
-        }
+        if (!tr.attr('id')) tr.attr('id', rowId);
 
         if (row.child.isShown()) {
           $('div.details-container', row.child()).slideUp(250, function() {
@@ -817,5 +588,4 @@
       });
     });
   </script>
-</body>
-</html>
+{% endblock %}
