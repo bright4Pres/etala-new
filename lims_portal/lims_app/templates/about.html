@@ -112,7 +112,7 @@
     /* Slider Styles */
     .projects-section {
       flex: 1;
-      padding: 24px;
+      padding: 0;
       overflow-y: auto;
       display: flex;
       align-items: center;
@@ -442,21 +442,34 @@
     function fetchSearchSuggestions(query, container) {
       fetch(`/records/?search=${encodeURIComponent(query)}`, {
         headers: {
-          'X-Requested-With': 'XMLHttpRequest'
+          'X-Requested-With': 'XMLHttpRequest',
+          'Accept': 'application/json'
         }
       })
-      .then(response => response.json())
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        return response.json();
+      })
       .then(data => {
-        displaySuggestions(data.books, query, container);
+        if (data && data.books) {
+          displaySuggestions(data.books, query, container);
+        } else {
+          container.innerHTML = '<div class="search-suggestion-item" style="cursor: default;">No books found</div>';
+          container.classList.add('show');
+        }
       })
       .catch(error => {
         console.error('Search error:', error);
+        container.innerHTML = '<div class="search-suggestion-item" style="cursor: default;">Error loading suggestions</div>';
+        container.classList.add('show');
       });
     }
 
     function displaySuggestions(books, query, container) {
       if (!books || books.length === 0) {
-        container.innerHTML = '<div class="no-results">No books found</div>';
+        container.innerHTML = '<div class="search-suggestion-item" style="cursor: default; opacity: 0.7;">No books found</div>';
         container.classList.add('show');
         return;
       }
@@ -476,13 +489,15 @@
         }
         
         const matchDetails = matches.length > 0 ? matches.join(' • ') : 'Match found';
+        const availableCopies = book.available_copies || 0;
+        const totalCopies = book.total_copies || 0;
         
         return `
-          <div class="search-suggestion-item" onclick="goToRecords('${encodeURIComponent(query)}')">
-            <div class="suggestion-title">${escapeHtml(book.Title)}</div>
+          <div class="search-suggestion-item" onclick="goToRecords('${escapeHtml(query).replace(/'/g, "&apos;")}')">
+            <div class="suggestion-title">${escapeHtml(book.Title || 'Untitled')}</div>
             <div class="suggestion-details">
               ${matchDetails}<br>
-              Available: <strong>${book.available_copies}/${book.total_copies}</strong> copies
+              Available: <strong>${availableCopies}/${totalCopies}</strong> copies
             </div>
           </div>
         `;
