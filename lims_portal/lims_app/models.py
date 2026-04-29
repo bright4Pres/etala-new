@@ -12,63 +12,15 @@ GENDER_CHOICES = (
     ("Other", "Other"),
 )
 
-class grade_Seven(models.Model):
+class students(models.Model):
     name = models.CharField(max_length=100, unique=True,)
     school_id = models.CharField(max_length=50, unique=True)
     gender = models.CharField(max_length=10, choices=GENDER_CHOICES, default="Other")
     email = models.EmailField()
     batch = models.CharField(max_length=50, null=True, blank=True, help_text="Student batch/cohort (e.g., Antuilan, Bakunawa)")
     created_at = models.DateTimeField(auto_now_add=True)
-    def __str__(self):
-        return f"{self.name} ({self.id})"
-    
-class grade_Eight(models.Model):
-    name = models.CharField(max_length=100, unique=True,)
-    school_id = models.CharField(max_length=50, unique=True)
-    gender = models.CharField(max_length=10, choices=GENDER_CHOICES, default="Other")
-    email = models.EmailField()
-    batch = models.CharField(max_length=50, null=True, blank=True, help_text="Student batch/cohort (e.g., Antuilan, Bakunawa)")
-    created_at = models.DateTimeField(auto_now_add=True)
-    def __str__(self):
-        return f"{self.name} ({self.id})"
-    
-class grade_Nine(models.Model):
-    name = models.CharField(max_length=100, unique=True,)
-    school_id = models.CharField(max_length=50, unique=True)
-    gender = models.CharField(max_length=10, choices=GENDER_CHOICES, default="Other")
-    email = models.EmailField()
-    batch = models.CharField(max_length=50, null=True, blank=True, help_text="Student batch/cohort (e.g., Antuilan, Bakunawa)")
-    created_at = models.DateTimeField(auto_now_add=True)
-    def __str__(self):
-        return f"{self.name} ({self.id})"
-    
-class grade_Ten(models.Model):
-    name = models.CharField(max_length=100, unique=True,)
-    school_id = models.CharField(max_length=50, unique=True)
-    gender = models.CharField(max_length=10, choices=GENDER_CHOICES, default="Other")
-    email = models.EmailField()
-    batch = models.CharField(max_length=50, null=True, blank=True, help_text="Student batch/cohort (e.g., Antuilan, Bakunawa)")
-    created_at = models.DateTimeField(auto_now_add=True)
-    def __str__(self):
-        return f"{self.name} ({self.id})"
-    
-class grade_Eleven(models.Model):
-    name = models.CharField(max_length=100, unique=True,)
-    school_id = models.CharField(max_length=50, unique=True)
-    gender = models.CharField(max_length=10, choices=GENDER_CHOICES, default="Other")
-    email = models.EmailField()
-    batch = models.CharField(max_length=50, null=True, blank=True, help_text="Student batch/cohort (e.g., Antuilan, Bakunawa)")
-    created_at = models.DateTimeField(auto_now_add=True)
-    def __str__(self):
-        return f"{self.name} ({self.id})"
-    
-class grade_Twelve(models.Model):
-    name = models.CharField(max_length=100, unique=True,)
-    school_id = models.CharField(max_length=50, unique=True)
-    gender = models.CharField(max_length=10, choices=GENDER_CHOICES, default="Other")
-    email = models.EmailField()
-    batch = models.CharField(max_length=50, null=True, blank=True, help_text="Student batch/cohort (e.g., Antuilan, Bakunawa)")
-    created_at = models.DateTimeField(auto_now_add=True)
+    grade_Level = models.IntegerField(default=7, help_text="Current grade level of the student (7-12)")
+    section = models.CharField(max_length=50, null=True, blank=True, help_text="Section or class name (Ruby, Jasmin, Tesla, etc.)")
     def __str__(self):
         return f"{self.name} ({self.id})"
     
@@ -121,7 +73,7 @@ class BorrowHistory(models.Model):
         
         # --- Validate Account (search across all grade models) ---
         account = None
-        for model in [grade_Seven, grade_Eight, grade_Nine, grade_Ten, grade_Eleven, grade_Twelve]:
+        for model in [students]:
             try:
                 account = model.objects.get(school_id=self.accountID)
                 self.accountName = account.name

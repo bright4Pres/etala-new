@@ -1,12 +1,13 @@
 from django.http import JsonResponse
-from django.utils.dateparse import parse_datetime
+from django.utils.dateparse import parse_datetime, parse_date
 from django.utils import timezone
 from django.shortcuts import render, redirect
-from .models import Book, BookCopy, BorrowHistory, grade_Seven, grade_Eight, grade_Nine, grade_Ten, grade_Eleven, grade_Twelve
+from .models import Book, BookCopy, BorrowHistory, students
 from django.views.decorators.csrf import csrf_protect, ensure_csrf_cookie
 from django.db.models import Count, Q, Avg
 from django.db import transaction, IntegrityError
 from datetime import datetime, timedelta
+import csv
 import json
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
@@ -181,15 +182,8 @@ def analytics(request):
     
     # ========== CORE METRICS ==========
     total_books_count = Book.objects.count()
-    # Count all students across all grade models
-    total_accounts = sum([
-        grade_Seven.objects.count(),
-        grade_Eight.objects.count(),
-        grade_Nine.objects.count(),
-        grade_Ten.objects.count(),
-        grade_Eleven.objects.count(),
-        grade_Twelve.objects.count(),
-    ])
+    # Count all students
+    total_accounts = students.objects.count()
     total_borrows_all_time = BorrowHistory.objects.count()
     # count book copies marked as Borrowed in BookCopy.status
     currently_borrowed = BookCopy.objects.filter(status='Borrowed').count()
@@ -203,39 +197,72 @@ def analytics(request):
     
     # ========== TIME-BASED FILTERS ==========
     period = request.GET.get('period', 'month')
-    
-    if period == 'day':
-        start_date = now.replace(hour=0, minute=0, second=0, microsecond=0)
-        period_label = "Today"
-    elif period == 'week':
-        start_date = (now - timedelta(days=now.weekday())).replace(hour=0, minute=0, second=0, microsecond=0)
-        period_label = "This Week"
-    elif period == 'month':
-        start_date = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-        period_label = "This Month"
-    elif period == 'quarter':
-        quarter_month = ((now.month - 1) // 3) * 3 + 1
-        start_date = now.replace(month=quarter_month, day=1, hour=0, minute=0, second=0, microsecond=0)
-        period_label = "This Quarter"
-    elif period == 'year':
-        start_date = now.replace(month=1, day=1, hour=0, minute=0, second=0, microsecond=0)
-        period_label = "This Year"
-    else:
-        start_date = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-        period_label = "This Month"
-    
+    range_start_raw = request.GET.get('start_date', '')
+    range_end_raw = request.GET.get('end_date', '')
+
+    period_start_date = None
+    period_end_date = None
+    period_label = "This Month"
+
+    if period == 'range':
+        start_candidate = parse_date(range_start_raw) if range_start_raw else None
+        end_candidate = parse_date(range_end_raw) if range_end_raw else None
+        if start_candidate and end_candidate:
+            if start_candidate > end_candidate:
+                start_candidate, end_candidate = end_candidate, start_candidate
+            period_start_date = start_candidate
+            period_end_date = end_candidate
+            period_label = f"{start_candidate.strftime('%b %d, %Y')} - {end_candidate.strftime('%b %d, %Y')}"
+            range_start_raw = period_start_date
+            range_end_raw = period_end_date
+        else:
+            period = 'month'
+
+    if period != 'range':
+        if period == 'day':
+            period_start_date = now.date()
+            period_end_date = now.date()
+            period_label = "Today"
+        elif period == 'week':
+            period_start_date = (now - timedelta(days=now.weekday())).date()
+            period_end_date = now.date()
+            period_label = "This Week"
+        elif period == 'month':
+            period_start_date = now.replace(day=1).date()
+            period_end_date = now.date()
+            period_label = "This Month"
+        elif period == 'quarter':
+            quarter_month = ((now.month - 1) // 3) * 3 + 1
+            period_start_date = now.replace(month=quarter_month, day=1).date()
+            period_end_date = now.date()
+            period_label = "This Quarter"
+        elif period == 'year':
+            period_start_date = now.replace(month=1, day=1).date()
+            period_end_date = now.date()
+            period_label = "This Year"
+        else:
+            period_start_date = now.replace(day=1).date()
+            period_end_date = now.date()
+            period_label = "This Month"
+
+    range_start_value = None
+    range_end_value = None
+    if period == 'range' and period_start_date and period_end_date:
+        range_start_value = period_start_date
+        range_end_value = period_end_date
+
     # Period-specific metrics
-    period_borrows = BorrowHistory.objects.filter(borrow_date__gte=start_date).count()
-    period_returns = BorrowHistory.objects.filter(returned=True, return_date__gte=start_date).count()
-    # Count new students from all grade models in period
-    period_new_accounts = sum([
-        grade_Seven.objects.filter(created_at__gte=start_date).count(),
-        grade_Eight.objects.filter(created_at__gte=start_date).count(),
-        grade_Nine.objects.filter(created_at__gte=start_date).count(),
-        grade_Ten.objects.filter(created_at__gte=start_date).count(),
-        grade_Eleven.objects.filter(created_at__gte=start_date).count(),
-        grade_Twelve.objects.filter(created_at__gte=start_date).count(),
-    ])
+    period_borrows = BorrowHistory.objects.filter(
+        borrow_date__date__range=(period_start_date, period_end_date)
+    ).count()
+    period_returns = BorrowHistory.objects.filter(
+        returned=True,
+        return_date__date__range=(period_start_date, period_end_date)
+    ).count()
+    # Count new students in period
+    period_new_accounts = students.objects.filter(
+        created_at__date__range=(period_start_date, period_end_date)
+    ).count()
     
     # ========== MONTHLY BORROWS (Last 7 months) ==========
     def shift_month(year, month, delta):
@@ -292,30 +319,9 @@ def analytics(request):
     # ========== GENDER STATISTICS ==========
     # Overall gender proportions
     overall_gender = {
-        'Male': sum([
-            grade_Seven.objects.filter(gender='Male').count(),
-            grade_Eight.objects.filter(gender='Male').count(),
-            grade_Nine.objects.filter(gender='Male').count(),
-            grade_Ten.objects.filter(gender='Male').count(),
-            grade_Eleven.objects.filter(gender='Male').count(),
-            grade_Twelve.objects.filter(gender='Male').count(),
-        ]),
-        'Female': sum([
-            grade_Seven.objects.filter(gender='Female').count(),
-            grade_Eight.objects.filter(gender='Female').count(),
-            grade_Nine.objects.filter(gender='Female').count(),
-            grade_Ten.objects.filter(gender='Female').count(),
-            grade_Eleven.objects.filter(gender='Female').count(),
-            grade_Twelve.objects.filter(gender='Female').count(),
-        ]),
-        'Other': sum([
-            grade_Seven.objects.filter(gender='Other').count(),
-            grade_Eight.objects.filter(gender='Other').count(),
-            grade_Nine.objects.filter(gender='Other').count(),
-            grade_Ten.objects.filter(gender='Other').count(),
-            grade_Eleven.objects.filter(gender='Other').count(),
-            grade_Twelve.objects.filter(gender='Other').count(),
-        ]),
+        'Male': students.objects.filter(gender='Male').count(),
+        'Female': students.objects.filter(gender='Female').count(),
+        'Other': students.objects.filter(gender='Other').count(),
     }
     total_students = sum(overall_gender.values())
     overall_gender_proportions = {k: round((v / total_students * 100), 1) if total_students > 0 else 0 for k, v in overall_gender.items()}
@@ -329,38 +335,14 @@ def analytics(request):
             overall_gender_data.append(value)
 
     # Gender proportions per batch
-    batch_gender_stats = {
-        'Grade 7': {
-            'Male': grade_Seven.objects.filter(gender='Male').count(),
-            'Female': grade_Seven.objects.filter(gender='Female').count(),
-            'Other': grade_Seven.objects.filter(gender='Other').count(),
-        },
-        'Grade 8': {
-            'Male': grade_Eight.objects.filter(gender='Male').count(),
-            'Female': grade_Eight.objects.filter(gender='Female').count(),
-            'Other': grade_Eight.objects.filter(gender='Other').count(),
-        },
-        'Grade 9': {
-            'Male': grade_Nine.objects.filter(gender='Male').count(),
-            'Female': grade_Nine.objects.filter(gender='Female').count(),
-            'Other': grade_Nine.objects.filter(gender='Other').count(),
-        },
-        'Grade 10': {
-            'Male': grade_Ten.objects.filter(gender='Male').count(),
-            'Female': grade_Ten.objects.filter(gender='Female').count(),
-            'Other': grade_Ten.objects.filter(gender='Other').count(),
-        },
-        'Grade 11': {
-            'Male': grade_Eleven.objects.filter(gender='Male').count(),
-            'Female': grade_Eleven.objects.filter(gender='Female').count(),
-            'Other': grade_Eleven.objects.filter(gender='Other').count(),
-        },
-        'Grade 12': {
-            'Male': grade_Twelve.objects.filter(gender='Male').count(),
-            'Female': grade_Twelve.objects.filter(gender='Female').count(),
-            'Other': grade_Twelve.objects.filter(gender='Other').count(),
-        },
-    }
+    batch_gender_stats = {}
+    for grade_num in range(7, 13):
+        grade_label = f'Grade {grade_num}'
+        batch_gender_stats[grade_label] = {
+            'Male': students.objects.filter(grade_Level=grade_num, gender='Male').count(),
+            'Female': students.objects.filter(grade_Level=grade_num, gender='Female').count(),
+            'Other': students.objects.filter(grade_Level=grade_num, gender='Other').count(),
+        }
     for batch, genders in batch_gender_stats.items():
         # Only include the gender keys (Male, Female, Other) - not 'total' or 'proportions'
         gender_counts = {k: v for k, v in genders.items() if k in ['Male', 'Female', 'Other']}
@@ -383,14 +365,11 @@ def analytics(request):
         }
 
     # Batch activity (borrows per batch)
-    batch_activity = {
-        'Grade 7': BorrowHistory.objects.filter(accountID__in=grade_Seven.objects.values('school_id')).count(),
-        'Grade 8': BorrowHistory.objects.filter(accountID__in=grade_Eight.objects.values('school_id')).count(),
-        'Grade 9': BorrowHistory.objects.filter(accountID__in=grade_Nine.objects.values('school_id')).count(),
-        'Grade 10': BorrowHistory.objects.filter(accountID__in=grade_Ten.objects.values('school_id')).count(),
-        'Grade 11': BorrowHistory.objects.filter(accountID__in=grade_Eleven.objects.values('school_id')).count(),
-        'Grade 12': BorrowHistory.objects.filter(accountID__in=grade_Twelve.objects.values('school_id')).count(),
-    }
+    batch_activity = {}
+    for grade_num in range(7, 13):
+        grade_label = f'Grade {grade_num}'
+        grade_school_ids = students.objects.filter(grade_Level=grade_num).values_list('school_id', flat=True)
+        batch_activity[grade_label] = BorrowHistory.objects.filter(accountID__in=grade_school_ids).count()
     # Sort batch_activity by borrow count descending
     sorted_batch_activity = []
     for batch, count in sorted(batch_activity.items(), key=lambda x: x[1], reverse=True):
@@ -437,9 +416,9 @@ def analytics(request):
 
     if heatmap_range == 'week':
         days = 7
-        period_label = 'This Week'
-        start_date = today - timedelta(days=(today.weekday() + 7 * heatmap_offset))
-        end_date = start_date + timedelta(days=6)
+        heatmap_period_label = 'This Week'
+        heatmap_start_date = today - timedelta(days=(today.weekday() + 7 * heatmap_offset))
+        heatmap_end_date = heatmap_start_date + timedelta(days=6)
     elif heatmap_range == 'month':
         # Go back N months
         month = today.month - heatmap_offset
@@ -447,26 +426,26 @@ def analytics(request):
         while month < 1:
             month += 12
             year -= 1
-        start_date = datetime(year, month, 1).date()
+        heatmap_start_date = datetime(year, month, 1).date()
         # End of month
         if month == 12:
-            end_date = datetime(year + 1, 1, 1).date() - timedelta(days=1)
+            heatmap_end_date = datetime(year + 1, 1, 1).date() - timedelta(days=1)
         else:
-            end_date = datetime(year, month + 1, 1).date() - timedelta(days=1)
-        days = (end_date - start_date).days + 1
-        period_label = start_date.strftime('%B %Y')
+            heatmap_end_date = datetime(year, month + 1, 1).date() - timedelta(days=1)
+        days = (heatmap_end_date - heatmap_start_date).days + 1
+        heatmap_period_label = heatmap_start_date.strftime('%B %Y')
     else:  # 'year' or default
         # Go back N years
         year = today.year - heatmap_offset
-        start_date = datetime(year, 1, 1).date()
-        end_date = datetime(year, 12, 31).date()
-        days = (end_date - start_date).days + 1
-        period_label = str(year)
+        heatmap_start_date = datetime(year, 1, 1).date()
+        heatmap_end_date = datetime(year, 12, 31).date()
+        days = (heatmap_end_date - heatmap_start_date).days + 1
+        heatmap_period_label = str(year)
 
     # Build heatmap data for the selected period
     heatmap_data = []
     for i in range(days):
-        date = start_date + timedelta(days=i)
+        date = heatmap_start_date + timedelta(days=i)
         count = BorrowHistory.objects.filter(borrow_date__date=date).count()
         heatmap_data.append({
             'date': date.strftime('%Y-%m-%d'),
@@ -492,7 +471,7 @@ def analytics(request):
         "heatmapData": heatmap_data,
         "heatmapRange": heatmap_range,
         "heatmapOffset": heatmap_offset,
-        "heatmapPeriodLabel": period_label,
+        "heatmapPeriodLabel": heatmap_period_label,
         "heatmapCanGoNext": can_go_next,
     }
 
@@ -516,6 +495,7 @@ def analytics(request):
         "period_returns": period_returns,
         "period_new_accounts": period_new_accounts,
         "period_label": period_label,
+        "period_value": period,
 
         # Lists / details
         "top_borrowers": list(top_borrowers),
@@ -539,10 +519,12 @@ def analytics(request):
         "metrics_json": json.dumps(metrics),
         "heatmap_range": heatmap_range,
         "heatmap_offset": heatmap_offset,
-        "heatmap_period_label": period_label,
+        "heatmap_period_label": heatmap_period_label,
         "heatmap_can_go_next": can_go_next,
         "heatmap_prev_offset": prev_offset,
         "heatmap_next_offset": next_offset,
+        "range_start": range_start_value,
+        "range_end": range_end_value,
     }
 
     return render(request, "analytics.html", context)
@@ -752,59 +734,51 @@ def admin_dashboard(request):
             name = (request.POST.get('name') or '').strip()
             email = (request.POST.get('email') or '').strip()
             batch = (request.POST.get('batch') or '').strip() or None
+            section = (request.POST.get('section') or '').strip()
 
-            grade_map = {
-                '7': grade_Seven,
-                '8': grade_Eight,
-                '9': grade_Nine,
-                '10': grade_Ten,
-                '11': grade_Eleven,
-                '12': grade_Twelve,
-            }
-            source_model = grade_map.get(old_grade_num)
-            target_model = grade_map.get(new_grade_num)
-            if not source_model or not target_model:
+            try:
+                old_grade_int = int(old_grade_num) if old_grade_num else None
+                new_grade_int = int(new_grade_num) if new_grade_num else None
+            except ValueError:
+                messages.error(request, 'Invalid grade.')
+                return redirect('admin_dashboard')
+
+            if old_grade_int and not (7 <= old_grade_int <= 12):
+                messages.error(request, 'Invalid grade.')
+                return redirect('admin_dashboard')
+            if new_grade_int and not (7 <= new_grade_int <= 12):
                 messages.error(request, 'Invalid grade.')
                 return redirect('admin_dashboard')
 
             try:
                 with transaction.atomic():
-                    user = source_model.objects.get(school_id=old_school_id)
+                    lookup = {'school_id': old_school_id}
+                    if old_grade_int:
+                        lookup['grade_Level'] = old_grade_int
+                    user = students.objects.get(**lookup)
 
-                    # Unique school_id across all grade tables
                     if new_school_id != old_school_id:
-                        for model in [grade_Seven, grade_Eight, grade_Nine, grade_Ten, grade_Eleven, grade_Twelve]:
-                            if model is source_model:
-                                continue
-                            if model.objects.filter(school_id=new_school_id).exists():
-                                messages.error(request, 'School ID already exists.')
-                                return redirect('admin_dashboard')
-
-                    # If moving grade, ensure name is not already used in the target table
-                    new_name = name or user.name
-                    if target_model is not source_model:
-                        if target_model.objects.filter(name=new_name).exists():
-                            messages.error(request, 'Name already exists in the selected grade.')
+                        if students.objects.filter(school_id=new_school_id).exists():
+                            messages.error(request, 'School ID already exists.')
                             return redirect('admin_dashboard')
 
-                    if target_model is source_model:
-                        user.school_id = new_school_id or user.school_id
-                        user.name = new_name
-                        user.email = email or user.email
-                        user.batch = batch
-                        user.save()
-                    else:
-                        target_model.objects.create(
-                            name=new_name,
-                            school_id=new_school_id or user.school_id,
-                            gender=user.gender,
-                            email=email or user.email,
-                            batch=batch,
-                        )
-                        user.delete()
+                    new_name = name or user.name
+                    if new_name != user.name:
+                        if students.objects.filter(name=new_name).exclude(id=user.id).exists():
+                            messages.error(request, 'Name already exists.')
+                            return redirect('admin_dashboard')
+
+                    user.school_id = new_school_id or user.school_id
+                    user.name = new_name
+                    user.email = email or user.email
+                    user.batch = batch
+                    user.section = section or None
+                    if new_grade_int:
+                        user.grade_Level = new_grade_int
+                    user.save()
 
                 messages.success(request, 'User updated successfully.')
-            except source_model.DoesNotExist:
+            except students.DoesNotExist:
                 messages.error(request, 'User not found.')
             except IntegrityError:
                 messages.error(request, 'Could not update user. Ensure Name and School ID are unique.')
@@ -819,26 +793,26 @@ def admin_dashboard(request):
                 messages.error(request, 'Delete not confirmed.')
                 return redirect('admin_dashboard')
 
-            grade_map = {
-                '7': grade_Seven,
-                '8': grade_Eight,
-                '9': grade_Nine,
-                '10': grade_Ten,
-                '11': grade_Eleven,
-                '12': grade_Twelve,
-            }
-            model = grade_map.get(grade_num)
-            if not model:
+            try:
+                grade_int = int(grade_num) if grade_num else None
+            except ValueError:
+                messages.error(request, 'Invalid grade.')
+                return redirect('admin_dashboard')
+
+            if grade_int and not (7 <= grade_int <= 12):
                 messages.error(request, 'Invalid grade.')
                 return redirect('admin_dashboard')
 
             try:
                 with transaction.atomic():
-                    user = model.objects.get(school_id=school_id)
+                    lookup = {'school_id': school_id}
+                    if grade_int:
+                        lookup['grade_Level'] = grade_int
+                    user = students.objects.get(**lookup)
                     name = user.name
                     user.delete()
                 messages.success(request, f'User "{name}" deleted.')
-            except model.DoesNotExist:
+            except students.DoesNotExist:
                 messages.error(request, 'User not found.')
             except Exception as e:
                 messages.error(request, f'Error deleting user: {str(e)}')
@@ -872,14 +846,10 @@ def admin_dashboard(request):
                 (run_dir / 'books.json').write_text(json.dumps(books_data, default=str, indent=2), encoding='utf-8')
                 (run_dir / 'book_copies.json').write_text(json.dumps(copies_data, default=str, indent=2), encoding='utf-8')
 
-                users = {
-                    'grade7': list(grade_Seven.objects.all().values()),
-                    'grade8': list(grade_Eight.objects.all().values()),
-                    'grade9': list(grade_Nine.objects.all().values()),
-                    'grade10': list(grade_Ten.objects.all().values()),
-                    'grade11': list(grade_Eleven.objects.all().values()),
-                    'grade12': list(grade_Twelve.objects.all().values()),
-                }
+                users = {}
+                for grade_num in range(7, 13):
+                    key = f'grade{grade_num}'
+                    users[key] = list(students.objects.filter(grade_Level=grade_num).values())
                 (run_dir / 'users.json').write_text(json.dumps(users, default=str, indent=2), encoding='utf-8')
                 (run_dir / 'grade12_graduating.json').write_text(json.dumps(users['grade12'], default=str, indent=2), encoding='utf-8')
 
@@ -974,44 +944,132 @@ def admin_dashboard(request):
             except Exception as e:
                 messages.error(request, f'Error adding book: {str(e)}')
 
+        elif action == 'import_students':
+            csv_file = request.FILES.get('students_csv')
+            if not csv_file:
+                messages.error(request, 'Please upload a CSV file to import students.')
+                return redirect('admin_dashboard')
+
+            try:
+                decoded_file = csv_file.read().decode('utf-8-sig')
+            except UnicodeDecodeError:
+                messages.error(request, 'CSV must be UTF-8 encoded.')
+                return redirect('admin_dashboard')
+
+            reader = csv.DictReader(StringIO(decoded_file))
+            if not reader.fieldnames:
+                messages.error(request, 'CSV file has no header row.')
+                return redirect('admin_dashboard')
+
+            def normalize_header(value):
+                return ''.join(ch for ch in (value or '').lower().strip().replace('-', ' ').replace('_', ' ') if ch.isalnum() or ch == ' ').replace(' ', '')
+
+            header_map = {normalize_header(h): h for h in reader.fieldnames if h}
+
+            def get_value(row, *keys):
+                for key in keys:
+                    raw_key = header_map.get(key)
+                    if raw_key:
+                        return (row.get(raw_key) or '').strip()
+                return ''
+
+            def parse_grade(grade_raw):
+                digits = ''.join(ch for ch in (grade_raw or '') if ch.isdigit())
+                return int(digits) if digits else None
+
+            def generate_school_id(grade_int):
+                year = timezone.now().year
+                base = f"PSHS{year}{grade_int:02d}"
+                next_seq = students.objects.filter(school_id__startswith=base).count() + 1
+                candidate = f"{base}{next_seq:03d}"
+                while students.objects.filter(school_id=candidate).exists():
+                    next_seq += 1
+                    candidate = f"{base}{next_seq:03d}"
+                return candidate
+
+            imported_count = 0
+            errors = []
+
+            for row_num, row in enumerate(reader, start=2):
+                name = get_value(row, 'name')
+                grade_raw = get_value(row, 'gradelevel', 'grade')
+                section = get_value(row, 'section')
+                email = get_value(row, 'email')
+                school_id = get_value(row, 'schoolid')
+
+                if not name or not grade_raw:
+                    errors.append(f"Row {row_num}: Missing name or grade level.")
+                    continue
+
+                grade_int = parse_grade(grade_raw)
+                if not grade_int or not (7 <= grade_int <= 12):
+                    errors.append(f"Row {row_num}: Invalid grade level '{grade_raw}'.")
+                    continue
+
+                if not school_id:
+                    school_id = generate_school_id(grade_int)
+
+                if students.objects.filter(school_id=school_id).exists():
+                    errors.append(f"Row {row_num}: School ID '{school_id}' already exists.")
+                    continue
+
+                try:
+                    students.objects.create(
+                        name=name,
+                        school_id=school_id,
+                        email=email or '',
+                        grade_Level=grade_int,
+                        section=section or None,
+                    )
+                    imported_count += 1
+                except IntegrityError:
+                    errors.append(f"Row {row_num}: Name or School ID must be unique.")
+                except Exception as e:
+                    errors.append(f"Row {row_num}: {str(e)}")
+
+            if errors:
+                sample_errors = '; '.join(errors[:5])
+                messages.error(request, f'Imported {imported_count} students with {len(errors)} issues. First issues: {sample_errors}')
+            else:
+                messages.success(request, f'Imported {imported_count} students successfully.')
+
         elif action == 'add_user':
             grade_num = request.POST.get('grade_num', '').strip()
             name = request.POST.get('name', '').strip()
             school_id = request.POST.get('school_id', '').strip()
             email = request.POST.get('email', '').strip()
             batch = request.POST.get('batch', '').strip()
+            section = request.POST.get('section', '').strip()
             gender = request.POST.get('gender', 'Other').strip() or 'Other'
 
             if not grade_num or not name or not school_id or not email:
                 messages.error(request, 'Grade, Name, School ID, and Email are required.')
                 return redirect('admin_dashboard')
 
-            grade_model = {
-                '7': grade_Seven,
-                '8': grade_Eight,
-                '9': grade_Nine,
-                '10': grade_Ten,
-                '11': grade_Eleven,
-                '12': grade_Twelve,
-            }.get(grade_num)
+            try:
+                grade_int = int(grade_num)
+            except ValueError:
+                messages.error(request, 'Invalid grade selected.')
+                return redirect('admin_dashboard')
 
-            if not grade_model:
+            if not (7 <= grade_int <= 12):
                 messages.error(request, 'Invalid grade selected.')
                 return redirect('admin_dashboard')
 
             # Prevent duplicate school IDs across all grades
-            for model in [grade_Seven, grade_Eight, grade_Nine, grade_Ten, grade_Eleven, grade_Twelve]:
-                if model.objects.filter(school_id=school_id).exists():
-                    messages.error(request, 'School ID already exists.')
-                    return redirect('admin_dashboard')
+            if students.objects.filter(school_id=school_id).exists():
+                messages.error(request, 'School ID already exists.')
+                return redirect('admin_dashboard')
 
             try:
-                grade_model.objects.create(
+                students.objects.create(
                     name=name,
                     school_id=school_id,
                     email=email,
                     batch=batch or None,
+                    section=section or None,
                     gender=gender,
+                    grade_Level=grade_int,
                 )
                 messages.success(request, f'User "{name}" added successfully.')
             except IntegrityError:
@@ -1062,32 +1120,22 @@ def admin_dashboard(request):
             'copies_json': json.dumps(copies_payload),
         })
     
-    # Get all users from all grade models, organized by grade
-    grade_models = [
-        (7, grade_Seven),
-        (8, grade_Eight),
-        (9, grade_Nine),
-        (10, grade_Ten),
-        (11, grade_Eleven),
-        (12, grade_Twelve),
-    ]
-    
     students_by_grade = {}
-    total_users_count = 0
-    
-    for grade_num, model in grade_models:
-        students = []
-        for user in model.objects.order_by('name'):  # Alphabetical order
-            students.append({
+    total_users_count = students.objects.count()
+
+    for grade_num in range(7, 13):
+        grade_students = []
+        for user in students.objects.filter(grade_Level=grade_num).order_by('name'):
+            grade_students.append({
                 'name': user.name,
                 'school_id': user.school_id,
                 'email': user.email,
                 'grade': f'Grade {grade_num}',
                 'grade_num': grade_num,
-                'batch': getattr(user, 'batch', 'N/A'),
+                'batch': user.batch or '',
+                'section': user.section or '',
             })
-        students_by_grade[grade_num] = students
-        total_users_count += len(students)
+        students_by_grade[grade_num] = grade_students
     
     return render(request, 'cadmin.html', {
         'borrowed_books': borrowed_books,
@@ -1166,10 +1214,8 @@ def admin_return(request):
 def admin_accounts(request):
     # Get all students grouped by grade
     all_students = {}
-    for grade_num, model in [(7, grade_Seven), (8, grade_Eight), (9, grade_Nine), 
-                              (10, grade_Ten), (11, grade_Eleven), (12, grade_Twelve)]:
-        students = model.objects.all()
-        all_students[grade_num] = students
+    for grade_num in range(7, 13):
+        all_students[grade_num] = students.objects.filter(grade_Level=grade_num)
     return render(request, 'admin_accounts.html', {'all_students': all_students})
 
 @staff_member_required

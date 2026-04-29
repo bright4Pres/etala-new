@@ -64,7 +64,7 @@
     }
 
     .info-section li:before {
-        content: "•";
+        content: "â€¢";
         color: #5f6368;
         position: absolute;
         left: 0;
@@ -101,7 +101,7 @@
     }
 
     .danger-section li:before {
-        content: "•";
+        content: "â€¢";
         color: #ea8600;
         position: absolute;
         left: 0;
@@ -173,11 +173,11 @@
     <div class="info-section">
         <h3>What will happen</h3>
         <ul>
-            <li><strong>Grade 11 → Grade 12:</strong> All Grade 11 students will be promoted to Grade 12</li>
-            <li><strong>Grade 10 → Grade 11:</strong> All Grade 10 students will be promoted to Grade 11</li>
-            <li><strong>Grade 9 → Grade 10:</strong> All Grade 9 students will be promoted to Grade 10</li>
-            <li><strong>Grade 8 → Grade 9:</strong> All Grade 8 students will be promoted to Grade 9</li>
-            <li><strong>Grade 7 → Grade 8:</strong> All Grade 7 students will be promoted to Grade 8</li>
+            <li><strong>Grade 11 â†’ Grade 12:</strong> All Grade 11 students will be promoted to Grade 12</li>
+            <li><strong>Grade 10 â†’ Grade 11:</strong> All Grade 10 students will be promoted to Grade 11</li>
+            <li><strong>Grade 9 â†’ Grade 10:</strong> All Grade 9 students will be promoted to Grade 10</li>
+            <li><strong>Grade 8 â†’ Grade 9:</strong> All Grade 8 students will be promoted to Grade 9</li>
+            <li><strong>Grade 7 â†’ Grade 8:</strong> All Grade 7 students will be promoted to Grade 8</li>
             <li><strong>Grade 12 Students:</strong> Will be <strong style="color: #ea4335;">deleted</strong> (graduated)</li>
         </ul>
     </div>
@@ -194,7 +194,7 @@
     </div>
 
     <div class="action-buttons">
-        <a href="{% url 'admin:lims_app_grade_seven_changelist' %}" class="btn">
+        <a href="{% url 'admin:lims_app_students_changelist' %}" class="btn">
             Cancel
         </a>
         <button type="submit" class="btn btn-danger">

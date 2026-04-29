@@ -181,7 +181,7 @@ Sample students created:
 
 ### Student Move-Up Implementation
 - **File**: `lims_portal/lims_app/management/commands/moveup_students.py`
-- **Models Updated**: grade_Seven through grade_Twelve, StudentActivation
+- **Models Updated**: students (grade_Level), StudentActivation
 - **Processing Order**: Grade 11→12, 10→11, 9→10, 8→9, 7→8 (prevents conflicts)
 - **Transaction Handling**: Atomic operations ensure data consistency
 
@@ -193,7 +193,7 @@ Sample students created:
 
 ### Sample Students Implementation
 - **File**: `lims_portal/lims_app/management/commands/init_sample_students.py`
-- **Models**: grade_Seven through grade_Twelve
+- **Model**: students (grade_Level)
 - **Fields Populated**: name, school_id, gender, email, is_activated
 - **School IDs**: Format PSHS{YYYY}{Grade}{Number} with uniqueness checks
 - **Names**: Filipino first names, middle initials, and last names
@@ -215,7 +215,7 @@ python manage.py dumpdata > backup_$(date +%Y%m%d).json
 ```
 
 ### Week 3: Move-Up
-1. Go to Admin → Grade Seven (or any grade page)
+1. Go to Admin → Students
 2. Actions → "🎓 Move All Students Up One Grade"
 3. Review confirmation page
 4. Click "Confirm Move-Up"

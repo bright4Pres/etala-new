@@ -11,7 +11,7 @@
   <link rel="stylesheet" href="{% static 'Scripts/css/dataTables.bootstrap5.min.css' %}">
   <link rel="stylesheet" href="{% static 'Scripts/css/bootstrap.min.css' %}">
   <style>
-    /* Force all table backgrounds and text */
+    /* quick note: force all table backgrounds and text */
     .table,
     .table-striped,
     .table-bordered,
@@ -48,7 +48,7 @@
       border-color: var(--message-box-border) !important;
       font-weight: 500;
     }
-    /* Striped rows with highest specificity */
+    /* lol reminder: striped rows with highest specificity */
     .table-striped tbody tr:nth-of-type(odd) > *,
     #booksTable.table-striped tbody tr:nth-of-type(odd),
     #booksTable.table-striped tbody tr:nth-of-type(odd) > * {
@@ -61,7 +61,7 @@
       background-color: var(--message-box-hover) !important;
       color: var(--main-color) !important;
     }
-    /* DataTables even/odd classes */
+    /* tiny reminder: datatables even/odd classes */
     #booksTable tbody tr.odd,
     #booksTable tbody tr.odd > * {
       background-color: var(--projects-section) !important;
@@ -110,7 +110,7 @@
       color: var(--main-color);
     }
 
-    /* Force override Bootstrap table styles */
+    /* quick note: force override bootstrap table styles */
     table.dataTable,
     table.table,
     table.table-striped,
@@ -164,7 +164,7 @@
       border-color: var(--message-box-border) !important;
     }
 
-    /* Force text colors inside table */
+    /* note to self: force text colors inside table */
     .table strong,
     .table small,
     .table span,
@@ -181,7 +181,7 @@
       color: var(--secondary-color) !important;
     }
 
-    /* Highlight search matches */
+    /* quick note: highlight search matches */
     mark {
       background-color: rgba(37, 99, 235, 0.15);
       color: var(--link-color);
@@ -190,7 +190,7 @@
       font-weight: 500;
     }
 
-    /* DataTables sorting headers */
+    /* quick note: datatables sorting headers */
     table.dataTable thead .sorting,
     table.dataTable thead .sorting_asc,
     table.dataTable thead .sorting_desc,
@@ -411,7 +411,7 @@
           });
         }
 
-        const matchDetails = matches.length > 0 ? matches.slice(0, 3).join(' • ') : 'Match found';
+        const matchDetails = matches.length > 0 ? matches.slice(0, 3).join(' â€¢ ') : 'Match found';
 
         return `
           <div class="search-suggestion-item" onclick="applySearchFromEncoded('${encodeURIComponent(query)}')">

@@ -386,11 +386,22 @@ document.addEventListener('DOMContentLoaded', function() {
        Changes URL parameter when user selects different time period
        ========================================== */
     const periodSelect = document.getElementById('period-select');
+    const periodForm = document.getElementById('period-form');
+    const rangeFields = document.getElementById('period-range-fields');
+
+    function toggleRangeFields(isRange) {
+        if (!rangeFields) return;
+        rangeFields.style.display = isRange ? 'flex' : 'none';
+    }
+
     if (periodSelect) {
+        toggleRangeFields(periodSelect.value === 'range');
         periodSelect.addEventListener('change', function() {
-            const selectedPeriod = this.value;
-            // Redirect to same page with new period parameter
-            window.location.href = '?period=' + selectedPeriod;
+            const isRange = this.value === 'range';
+            toggleRangeFields(isRange);
+            if (!isRange && periodForm) {
+                periodForm.submit();
+            }
         });
     }
 

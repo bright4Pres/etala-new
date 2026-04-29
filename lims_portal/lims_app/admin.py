@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import BorrowHistory, Book, BookCopy, grade_Seven, grade_Eight, grade_Nine, grade_Ten, grade_Eleven, grade_Twelve
+from .models import BorrowHistory, Book, BookCopy, students
 from django.urls import path, reverse
 from django.shortcuts import redirect, get_object_or_404, render
 from django.utils import timezone
@@ -135,22 +135,7 @@ class GradeAdminBase(BulkImportAdmin):
     
     move_up_all_students.short_description = "Move All Students Up One Grade"
 
-class grade_SevenAdmin(GradeAdminBase):
-    pass
-
-class grade_EightAdmin(GradeAdminBase):
-    pass
-
-class grade_NineAdmin(GradeAdminBase):
-    pass
-
-class grade_TenAdmin(GradeAdminBase):
-    pass
-
-class grade_ElevenAdmin(GradeAdminBase):
-    pass
-
-class grade_TwelveAdmin(GradeAdminBase):
+class studentsAdmin(GradeAdminBase):
     pass
 
 class historyAdmin(admin.ModelAdmin):
@@ -321,9 +306,4 @@ admin.site.register(Book, BookAdmin)
 admin.site.register(BookCopy, BookCopyAdmin)
 
 # Register grade tables with bulk import
-admin.site.register(grade_Seven, grade_SevenAdmin)
-admin.site.register(grade_Eight, grade_EightAdmin)
-admin.site.register(grade_Nine, grade_NineAdmin)
-admin.site.register(grade_Ten, grade_TenAdmin)
-admin.site.register(grade_Eleven, grade_ElevenAdmin)
-admin.site.register(grade_Twelve, grade_TwelveAdmin)
+admin.site.register(students, studentsAdmin)

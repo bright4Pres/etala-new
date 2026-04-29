@@ -164,7 +164,7 @@
       <details>
         <summary>
           <div style="display: flex; align-items: center;">
-            <span class="arrow">▶</span>
+            <span class="arrow">â–¶</span>
             <span style="margin-left: 1rem;">Grade {{ grade }}</span>
             <span class="student-count">{{ students|length }} student{{ students|length|pluralize }}</span>
           </div>
@@ -201,7 +201,7 @@
   </div>
 
   <script>
-    // Search functionality
+    // tiny reminder: search functionality
     document.getElementById('searchInput').addEventListener('input', function() {
       const searchTerm = this.value.toLowerCase();
       const sections = document.querySelectorAll('.grade-section');
@@ -220,7 +220,7 @@
           }
         });
         
-        // Auto-expand grade section if it has matches, otherwise hide it
+        // note to self: auto-expand grade section if it has matches, otherwise hide it
         const details = section.querySelector('details');
         if (visibleRows === 0 && searchTerm !== '') {
           section.style.display = 'none';
@@ -233,14 +233,14 @@
       });
     });
 
-    // Expand all sections
+    // tiny reminder: expand all sections
     function expandAll() {
       document.querySelectorAll('.grade-section details').forEach(details => {
         details.open = true;
       });
     }
 
-    // Collapse all sections
+    // lol reminder: collapse all sections
     function collapseAll() {
       document.querySelectorAll('.grade-section details').forEach(details => {
         details.open = false;

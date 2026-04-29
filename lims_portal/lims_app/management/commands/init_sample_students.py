@@ -3,7 +3,7 @@ Initialization script to create sample students for all grade levels.
 Usage: python manage.py init_sample_students
 """
 from django.core.management.base import BaseCommand
-from lims_app.models import grade_Seven, grade_Eight, grade_Nine, grade_Ten, grade_Eleven, grade_Twelve
+from lims_app.models import students
 from datetime import datetime
 import random
 
@@ -28,23 +28,22 @@ class Command(BaseCommand):
         count = options['count']
         clear_existing = options['clear']
         
-        # Grade models and their corresponding StudentActivation grade numbers
-        grade_models = [
-            (grade_Seven, 7, "Grade 7"),
-            (grade_Eight, 8, "Grade 8"),
-            (grade_Nine, 9, "Grade 9"),
-            (grade_Ten, 10, "Grade 10"),
-            (grade_Eleven, 11, "Grade 11"),
-            (grade_Twelve, 12, "Grade 12"),
+        # all the grades and their numbers, so I don't forget
+        grade_levels = [
+            (7, "Grade 7"),
+            (8, "Grade 8"),
+            (9, "Grade 9"),
+            (10, "Grade 10"),
+            (11, "Grade 11"),
+            (12, "Grade 12"),
         ]
         
         if clear_existing:
-            # Clear all grade tables
-            for model, _, _ in grade_models:
-                model.objects.all().delete()
+            # nuke all the students if you want a fresh start
+            students.objects.all().delete()
             self.stdout.write(self.style.WARNING('Cleared all existing students\n'))
         
-        # Sample data
+        # random names and stuff for fake students
         first_names_male = [
             "Juan", "Pedro", "Jose", "Miguel", "Antonio", "Carlos", "Luis", "Fernando",
             "Ricardo", "Roberto", "Eduardo", "Rafael", "Gabriel", "Manuel", "Francisco",
@@ -70,7 +69,7 @@ class Command(BaseCommand):
         
         middle_initials = ["A.", "B.", "C.", "D.", "E.", "F.", "G.", "H.", "I.", "J."]
         
-        # Sample batch names (PSHS-ZRC traditional batch names)
+        # random batch names, because why not
         batch_names = [
             "Antuilan", "Bakunawa", "Calipayan", "Dalisay", "Estrellas",
             "Fernandez", "Galura", "Himigsugan", "Ignatius", "Jaime",
@@ -81,23 +80,23 @@ class Command(BaseCommand):
         total_created = 0
         total_skipped = 0
         
-        for model, grade_num, grade_name in grade_models:
+        for grade_num, grade_name in grade_levels:
             self.stdout.write(f'\nCreating {count} sample students for {grade_name}...')
             
             created_count = 0
             skipped_count = 0
             
             for i in range(count):
-                # Generate unique school ID
+                # make up a school ID, hope it's unique
                 year = datetime.now().year
                 student_num = f"{grade_num:02d}{str(i+1).zfill(3)}"
                 school_id = f"PSHS{year}{student_num}"
                 
-                # Check if school_id already exists
-                if model.objects.filter(school_id=school_id).exists():
+                # oops, if ID exists, just add some random junk
+                if students.objects.filter(school_id=school_id).exists():
                     school_id = f"PSHS{year}{student_num}X{random.randint(1,999)}"
                 
-                # Random gender and name generation
+                # pick a random gender and name, whatever
                 gender = random.choice(["Male", "Female"])
                 if gender == "Male":
                     first_name = random.choice(first_names_male)
@@ -107,16 +106,16 @@ class Command(BaseCommand):
                 last_name = random.choice(last_names)
                 middle_initial = random.choice(middle_initials)
                 
-                # Full name format: First M.I. Last
+                # name looks like: First M.I. Last (fancy)
                 full_name = f"{first_name} {middle_initial} {last_name}"
                 
-                # Generate email
+                # make up a school email, not real
                 email_base = f"{first_name.lower()}.{last_name.lower()}"
                 email = f"{email_base}@pshs.edu.ph"
                 
-                # Check for name uniqueness (since name field is unique)
-                if model.objects.filter(name=full_name).exists():
-                    # Add suffix if name exists
+                # if name's taken, slap a number on it lol
+                if students.objects.filter(name=full_name).exists():
+                    # add a random number if someone already stole the name
                     suffix = random.randint(1, 999)
                     full_name = f"{first_name} {middle_initial} {last_name} {suffix}"
                 
@@ -124,12 +123,13 @@ class Command(BaseCommand):
                 batch = random.choice(batch_names)
                 
                 try:
-                    student = model.objects.create(
+                    student = students.objects.create(
                         name=full_name,
                         school_id=school_id,
                         gender=gender,
                         email=email,
                         batch=batch,
+                        grade_Level=grade_num,
                     )
                     created_count += 1
                     
@@ -164,8 +164,8 @@ class Command(BaseCommand):
         
         # Display sample students from each grade
         self.stdout.write('\nSample students created:')
-        for model, grade_num, grade_name in grade_models:
-            sample_students = model.objects.order_by('-id')[:2]
+        for grade_num, grade_name in grade_levels:
+            sample_students = students.objects.filter(grade_Level=grade_num).order_by('-id')[:2]
             if sample_students:
                 self.stdout.write(f'\n  {grade_name}:')
                 for student in sample_students:
