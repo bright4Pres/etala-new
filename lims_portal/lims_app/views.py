@@ -1,4 +1,4 @@
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.utils.dateparse import parse_datetime, parse_date
 from django.utils import timezone
 from django.shortcuts import render, redirect
@@ -177,7 +177,7 @@ def records(request):
         "selected_filters": selected_filters,
     })
     
-def analytics(request):
+def _build_analytics_context(request):
     now = timezone.now()
     
     # ========== CORE METRICS ==========
@@ -525,9 +525,113 @@ def analytics(request):
         "heatmap_next_offset": next_offset,
         "range_start": range_start_value,
         "range_end": range_end_value,
+        "avg_borrow_days": avg_borrow_days,
+        "export_query": request.GET.urlencode(),
     }
 
+    return context
+
+
+@staff_member_required
+def analytics(request):
+    context = _build_analytics_context(request)
     return render(request, "analytics.html", context)
+
+
+@staff_member_required
+def admin_analytics_export(request):
+    context = _build_analytics_context(request)
+    export_format = (request.GET.get('format') or 'csv').lower()
+    timestamp = timezone.now().strftime('%Y%m%d_%H%M%S')
+    filename_base = f"library-analytics-{timestamp}"
+
+    def format_date(value):
+        return value.isoformat() if value else None
+
+    summary = {
+        "period_label": context.get("period_label"),
+        "period_start": format_date(context.get("range_start")),
+        "period_end": format_date(context.get("range_end")),
+        "total_books_count": context.get("total_books_count"),
+        "total_accounts": context.get("total_accounts"),
+        "total_borrows_all_time": context.get("total_borrows_all_time"),
+        "currently_borrowed": context.get("currently_borrowed"),
+        "available_books": context.get("available_books"),
+        "overdue_books": context.get("overdue_books"),
+        "period_borrows": context.get("period_borrows"),
+        "period_returns": context.get("period_returns"),
+        "period_new_accounts": context.get("period_new_accounts"),
+        "return_rate": context.get("return_rate"),
+        "avg_borrow_days": context.get("avg_borrow_days"),
+    }
+
+    if export_format == 'json':
+        recent_activity_export = []
+        for item in context.get("borrowed_books", []):
+            recent_activity_export.append({
+                "book_title": item.bookTitle,
+                "account_name": item.accountName,
+                "account_id": item.accountID,
+                "borrow_date": item.borrow_date.isoformat() if item.borrow_date else None,
+                "return_date": item.return_date.isoformat() if item.return_date else None,
+                "returned": item.returned,
+            })
+
+        overdue_export = []
+        for item in context.get("overdue_list", []):
+            overdue_export.append({
+                "book_title": item.bookTitle,
+                "account_name": item.accountName,
+                "account_id": item.accountID,
+                "borrow_date": item.borrow_date.isoformat() if item.borrow_date else None,
+                "return_date": item.return_date.isoformat() if item.return_date else None,
+                "days_overdue": (timezone.now().date() - item.return_date.date()).days if item.return_date else None,
+            })
+
+        payload = {
+            "generated_at": timezone.now().isoformat(),
+            "summary": summary,
+            "metrics": json.loads(context.get("metrics_json") or '{}'),
+            "top_borrowers": context.get("top_borrowers", []),
+            "most_borrowed": context.get("most_borrowed", []),
+            "location_stats": context.get("location_stats", []),
+            "recent_activity": recent_activity_export,
+            "overdue_list": overdue_export,
+            "overall_gender_proportions": context.get("overall_gender_proportions", {}),
+            "batch_gender_stats": context.get("batch_gender_stats", {}),
+        }
+
+        response = JsonResponse(payload, json_dumps_params={"indent": 2})
+        response['Content-Disposition'] = f'attachment; filename="{filename_base}.json"'
+        return response
+
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = f'attachment; filename="{filename_base}.csv"'
+    writer = csv.writer(response)
+    writer.writerow([
+        'period_label', 'period_start', 'period_end',
+        'total_books_count', 'total_accounts', 'total_borrows_all_time',
+        'currently_borrowed', 'available_books', 'overdue_books',
+        'period_borrows', 'period_returns', 'period_new_accounts',
+        'return_rate', 'avg_borrow_days'
+    ])
+    writer.writerow([
+        summary['period_label'],
+        summary['period_start'],
+        summary['period_end'],
+        summary['total_books_count'],
+        summary['total_accounts'],
+        summary['total_borrows_all_time'],
+        summary['currently_borrowed'],
+        summary['available_books'],
+        summary['overdue_books'],
+        summary['period_borrows'],
+        summary['period_returns'],
+        summary['period_new_accounts'],
+        summary['return_rate'],
+        summary['avg_borrow_days'],
+    ])
+    return response
 
 
 # Admin Views
