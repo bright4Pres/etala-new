@@ -12,11 +12,11 @@
     <style>
       /* note to self: grade section styling */
       .grade-section summary {
-        background: #4a5568;
+        background: var(--accent);
       }
       
       .grade-section summary:hover {
-        background: #2d3748 !important;
+        background: var(--accent-strong) !important;
         transform: translateX(2px);
         box-shadow: 0 2px 8px rgba(74, 85, 104, 0.3);
       }
@@ -27,24 +27,25 @@
       
       /* tiny reminder: dark mode styles for grade sections */
       html.dark .grade-section summary {
-        background: #374151;
+        background: var(--accent);
       }
       
       html.dark .grade-section summary:hover {
-        background: #4b5563 !important;
+        background: var(--accent-strong) !important;
         box-shadow: 0 2px 8px rgba(107, 114, 128, 0.4);
       }
       
       html.dark .grade-section .user-item {
-        border-left-color: #6b7280 !important;
+        border-left-color: var(--accent) !important;
       }
       
       html.dark .grade-section .user-item button {
-        background: #4b5563 !important;
+        background: var(--accent) !important;
+        color: var(--accent-contrast) !important;
       }
       
       html.dark .grade-section .user-item button:hover {
-        background: #6b7280 !important;
+        background: var(--accent-strong) !important;
       }
     </style>
 
@@ -126,14 +127,14 @@
         
         <!-- note to self: action button -->
         <div style="margin-bottom: 10px;">
-          <button type="button" onclick="openBookAddModal(); return false;" style="width: 100%; background: #3368a4; color: white; border: none; border-radius: 6px; padding: 8px 12px; font-size: 0.8rem; cursor: pointer; font-weight: 500; transition: background 0.2s;" onmouseover="this.style.background='#255783'" onmouseout="this.style.background='#3368a4'">+ Add Book</button>
+          <button type="button" onclick="openBookAddModal(); return false;" style="width: 100%; background: var(--accent); color: var(--accent-contrast); border: none; border-radius: 6px; padding: 8px 12px; font-size: 0.8rem; cursor: pointer; font-weight: 500; transition: background 0.2s;" onmouseover="this.style.background='var(--accent-strong)'" onmouseout="this.style.background='var(--accent)'">+ Add Book</button>
         </div>
         
         <!-- quick note: stats badges -->
         <div style="display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap;">
-          <span style="background: #3368a4; color: white; padding: 4px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 500;">{{ total_books_count }} Total</span>
-          <span style="background: #28a745; color: white; padding: 4px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 500;">{{ available_books_count }} Available</span>
-          <span style="background: #dc3545; color: white; padding: 4px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 500;">{{ borrowed_books|length }} Borrowed</span>
+          <span style="background: var(--accent-soft); color: var(--accent); padding: 4px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 500;">{{ total_books_count }} Total</span>
+          <span style="background: var(--success-bg); color: var(--success); padding: 4px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 500;">{{ available_books_count }} Available</span>
+          <span style="background: var(--danger-bg); color: var(--danger); padding: 4px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 500;">{{ borrowed_books|length }} Borrowed</span>
         </div>
         
         <!-- tiny reminder: search box -->
@@ -143,8 +144,8 @@
       </div>
       <div id="booksList" style="flex: 1; overflow-y: auto; padding: 12px; min-height: 0;">
         {% for book in all_books %}
-        <div class="book-item" data-title="{{ book.Title|lower }}" data-author="{{ book.mainAuthor|lower }}" data-callnumber="{{ book.callNumber|lower }}" style="padding: 12px; margin-bottom: 10px; background: var(--message-box-hover); border-radius: 8px; border-left: 4px solid {% if book.available_copies > 0 %}#28a745{% else %}#dc3545{% endif %}; position: relative;">
-          <button onclick="openBookEditModal('{{ book.id }}', '{{ book.Title|escapejs }}', '{{ book.mainAuthor|escapejs }}', '{{ book.coAuthor|escapejs }}', '{{ book.Publisher|escapejs }}', '{{ book.Edition|escapejs }}', '{{ book.callNumber|escapejs }}', '{{ book.Language }}', '{{ book.Type }}', '{{ book.copies_json|escapejs }}')" style="position: absolute; top: 10px; right: 10px; background: #3368a4; color: white; border: none; border-radius: 4px; padding: 4px 8px; font-size: 0.7rem; cursor: pointer;">Edit</button>
+        <div class="book-item" data-title="{{ book.Title|lower }}" data-author="{{ book.mainAuthor|lower }}" data-callnumber="{{ book.callNumber|lower }}" style="padding: 12px; margin-bottom: 10px; background: var(--message-box-hover); border-radius: 8px; border-left: 4px solid {% if book.available_copies > 0 %}var(--success){% else %}var(--danger){% endif %}; position: relative;">
+          <button onclick="openBookEditModal('{{ book.id }}', '{{ book.Title|escapejs }}', '{{ book.mainAuthor|escapejs }}', '{{ book.coAuthor|escapejs }}', '{{ book.Publisher|escapejs }}', '{{ book.Edition|escapejs }}', '{{ book.callNumber|escapejs }}', '{{ book.Language }}', '{{ book.Type }}', '{{ book.copies_json|escapejs }}')" style="position: absolute; top: 10px; right: 10px; background: var(--accent); color: var(--accent-contrast); border: none; border-radius: 4px; padding: 4px 8px; font-size: 0.7rem; cursor: pointer;">Edit</button>
           
           <div style="font-weight: 600; font-size: 0.9rem; color: var(--main-color); margin-bottom: 6px; padding-right: 50px;">{{ book.Title }}</div>
           <div style="font-size: 0.75rem; color: var(--secondary-color); margin-bottom: 6px;">{{ book.mainAuthor }}</div>
@@ -158,12 +159,12 @@
             <summary style="cursor: pointer; font-size: 0.75rem; font-weight: 500; color: var(--main-color); padding: 4px; border-radius: 4px; background: var(--app-container);">View All Copies ({{ book.total_copies }})</summary>
             <div style="margin-top: 8px; padding-left: 8px;">
               {% for copy in book.copies %}
-              <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px; margin-bottom: 4px; background: var(--app-container); border-radius: 4px; border-left: 2px solid {% if copy.status == 'Available' %}#28a745{% else %}#dc3545{% endif %};">
+              <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px; margin-bottom: 4px; background: var(--app-container); border-radius: 4px; border-left: 2px solid {% if copy.status == 'Available' %}var(--success){% else %}var(--danger){% endif %};">
                 <div style="flex: 1;">
                   <div style="font-size: 0.7rem; font-weight: 500; color: var(--main-color);">{{ copy.accessionNumber }}</div>
                   <div style="font-size: 0.65rem; color: var(--secondary-color);">{{ copy.Location }}</div>
                 </div>
-                <span style="padding: 2px 6px; border-radius: 4px; font-size: 0.65rem; {% if copy.status == 'Available' %}background: #d4edda; color: #155724;{% else %}background: #f8d7da; color: #721c24;{% endif %}">{{ copy.status }}</span>
+                <span style="padding: 2px 6px; border-radius: 4px; font-size: 0.65rem; {% if copy.status == 'Available' %}background: var(--success-bg); color: var(--success);{% else %}background: var(--danger-bg); color: var(--danger);{% endif %}">{{ copy.status }}</span>
               </div>
               {% empty %}
               <p style="font-size: 0.7rem; color: var(--secondary-color); padding: 8px;">No copies available</p>
@@ -188,13 +189,13 @@
         
         <!-- note to self: action button -->
         <div style="margin-bottom: 10px; display: flex; flex-direction: column; gap: 8px;">
-          <button type="button" onclick="openUserAddModal(); return false;" style="width: 100%; background: #28a745; color: white; border: none; border-radius: 6px; padding: 8px 12px; font-size: 0.8rem; cursor: pointer; font-weight: 500; transition: background 0.2s;" onmouseover="this.style.background='#218838'" onmouseout="this.style.background='#28a745'">+ Add Student</button>
-          <button type="button" onclick="openImportStudentsModal(); return false;" style="width: 100%; background: #0d9488; color: white; border: none; border-radius: 6px; padding: 8px 12px; font-size: 0.8rem; cursor: pointer; font-weight: 500; transition: background 0.2s;" onmouseover="this.style.background='#0f766e'" onmouseout="this.style.background='#0d9488'">Import Students</button>
+          <button type="button" onclick="openUserAddModal(); return false;" style="width: 100%; background: var(--accent); color: var(--accent-contrast); border: none; border-radius: 6px; padding: 8px 12px; font-size: 0.8rem; cursor: pointer; font-weight: 500; transition: background 0.2s;" onmouseover="this.style.background='var(--accent-strong)'" onmouseout="this.style.background='var(--accent)'">+ Add Student</button>
+          <button type="button" onclick="openImportStudentsModal(); return false;" style="width: 100%; background: var(--accent-soft); color: var(--accent); border: none; border-radius: 6px; padding: 8px 12px; font-size: 0.8rem; cursor: pointer; font-weight: 500; transition: background 0.2s;" onmouseover="this.style.background='var(--accent-soft-strong)'" onmouseout="this.style.background='var(--accent-soft)'">Import Students</button>
         </div>
         
         <!-- lol reminder: stats badge -->
         <div style="margin-bottom: 10px;">
-          <span style="background: #28a745; color: white; padding: 4px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 500;">{{ total_users_count }} Students</span>
+          <span style="background: var(--accent-soft); color: var(--accent); padding: 4px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 500;">{{ total_users_count }} Students</span>
         </div>
         
         <!-- tiny reminder: search box -->
@@ -205,14 +206,14 @@
       <div id="usersList" style="flex: 1; overflow-y: auto; padding: 12px; min-height: 0;">
         {% for grade_num in "7,8,9,10,11,12"|split:"," %}
         <details class="grade-section" {% if grade_num == "7" %}open{% endif %} style="margin-bottom: 8px; border-radius: 8px; overflow: hidden; background: var(--message-box-hover);">
-          <summary style="cursor: pointer; padding: 10px 12px; color: white; font-weight: 600; font-size: 0.85rem; display: flex; justify-content: space-between; align-items: center; user-select: none; transition: all 0.3s ease;">
+            <summary style="cursor: pointer; padding: 10px 12px; color: var(--accent-contrast); font-weight: 600; font-size: 0.85rem; display: flex; justify-content: space-between; align-items: center; user-select: none; transition: all 0.3s ease;">
             <span>Grade {{ grade_num }}</span>
-            <span style="background: rgba(255,255,255,0.2); padding: 2px 8px; border-radius: 12px; font-size: 0.75rem;">{{ students_by_grade|get_item:grade_num|length }}</span>
+            <span style="background: var(--accent-soft); color: var(--accent); padding: 2px 8px; border-radius: 12px; font-size: 0.75rem;">{{ students_by_grade|get_item:grade_num|length }}</span>
           </summary>
           <div style="padding: 8px;">
             {% for user in students_by_grade|get_item:grade_num %}
-            <div class="user-item" data-name="{{ user.name|lower }}" data-schoolid="{{ user.school_id|lower }}" data-grade="grade {{ grade_num }}" data-batch="{{ user.batch|lower }}" data-section="{{ user.section|default:''|lower }}" style="padding: 10px; margin-bottom: 6px; background: var(--app-container); border-radius: 6px; border-left: 3px solid #4a5568; position: relative;">
-              <button onclick="openUserEditModal('{{ user.school_id|escapejs }}', '{{ user.name|escapejs }}', '{{ user.email|escapejs }}', '{{ grade_num }}', '{{ user.batch|escapejs }}', '{{ user.section|escapejs }}')" style="position: absolute; top: 6px; right: 6px; background: #4a5568; color: white; border: none; border-radius: 4px; padding: 3px 6px; font-size: 0.65rem; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='#2d3748'" onmouseout="this.style.background='#4a5568'">Edit</button>
+            <div class="user-item" data-name="{{ user.name|lower }}" data-schoolid="{{ user.school_id|lower }}" data-grade="grade {{ grade_num }}" data-batch="{{ user.batch|lower }}" data-section="{{ user.section|default:''|lower }}" style="padding: 10px; margin-bottom: 6px; background: var(--app-container); border-radius: 6px; border-left: 3px solid var(--accent); position: relative;">
+              <button onclick="openUserEditModal('{{ user.school_id|escapejs }}', '{{ user.name|escapejs }}', '{{ user.email|escapejs }}', '{{ grade_num }}', '{{ user.batch|escapejs }}', '{{ user.section|escapejs }}')" style="position: absolute; top: 6px; right: 6px; background: var(--accent); color: var(--accent-contrast); border: none; border-radius: 4px; padding: 3px 6px; font-size: 0.65rem; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='var(--accent-strong)'" onmouseout="this.style.background='var(--accent)'">Edit</button>
               <div style="font-weight: 600; font-size: 0.8rem; color: var(--main-color); margin-bottom: 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding-right: 45px;">{{ user.name }}</div>
               <div style="font-size: 0.7rem; color: var(--secondary-color); margin-bottom: 2px;">{{ user.school_id }}</div>
               <div style="font-size: 0.65rem; color: var(--secondary-color);">{{ user.batch }}{% if user.section %} | {{ user.section }}{% endif %}</div>
@@ -247,11 +248,11 @@
           <div class="messages" style="margin: 1rem 0;">
             {% for message in messages %}
               {% if message.tags == 'success' %}
-                <div style="color: #155724; background: #d4edda; padding: 0.75rem; border-radius: 6px; border-left: 4px solid #28a745; margin-bottom: 0.5rem;">
+                <div style="color: var(--success); background: var(--success-bg); padding: 0.75rem; border-radius: 6px; border-left: 4px solid var(--success); margin-bottom: 0.5rem;">
                   <strong>Ã¢Å“â€œ Success:</strong> {{ message }}
                 </div>
               {% else %}
-                <div style="color: #721c24; background: #f8d7da; padding: 0.75rem; border-radius: 6px; border-left: 4px solid #dc3545; margin-bottom: 0.5rem;">
+                <div style="color: var(--danger); background: var(--danger-bg); padding: 0.75rem; border-radius: 6px; border-left: 4px solid var(--danger); margin-bottom: 0.5rem;">
                   <strong>Ã¢Å“â€” Error:</strong> {{ message }}
                 </div>
               {% endif %}
@@ -304,7 +305,7 @@
         <div class="project-boxes jsGridView">
           {% for borrow in borrowed_books %}
           <div class="project-box-wrapper">
-            <div class="project-box" style="background-color: {% if borrow.is_overdue %}#f8d7da{% else %}#d4edda{% endif %}">
+            <div class="project-box" style="background-color: {% if borrow.is_overdue %}var(--danger-bg){% else %}var(--success-bg){% endif %}">
               <div class="project-box-header">
                 <span>{{ borrow.borrow_date|date:"M d, Y" }}</span>
                 <div class="more-wrapper">
@@ -323,7 +324,7 @@
               <div class="box-progress-wrapper">
                 <p class="box-progress-header">Due Date</p>
                 <div class="box-progress-bar">
-                  <span class="box-progress" style="width: {% if borrow.is_overdue %}100{% else %}50{% endif %}%; background-color: {% if borrow.is_overdue %}#dc3545{% else %}#28a745{% endif %}"></span>
+                  <span class="box-progress" style="width: {% if borrow.is_overdue %}100{% else %}50{% endif %}%; background-color: {% if borrow.is_overdue %}var(--danger){% else %}var(--success){% endif %}"></span>
                 </div>
                 <p class="box-progress-percentage">{{ borrow.return_date|date:"M d" }}</p>
               </div>
@@ -331,7 +332,7 @@
                 <div class="participants">
                   <span style="font-size: 12px;">Accession: {{ borrow.bookID }}</span>
                 </div>
-                <div class="days-left" style="color: {% if borrow.is_overdue %}#dc3545{% else %}#28a745{% endif %}">
+                <div class="days-left" style="color: {% if borrow.is_overdue %}var(--danger){% else %}var(--success){% endif %}">
                   {% if borrow.is_overdue %}Overdue{% else %}On Time{% endif %}
                 </div>
               </div>
@@ -356,18 +357,18 @@
           <div class="messages" style="margin: 1rem 0;">
             {% for message in messages %}
               {% if message.tags == 'success' %}
-                <div style="color: #155724; background: #d4edda; padding: 0.75rem; border-radius: 6px; border-left: 4px solid #28a745; margin-bottom: 0.5rem;">
+                <div style="color: var(--success); background: var(--success-bg); padding: 0.75rem; border-radius: 6px; border-left: 4px solid var(--success); margin-bottom: 0.5rem;">
                   <strong>Ã¢Å“â€œ Success:</strong> {{ message }}
                 </div>
               {% else %}
-                <div style="color: #721c24; background: #f8d7da; padding: 0.75rem; border-radius: 6px; border-left: 4px solid #dc3545; margin-bottom: 0.5rem;">
+                <div style="color: var(--danger); background: var(--danger-bg); padding: 0.75rem; border-radius: 6px; border-left: 4px solid var(--danger); margin-bottom: 0.5rem;">
                   <strong>Ã¢Å“â€” Error:</strong> {{ message }}
                 </div>
               {% endif %}
             {% endfor %}
           </div>
         {% endif %}
-        <form method="post" action="{% url 'admin_dashboard' %}" id="checkout-form" style="background: white; padding: 2rem; border-radius: 8px; border: 2px solid #3368a4;">
+        <form method="post" action="{% url 'admin_dashboard' %}" id="checkout-form" style="background: var(--content-bg); padding: 2rem; border-radius: 8px; border: 1px solid var(--border-color);">
           {% csrf_token %}
           <input type="hidden" name="action" value="checkout">
           <input type="hidden" name="active_view" value="checkout">
@@ -385,7 +386,7 @@
             <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Student School ID</label>
             <input type="text" name="student_id" id="checkout-student-input" placeholder="Enter student ID" required style="width: 100%; padding: 0.75rem; border: 2px solid #e0e0e0; border-radius: 6px; font-size: 1rem; box-sizing: border-box;">
           </div>
-          <button type="submit" id="checkout-submit-btn" style="padding: 0.75rem 1.5rem; background: #3368a4; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 1rem; font-weight: 600;">Checkout Book</button>
+          <button type="submit" id="checkout-submit-btn" style="padding: 0.75rem 1.5rem; background: var(--accent); color: var(--accent-contrast); border: none; border-radius: 6px; cursor: pointer; font-size: 1rem; font-weight: 600;">Checkout Book</button>
         </form>
       </div>
 
@@ -399,15 +400,15 @@
         <div id="return-status" style="margin: 1rem 0; display: none;"></div>
         
         <!-- quick note: barcode scanner section -->
-        <div style="background: white; padding: 1.5rem; border-radius: 8px; margin-bottom: 1.5rem; border: 2px solid #3368a4;">
+        <div style="background: var(--content-bg); padding: 1.5rem; border-radius: 8px; margin-bottom: 1.5rem; border: 1px solid var(--border-color);">
           <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
-            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#3368a4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
               <line x1="9" y1="3" x2="9" y2="21"/>
               <line x1="15" y1="3" x2="15" y2="21"/>
             </svg>
             <div style="flex: 1;">
-              <h4 style="margin: 0 0 0.25rem 0; color: #3368a4;">Quick Return via Barcode</h4>
+              <h4 style="margin: 0 0 0.25rem 0; color: var(--accent);">Quick Return via Barcode</h4>
               <p style="margin: 0; font-size: 0.85rem; color: #666;">Scan the book's accession number to return</p>
             </div>
           </div>
@@ -423,7 +424,7 @@
                 placeholder="Scan or type accession number..." 
                 autofocus
                 style="flex: 1; padding: 0.75rem; border: 2px solid #e0e0e0; border-radius: 6px; font-size: 1rem; box-sizing: border-box; font-family: monospace;">
-              <button type="submit" id="return-submit-btn" style="padding: 0.75rem 1.5rem; background: #dc3545; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 1rem; font-weight: 600; white-space: nowrap;">Return Book</button>
+              <button type="submit" id="return-submit-btn" style="padding: 0.75rem 1.5rem; background: var(--danger); color: var(--danger-contrast); border: none; border-radius: 6px; cursor: pointer; font-size: 1rem; font-weight: 600; white-space: nowrap;">Return Book</button>
             </div>
           </form>
           <div id="barcode-status" style="margin-top: 0.75rem; padding: 0.75rem; border-radius: 4px; display: none;"></div>
@@ -433,11 +434,11 @@
           <div class="messages" style="margin: 1rem 0;">
             {% for message in messages %}
               {% if message.tags == 'success' %}
-                <div style="color: #155724; background: #d4edda; padding: 0.75rem; border-radius: 6px; border-left: 4px solid #28a745; margin-bottom: 0.5rem;">
+                <div style="color: var(--success); background: var(--success-bg); padding: 0.75rem; border-radius: 6px; border-left: 4px solid var(--success); margin-bottom: 0.5rem;">
                   <strong>Ã¢Å“â€œ Success:</strong> {{ message }}
                 </div>
               {% else %}
-                <div style="color: #721c24; background: #f8d7da; padding: 0.75rem; border-radius: 6px; border-left: 4px solid #dc3545; margin-bottom: 0.5rem;">
+                <div style="color: var(--danger); background: var(--danger-bg); padding: 0.75rem; border-radius: 6px; border-left: 4px solid var(--danger); margin-bottom: 0.5rem;">
                   <strong>Ã¢Å“â€” Error:</strong> {{ message }}
                 </div>
               {% endif %}
@@ -452,7 +453,7 @@
         <div class="project-boxes jsGridView">
           {% for borrow in borrowed_books %}
           <div class="project-box-wrapper">
-            <div class="project-box" style="background-color: {% if borrow.is_overdue %}#fff3cd{% else %}#e7f1ff{% endif %}">
+            <div class="project-box" style="background-color: {% if borrow.is_overdue %}var(--warning-bg){% else %}var(--info-bg){% endif %}">
               <div class="project-box-header">
                 <span>{{ borrow.borrow_date|date:"M d, Y" }}</span>
               </div>
@@ -462,7 +463,7 @@
               </div>
               <div class="box-progress-wrapper">
                 <p class="box-progress-header">Status</p>
-                <p class="box-progress-percentage" style="color: {% if borrow.is_overdue %}#dc3545{% else %}#28a745{% endif %}">
+                <p class="box-progress-percentage" style="color: {% if borrow.is_overdue %}var(--danger){% else %}var(--success){% endif %}">
                   {% if borrow.is_overdue %}Overdue{% else %}On Time{% endif %}
                 </p>
               </div>
@@ -475,7 +476,7 @@
                   <input type="hidden" name="action" value="return">
                   <input type="hidden" name="active_view" value="borrowed">
                   <input type="hidden" name="borrow_id" value="{{ borrow.id }}">
-                  <button type="submit" style="padding: 0.5rem 1rem; background: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.9rem;">Return</button>
+                  <button type="submit" style="padding: 0.5rem 1rem; background: var(--danger); color: var(--danger-contrast); border: none; border-radius: 4px; cursor: pointer; font-size: 0.9rem;">Return</button>
                 </form>
               </div>
             </div>
@@ -527,7 +528,7 @@
     <div id="addBookModal" class="modal" style="display: none;">
       <div class="modal-content">
         <div class="modal-header">
-          <h2 style="margin: 0; color: #333;">Add Book</h2>
+          <h2 style="margin: 0; color: var(--main-color);">Add Book</h2>
           <button onclick="closeBookAddModal()" class="modal-close">&times;</button>
         </div>
         <form method="post" action="{% url 'admin_dashboard' %}" id="addBookForm">
@@ -618,7 +619,7 @@ ACC003, Annex, Unavailable"></textarea>
     <div id="addUserModal" class="modal" style="display: none;">
       <div class="modal-content">
         <div class="modal-header">
-          <h2 style="margin: 0; color: #333;">Add User</h2>
+          <h2 style="margin: 0; color: var(--main-color);">Add User</h2>
           <button onclick="closeUserAddModal()" class="modal-close">&times;</button>
         </div>
         <form method="post" action="{% url 'admin_dashboard' %}" id="addUserForm">
@@ -691,7 +692,7 @@ ACC003, Annex, Unavailable"></textarea>
     <div id="importStudentsModal" class="modal" style="display: none;">
       <div class="modal-content" style="max-width: 520px;">
         <div class="modal-header">
-          <h2 style="margin: 0; color: #333;">Import Students</h2>
+          <h2 style="margin: 0; color: var(--main-color);">Import Students</h2>
           <button onclick="closeImportStudentsModal()" class="modal-close">&times;</button>
         </div>
         <form method="post" action="{% url 'admin_dashboard' %}" id="importStudentsForm" enctype="multipart/form-data">
@@ -718,7 +719,7 @@ ACC003, Annex, Unavailable"></textarea>
     <div id="editBookModal" class="modal" style="display: none;">
       <div class="modal-content">
         <div class="modal-header">
-          <h2 style="margin: 0; color: #333;">Edit Book</h2>
+          <h2 style="margin: 0; color: var(--main-color);">Edit Book</h2>
           <button onclick="closeBookEditModal()" class="modal-close">&times;</button>
         </div>
         <form method="post" action="{% url 'admin_dashboard' %}" id="editBookForm">
@@ -807,7 +808,7 @@ ACC003, Annex, Unavailable"></textarea>
     <div id="editUserModal" class="modal" style="display: none;">
       <div class="modal-content">
         <div class="modal-header">
-          <h2 style="margin: 0; color: #333;">Edit User</h2>
+          <h2 style="margin: 0; color: var(--main-color);">Edit User</h2>
           <button onclick="closeUserEditModal()" class="modal-close">&times;</button>
         </div>
         <form method="post" action="{% url 'admin_dashboard' %}" id="editUserForm">
@@ -862,7 +863,7 @@ ACC003, Annex, Unavailable"></textarea>
           <div class="modal-actions">
             <button type="button" onclick="closeUserEditModal()" class="btn-secondary">Cancel</button>
             <button type="submit" class="btn-primary">Save Changes</button>
-            <button type="button" onclick="confirmDeleteUser()" class="btn-secondary" style="margin-left: auto; background: #dc3545; color: white; border-color: #dc3545;">Delete User</button>
+            <button type="button" onclick="confirmDeleteUser()" class="btn-secondary" style="margin-left: auto; background: var(--danger); color: var(--danger-contrast); border-color: var(--danger);">Delete User</button>
           </div>
         </form>
       </div>
@@ -872,7 +873,7 @@ ACC003, Annex, Unavailable"></textarea>
     <div id="moveUpModal" class="modal" style="display: none;">
       <div class="modal-content" style="max-width: 520px;">
         <div class="modal-header">
-          <h2 style="margin: 0; color: #333;">Move-Up Students</h2>
+          <h2 style="margin: 0; color: var(--main-color);">Move-Up Students</h2>
           <button onclick="closeMoveUpModal()" class="modal-close">&times;</button>
         </div>
         <form method="post" action="{% url 'admin_dashboard' %}" id="moveUpForm">
@@ -887,7 +888,7 @@ ACC003, Annex, Unavailable"></textarea>
           </div>
           <div class="modal-actions">
             <button type="button" onclick="closeMoveUpModal()" class="btn-secondary">Cancel</button>
-            <button type="submit" class="btn-primary" style="background:#dc3545;">Run Move-Up</button>
+            <button type="submit" class="btn-primary" style="background: var(--danger); color: var(--danger-contrast);">Run Move-Up</button>
           </div>
         </form>
       </div>
@@ -956,19 +957,19 @@ ACC003, Annex, Unavailable"></textarea>
           checkoutStatusDiv.style.marginBottom = '0.5rem';
           
           if (type === 'success') {
-            checkoutStatusDiv.style.background = '#d4edda';
-            checkoutStatusDiv.style.color = '#155724';
-            checkoutStatusDiv.style.borderLeft = '4px solid #28a745';
+            checkoutStatusDiv.style.background = 'var(--success-bg)';
+            checkoutStatusDiv.style.color = 'var(--success)';
+            checkoutStatusDiv.style.borderLeft = '4px solid var(--success)';
             checkoutStatusDiv.innerHTML = '<strong>Ã¢Å“â€œ Success:</strong> ' + message;
           } else if (type === 'error') {
-            checkoutStatusDiv.style.background = '#f8d7da';
-            checkoutStatusDiv.style.color = '#721c24';
-            checkoutStatusDiv.style.borderLeft = '4px solid #dc3545';
+            checkoutStatusDiv.style.background = 'var(--danger-bg)';
+            checkoutStatusDiv.style.color = 'var(--danger)';
+            checkoutStatusDiv.style.borderLeft = '4px solid var(--danger)';
             checkoutStatusDiv.innerHTML = '<strong>Ã¢Å“â€” Error:</strong> ' + message;
           } else {
-            checkoutStatusDiv.style.background = '#d1ecf1';
-            checkoutStatusDiv.style.color = '#0c5460';
-            checkoutStatusDiv.style.borderLeft = '4px solid #17a2b8';
+            checkoutStatusDiv.style.background = 'var(--info-bg)';
+            checkoutStatusDiv.style.color = 'var(--info)';
+            checkoutStatusDiv.style.borderLeft = '4px solid var(--info)';
             checkoutStatusDiv.innerHTML = '<strong>Ã¢â€žÂ¹ Info:</strong> ' + message;
           }
         }
@@ -1016,9 +1017,9 @@ ACC003, Annex, Unavailable"></textarea>
           barcodeStatusDiv.style.borderRadius = '6px';
           
           if (type === 'success') {
-            barcodeStatusDiv.style.background = '#d4edda';
-            barcodeStatusDiv.style.color = '#155724';
-            barcodeStatusDiv.style.borderLeft = '4px solid #28a745';
+            barcodeStatusDiv.style.background = 'var(--success-bg)';
+            barcodeStatusDiv.style.color = 'var(--success)';
+            barcodeStatusDiv.style.borderLeft = '4px solid var(--success)';
             barcodeStatusDiv.innerHTML = '<strong>Ã¢Å“â€œ Success:</strong> ' + message;
             // quick note: clear input on success
             setTimeout(() => {
@@ -1029,14 +1030,14 @@ ACC003, Annex, Unavailable"></textarea>
               clearBarcodeStatus();
             }, 2000);
           } else if (type === 'error') {
-            barcodeStatusDiv.style.background = '#f8d7da';
-            barcodeStatusDiv.style.color = '#721c24';
-            barcodeStatusDiv.style.borderLeft = '4px solid #dc3545';
+            barcodeStatusDiv.style.background = 'var(--danger-bg)';
+            barcodeStatusDiv.style.color = 'var(--danger)';
+            barcodeStatusDiv.style.borderLeft = '4px solid var(--danger)';
             barcodeStatusDiv.innerHTML = '<strong>Ã¢Å“â€” Error:</strong> ' + message;
           } else {
-            barcodeStatusDiv.style.background = '#d1ecf1';
-            barcodeStatusDiv.style.color = '#0c5460';
-            barcodeStatusDiv.style.borderLeft = '4px solid #17a2b8';
+            barcodeStatusDiv.style.background = 'var(--info-bg)';
+            barcodeStatusDiv.style.color = 'var(--info)';
+            barcodeStatusDiv.style.borderLeft = '4px solid var(--info)';
             barcodeStatusDiv.innerHTML = '<strong>Ã¢â€žÂ¹ Info:</strong> ' + message;
           }
         }
@@ -1165,9 +1166,9 @@ ACC003, Annex, Unavailable"></textarea>
             const del = document.createElement('button');
             del.type = 'button';
             del.className = 'btn-secondary';
-            del.style.background = '#dc3545';
-            del.style.color = 'white';
-            del.style.borderColor = '#dc3545';
+            del.style.background = 'var(--danger)';
+            del.style.color = 'var(--danger-contrast)';
+            del.style.borderColor = 'var(--danger)';
             del.textContent = 'Delete';
             del.onclick = function() {
               confirmDeleteCopy(copy.id, copy.accessionNumber || '');
