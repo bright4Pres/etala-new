@@ -411,7 +411,7 @@
           });
         }
 
-        const matchDetails = matches.length > 0 ? matches.slice(0, 3).join(' â€¢ ') : 'Match found';
+        const matchDetails = matches.length > 0 ? matches.slice(0, 3).join(' ok ') : 'Match found';
 
         return `
           <div class="search-suggestion-item" onclick="applySearchFromEncoded('${encodeURIComponent(query)}')">
