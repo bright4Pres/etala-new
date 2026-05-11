@@ -256,11 +256,11 @@
             {% for message in messages %}
               {% if message.tags == 'success' %}
                 <div style="color: var(--success); background: var(--success-bg); padding: 0.75rem; border-radius: 6px; border-left: 4px solid var(--success); margin-bottom: 0.5rem;">
-                  <strong>Ã¢Å“â€œ Success:</strong> {{ message }}
+                  <strong>Success:</strong> {{ message }}
                 </div>
               {% else %}
                 <div style="color: var(--danger); background: var(--danger-bg); padding: 0.75rem; border-radius: 6px; border-left: 4px solid var(--danger); margin-bottom: 0.5rem;">
-                  <strong>Ã¢Å“â€” Error:</strong> {{ message }}
+                  <strong>Error:</strong> {{ message }}
                 </div>
               {% endif %}
             {% endfor %}
@@ -365,11 +365,11 @@
             {% for message in messages %}
               {% if message.tags == 'success' %}
                 <div style="color: var(--success); background: var(--success-bg); padding: 0.75rem; border-radius: 6px; border-left: 4px solid var(--success); margin-bottom: 0.5rem;">
-                  <strong>Ã¢Å“â€œ Success:</strong> {{ message }}
+                  <strong>Success:</strong> {{ message }}
                 </div>
               {% else %}
                 <div style="color: var(--danger); background: var(--danger-bg); padding: 0.75rem; border-radius: 6px; border-left: 4px solid var(--danger); margin-bottom: 0.5rem;">
-                  <strong>Ã¢Å“â€” Error:</strong> {{ message }}
+                  <strong>Error:</strong> {{ message }}
                 </div>
               {% endif %}
             {% endfor %}
@@ -442,11 +442,11 @@
             {% for message in messages %}
               {% if message.tags == 'success' %}
                 <div style="color: var(--success); background: var(--success-bg); padding: 0.75rem; border-radius: 6px; border-left: 4px solid var(--success); margin-bottom: 0.5rem;">
-                  <strong>Ã¢Å“â€œ Success:</strong> {{ message }}
+                  <strong>Success:</strong> {{ message }}
                 </div>
               {% else %}
                 <div style="color: var(--danger); background: var(--danger-bg); padding: 0.75rem; border-radius: 6px; border-left: 4px solid var(--danger); margin-bottom: 0.5rem;">
-                  <strong>Ã¢Å“â€” Error:</strong> {{ message }}
+                  <strong>Error:</strong> {{ message }}
                 </div>
               {% endif %}
             {% endfor %}
@@ -967,17 +967,17 @@ ACC003, Annex, Unavailable"></textarea>
             checkoutStatusDiv.style.background = 'var(--success-bg)';
             checkoutStatusDiv.style.color = 'var(--success)';
             checkoutStatusDiv.style.borderLeft = '4px solid var(--success)';
-            checkoutStatusDiv.innerHTML = '<strong>Ã¢Å“â€œ Success:</strong> ' + message;
+            checkoutStatusDiv.innerHTML = '<strong>Success:</strong> ' + message;
           } else if (type === 'error') {
             checkoutStatusDiv.style.background = 'var(--danger-bg)';
             checkoutStatusDiv.style.color = 'var(--danger)';
             checkoutStatusDiv.style.borderLeft = '4px solid var(--danger)';
-            checkoutStatusDiv.innerHTML = '<strong>Ã¢Å“â€” Error:</strong> ' + message;
+            checkoutStatusDiv.innerHTML = '<strong>Error:</strong> ' + message;
           } else {
             checkoutStatusDiv.style.background = 'var(--info-bg)';
             checkoutStatusDiv.style.color = 'var(--info)';
             checkoutStatusDiv.style.borderLeft = '4px solid var(--info)';
-            checkoutStatusDiv.innerHTML = '<strong>Ã¢â€žÂ¹ Info:</strong> ' + message;
+            checkoutStatusDiv.innerHTML = '<strong>Info:</strong> ' + message;
           }
         }
 
@@ -1027,7 +1027,7 @@ ACC003, Annex, Unavailable"></textarea>
             barcodeStatusDiv.style.background = 'var(--success-bg)';
             barcodeStatusDiv.style.color = 'var(--success)';
             barcodeStatusDiv.style.borderLeft = '4px solid var(--success)';
-            barcodeStatusDiv.innerHTML = '<strong>Ã¢Å“â€œ Success:</strong> ' + message;
+            barcodeStatusDiv.innerHTML = '<strong>Success:</strong> ' + message;
             // quick note: clear input on success
             setTimeout(() => {
               if (barcodeInput) {
@@ -1040,12 +1040,12 @@ ACC003, Annex, Unavailable"></textarea>
             barcodeStatusDiv.style.background = 'var(--danger-bg)';
             barcodeStatusDiv.style.color = 'var(--danger)';
             barcodeStatusDiv.style.borderLeft = '4px solid var(--danger)';
-            barcodeStatusDiv.innerHTML = '<strong>Ã¢Å“â€” Error:</strong> ' + message;
+            barcodeStatusDiv.innerHTML = '<strong>Error:</strong> ' + message;
           } else {
             barcodeStatusDiv.style.background = 'var(--info-bg)';
             barcodeStatusDiv.style.color = 'var(--info)';
             barcodeStatusDiv.style.borderLeft = '4px solid var(--info)';
-            barcodeStatusDiv.innerHTML = '<strong>Ã¢â€žÂ¹ Info:</strong> ' + message;
+            barcodeStatusDiv.innerHTML = '<strong>Info:</strong> ' + message;
           }
         }
 

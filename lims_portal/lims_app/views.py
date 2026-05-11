@@ -927,8 +927,37 @@ def admin_dashboard(request):
                 messages.error(request, 'Password verification failed.')
                 return redirect('admin_dashboard')
             try:
+                backups_dir = Path(settings.BASE_DIR) / 'backups'
+                backups_dir.mkdir(parents=True, exist_ok=True)
+                ts = timezone.now().strftime('%Y%m%d_%H%M%S')
+                moveup_dir = backups_dir / f'moveup_{ts}'
+                moveup_dir.mkdir(parents=True, exist_ok=True)
+
+                grade12_snapshot = list(students.objects.filter(grade_Level=12).values())
+                (moveup_dir / 'grade12_graduating.json').write_text(
+                    json.dumps(grade12_snapshot, default=str, indent=2),
+                    encoding='utf-8'
+                )
+
+                totals_snapshot = {
+                    'generated_at': timezone.now().isoformat(),
+                    'total_books': Book.objects.count(),
+                    'total_copies': BookCopy.objects.count(),
+                    'available_copies': BookCopy.objects.filter(status='Available').count(),
+                    'borrowed_copies': BookCopy.objects.filter(status='Borrowed').count(),
+                    'unavailable_copies': BookCopy.objects.filter(status='Unavailable').count(),
+                    'lost_copies': BookCopy.objects.filter(status='Lost').count(),
+                    'total_students': students.objects.count(),
+                    'grade12_students': len(grade12_snapshot),
+                }
+                (moveup_dir / 'totals.json').write_text(
+                    json.dumps(totals_snapshot, default=str, indent=2),
+                    encoding='utf-8'
+                )
+
                 output = StringIO()
                 call_command('moveup_students', stdout=output)
+                (moveup_dir / 'moveup_log.txt').write_text(output.getvalue(), encoding='utf-8')
                 messages.success(request, 'Move-up complete.')
             except Exception as e:
                 messages.error(request, f'Error during move-up: {str(e)}')
@@ -956,6 +985,22 @@ def admin_dashboard(request):
                     users[key] = list(students.objects.filter(grade_Level=grade_num).values())
                 (run_dir / 'users.json').write_text(json.dumps(users, default=str, indent=2), encoding='utf-8')
                 (run_dir / 'grade12_graduating.json').write_text(json.dumps(users['grade12'], default=str, indent=2), encoding='utf-8')
+
+                totals_snapshot = {
+                    'generated_at': timezone.now().isoformat(),
+                    'total_books': Book.objects.count(),
+                    'total_copies': BookCopy.objects.count(),
+                    'available_copies': BookCopy.objects.filter(status='Available').count(),
+                    'borrowed_copies': BookCopy.objects.filter(status='Borrowed').count(),
+                    'unavailable_copies': BookCopy.objects.filter(status='Unavailable').count(),
+                    'lost_copies': BookCopy.objects.filter(status='Lost').count(),
+                    'total_students': students.objects.count(),
+                    'grade12_students': len(users.get('grade12', [])),
+                }
+                (run_dir / 'totals.json').write_text(
+                    json.dumps(totals_snapshot, default=str, indent=2),
+                    encoding='utf-8'
+                )
 
                 messages.success(request, f'Backup created: {run_dir.name}')
             except Exception as e:
