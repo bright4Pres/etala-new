@@ -1,0 +1,54 @@
+html, body {
+    overflow: auto; /* allow scrolling */
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+}
+
+/* Chrome, Safari, Edge */
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+    display: none;  /* hide scrollbar completely */
+}
+
+@import url('./rubik.css');
+@import url("./staatliches.css");
+@import url('./css2.css');
+  body {
+      font-family: "Montserrat", sans-serif;
+      color: black;
+  }
+  .borrowed-row {
+      background-color: #ffffff;
+      color: rgb(0, 0, 0);
+  }
+
+  #booksTable {
+      border-radius: 0.5em;
+      overflow: hidden; 
+      color: black;
+  }
+  #booksTable_length > label {
+    color: black;
+  }
+  .row{
+    font-family: "Montserrat", sans-serif;
+  }
+  
+  #searchContainer {
+    font-family: "Montserrat", sans-serif;
+    width: 100%;
+    text-align: center;
+    position: absolute; /* Ensures it's above the image */
+    top: 50px; /* Adjust height so it's not covered */
+    left: 0;
+}
+
+#recordsContainer {
+    display: block;
+    position: relative;
+}
+
+    @import url('./outfit.css');
+    form{
+        font-family: "Montserrat", sans-serif;
+    }

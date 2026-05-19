@@ -111,7 +111,7 @@ class Command(BaseCommand):
         if not dry_run:
             self.stdout.write(
                 self.style.SUCCESS(
-                    '\n✅ All students have been moved up successfully!'
+                    '\nAll students have been moved up successfully!'
                 )
             )
             self.stdout.write(

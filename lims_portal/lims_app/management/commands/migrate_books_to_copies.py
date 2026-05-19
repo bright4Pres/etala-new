@@ -36,7 +36,7 @@ class Command(BaseCommand):
         
         if books_without_copies.count() == 0:
             self.stdout.write(
-                self.style.SUCCESS('✅ All books already have copies. No migration needed.')
+                self.style.SUCCESS('All books already have copies. No migration needed.')
             )
             return
         
@@ -78,7 +78,7 @@ class Command(BaseCommand):
                 self.stdout.write('\n' + '='*60)
                 self.stdout.write(
                     self.style.SUCCESS(
-                        f'✅ Successfully migrated {migrated_count} books to Book+BookCopy structure'
+                        f'Successfully migrated {migrated_count} books to Book+BookCopy structure'
                     )
                 )
                 if error_count > 0:
@@ -107,5 +107,5 @@ class Command(BaseCommand):
             )
         else:
             self.stdout.write(
-                self.style.SUCCESS('✅ All BorrowHistory records properly linked')
+                self.style.SUCCESS('All BorrowHistory records properly linked')
             )
