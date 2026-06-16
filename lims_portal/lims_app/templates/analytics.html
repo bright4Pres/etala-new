@@ -1,4 +1,5 @@
 {% load static %}
+{% load custom_filters %}
 
 <!DOCTYPE html>
 <html lang="en">
@@ -26,21 +27,17 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            position: relative;
         }
         .app-header-left {
             display: flex;
             align-items: center;
             gap: 1rem;
-            width: 300px;
-            margin-left: -8px;
         }
         .search-wrapper {
-            position: absolute;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 600px;
+            flex: 1;
             max-width: 600px;
+            margin: 0 2rem;
+            position: relative;
         }
         .main-container {
             max-width: 100%;
@@ -134,646 +131,714 @@
         h3 {
             font-weight: 600;
         }
+        .grade-section summary {
+            background: var(--accent);
+        }
+        .grade-section summary:hover {
+            background: var(--accent-strong) !important;
+            transform: translateX(2px);
+            box-shadow: 0 2px 8px rgba(74, 85, 104, 0.3);
+        }
+        .grade-section summary:active {
+            transform: scale(0.98);
+        }
+        html.dark .grade-section summary {
+            background: var(--accent);
+        }
+        html.dark .grade-section summary:hover {
+            background: var(--accent-strong) !important;
+            box-shadow: 0 2px 8px rgba(107, 114, 128, 0.4);
+        }
+        html.dark .grade-section .user-item {
+            border-left-color: var(--accent) !important;
+        }
     </style>
 </head>
 <body>
-    <div class="app-container">
-        <div class="app-header">
-            <div class="app-header-left">
-                <img src="{% static 'img/etalalogo.svg' %}" alt="eTala Logo" class="app-logo">
-                <p class="app-name">Library Admin Analytics</p>
-                <div class="search-wrapper">
-                    <input class="search-input" type="text" id="analyticsSearchInput" placeholder="Search..." autocomplete="off">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="feather feather-search" viewBox="0 0 24 24">
-                        <defs></defs>
-                        <circle cx="11" cy="11" r="8"></circle>
-                        <path d="M21 21l-4.35-4.35"></path>
-                    </svg>
-                    <div class="search-suggestions" id="analyticsSearchSuggestions"></div>
-                </div>
-            </div>
-            <div class="app-header-right">
-                <!-- note to self: period selector -->
-                <form method="get" id="period-form" style="display: flex; align-items: center; gap: 0.5rem; margin-right: 1rem;">
-                    <label for="period-select" style="font-size: 0.9rem; color: var(--text-secondary);">Period:</label>
-                    <select name="period" id="period-select" style="padding: 0.3rem 0.5rem; border-radius: 4px; background: var(--search-area-bg); color: var(--main-color); border: 1px solid var(--border-light); font-size: 0.9rem;">
-                        <option value="day" {% if period_value == 'day' %}selected{% endif %}>Today</option>
-                        <option value="week" {% if period_value == 'week' %}selected{% endif %}>This Week</option>
-                        <option value="month" {% if period_value == 'month' %}selected{% endif %}>This Month</option>
-                        <option value="quarter" {% if period_value == 'quarter' %}selected{% endif %}>This Quarter</option>
-                        <option value="year" {% if period_value == 'year' %}selected{% endif %}>This Year</option>
-                        <option value="range" {% if period_value == 'range' %}selected{% endif %}>Custom Range</option>
-                    </select>
-                    <div id="period-range-fields" style="display: {% if period_value == 'range' %}flex{% else %}none{% endif %}; align-items: center; gap: 0.4rem;">
-                        <input type="date" name="start_date" value="{{ range_start|date:'Y-m-d' }}" style="padding: 0.25rem 0.4rem; border-radius: 4px; background: var(--search-area-bg); color: var(--main-color); border: 1px solid var(--border-light); font-size: 0.85rem;">
-                        <span style="color: var(--text-secondary); font-size: 0.85rem;">to</span>
-                        <input type="date" name="end_date" value="{{ range_end|date:'Y-m-d' }}" style="padding: 0.25rem 0.4rem; border-radius: 4px; background: var(--search-area-bg); color: var(--main-color); border: 1px solid var(--border-light); font-size: 0.85rem;">
-                        <button type="submit" class="btn-secondary" style="height: 30px; padding: 0 10px; font-size: 0.8rem;">Apply</button>
-                    </div>
-                    <!-- quick note: preserve heatmap settings if present -->
-                    <input type="hidden" name="heatmap_range" value="{{ request.GET.heatmap_range|default:'' }}">
-                    <input type="hidden" name="heatmap_offset" value="{{ request.GET.heatmap_offset|default:'0' }}">
-                </form>
-                
-                <!-- note to self: export menu -->
-                <div class="export-wrapper">
-                    <button class="header-btn" id="exportToggle" title="Export Data" type="button">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                            <polyline points="7 10 12 15 17 10"></polyline>
-                            <line x1="12" y1="15" x2="12" y2="3"></line>
-                        </svg>
-                    </button>
-                    <div class="export-menu" id="exportMenu">
-                        <a href="{% url 'admin_analytics_export' %}?format=csv{% if export_query %}&{{ export_query }}{% endif %}">Summary CSV</a>
-                        <a href="{% url 'admin_analytics_export' %}?format=json{% if export_query %}&{{ export_query }}{% endif %}">Full JSON</a>
-                    </div>
-                </div>
-                
-                <!-- quick note: refresh button -->
-                <button class="header-btn" title="Refresh Data" onclick="window.location.reload()">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <polyline points="23 4 23 10 17 10"></polyline>
-                        <polyline points="1 20 1 14 7 14"></polyline>
-                        <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.64A9 9 0 0 1 3.51 15"></path>
-                    </svg>
-                </button>
-                
-                <button class="mode-switch" title="Switch Theme">
-                    <svg class="moon" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" width="24" height="24" viewBox="0 0 24 24">
-                        <defs></defs>
-                        <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"></path>
-                    </svg>
-                </button>
-            </div>
-        </div>
-        <div class="app-content">
-            <div class="app-sidebar">
-                <a href="{% url 'admin_dashboard' %}" class="app-sidebar-link" title="Dashboard">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-home">
-                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-                        <polyline points="9 22 9 12 15 12 15 22" /></svg>
-                </a>
-                <a href="{% url 'admin_analytics' %}" class="app-sidebar-link active" title="Analytics">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-bar-chart-2">
-                        <line x1="18" y1="20" x2="18" y2="10"></line>
-                        <line x1="12" y1="20" x2="12" y2="4"></line>
-                        <line x1="6" y1="20" x2="6" y2="14"></line>
-                    </svg>
-                </a>
-                <a href="{% url 'admin_checkout' %}" class="app-sidebar-link" title="Checkout">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="feather feather-plus-circle" viewBox="0 0 24 24">
-                        <circle cx="12" cy="12" r="10" />
-                        <path d="M12 8v8M8 12h8" />
-                    </svg>
-                </a>
-                <a href="{% url 'admin_return' %}" class="app-sidebar-link" title="Return">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-left-circle">
-                        <circle cx="12" cy="12" r="10" />
-                        <path d="M12 8l-4 4 4 4M16 12H8" /></svg>
-                </a>
-                <a href="{% url 'admin_books' %}" class="app-sidebar-link" title="Books">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-book">
-                        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
-                        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
-                    </svg>
-                </a>
-                <a href="{% url 'admin_accounts' %}" class="app-sidebar-link" title="Students">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-users">
-                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                        <circle cx="9" cy="7" r="4"></circle>
-                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-                    </svg>
-                </a>
-                <a href="{% url 'admin_logout' %}" class="app-sidebar-link" title="Logout">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-log-out">
-                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-                        <polyline points="16 17 21 12 16 7" />
-                        <line x1="21" y1="12" x2="9" y2="12" />
-                    </svg>
-                </a>
-            </div>
-        
-            <main class="projects-section main-container">
+  <div class="app-container">
 
-        <!-- lol divider so i can find stuff fast -->
+    <!-- ===== HEADER ===== -->
+    <div class="app-header">
+
+      <div class="app-header-left">
+        <img src="{% static 'img/etalalogo.svg' %}" alt="eTala Logo" class="app-logo">
+        <p class="app-name">Library Admin Analytics</p>
+      </div>
+
+      <!-- search-wrapper sits between left and right as a flex sibling -->
+      <div class="search-wrapper">
+        <input class="search-input" type="text" id="analyticsSearchInput" placeholder="Search..." autocomplete="off">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="feather feather-search" viewBox="0 0 24 24">
+          <circle cx="11" cy="11" r="8"></circle>
+          <path d="M21 21l-4.35-4.35"></path>
+        </svg>
+        <div class="search-suggestions" id="analyticsSearchSuggestions"></div>
+      </div>
+
+      <div class="app-header-right">
+        <!-- note to self: period selector -->
+        <form method="get" id="period-form" style="display: flex; align-items: center; gap: 0.5rem; margin-right: 1rem;">
+          <label for="period-select" style="font-size: 0.9rem; color: var(--text-secondary);">Period:</label>
+          <select name="period" id="period-select" style="padding: 0.3rem 0.5rem; border-radius: 4px; background: var(--search-area-bg); color: var(--main-color); border: 1px solid var(--border-light); font-size: 0.9rem;">
+            <option value="day" {% if period_value == 'day' %}selected{% endif %}>Today</option>
+            <option value="week" {% if period_value == 'week' %}selected{% endif %}>This Week</option>
+            <option value="month" {% if period_value == 'month' %}selected{% endif %}>This Month</option>
+            <option value="quarter" {% if period_value == 'quarter' %}selected{% endif %}>This Quarter</option>
+            <option value="year" {% if period_value == 'year' %}selected{% endif %}>This Year</option>
+            <option value="range" {% if period_value == 'range' %}selected{% endif %}>Custom Range</option>
+          </select>
+          <div id="period-range-fields" style="display: {% if period_value == 'range' %}flex{% else %}none{% endif %}; align-items: center; gap: 0.4rem;">
+            <input type="date" name="start_date" value="{{ range_start|date:'Y-m-d' }}" style="padding: 0.25rem 0.4rem; border-radius: 4px; background: var(--search-area-bg); color: var(--main-color); border: 1px solid var(--border-light); font-size: 0.85rem;">
+            <span style="color: var(--text-secondary); font-size: 0.85rem;">to</span>
+            <input type="date" name="end_date" value="{{ range_end|date:'Y-m-d' }}" style="padding: 0.25rem 0.4rem; border-radius: 4px; background: var(--search-area-bg); color: var(--main-color); border: 1px solid var(--border-light); font-size: 0.85rem;">
+            <button type="submit" class="btn-secondary" style="height: 30px; padding: 0 10px; font-size: 0.8rem;">Apply</button>
+          </div>
+          <!-- quick note: preserve heatmap settings if present -->
+          <input type="hidden" name="heatmap_range" value="{{ request.GET.heatmap_range|default:'' }}">
+          <input type="hidden" name="heatmap_offset" value="{{ request.GET.heatmap_offset|default:'0' }}">
+        </form>
+
+        <!-- note to self: export menu -->
+        <div class="export-wrapper">
+          <button class="header-btn" id="exportToggle" title="Export Data" type="button">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+          </button>
+          <div class="export-menu" id="exportMenu">
+            <a href="{% url 'admin_analytics_export' %}?format=csv{% if export_query %}&{{ export_query }}{% endif %}">Summary CSV</a>
+            <a href="{% url 'admin_analytics_export' %}?format=json{% if export_query %}&{{ export_query }}{% endif %}">Full JSON</a>
+          </div>
+        </div>
+
+        <!-- quick note: refresh button -->
+        <button class="header-btn" title="Refresh Data" onclick="window.location.reload()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="23 4 23 10 17 10"></polyline>
+            <polyline points="1 20 1 14 7 14"></polyline>
+            <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.64A9 9 0 0 1 3.51 15"></path>
+          </svg>
+        </button>
+
+        <button class="mode-switch" title="Switch Theme">
+          <svg class="moon" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" width="24" height="24" viewBox="0 0 24 24">
+            <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"></path>
+          </svg>
+        </button>
+      </div>
+
+    </div>
+    <!-- ===== END HEADER ===== -->
+
+    <div class="app-content">
+
+      <!-- ===== SIDEBAR ICONS ===== -->
+      <div class="app-sidebar">
+        <a href="{% url 'admin_dashboard' %}" class="app-sidebar-link" title="Dashboard">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-home">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+            <polyline points="9 22 9 12 15 12 15 22" />
+          </svg>
+        </a>
+        <a href="{% url 'admin_analytics' %}" class="app-sidebar-link active" title="Analytics">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-bar-chart-2">
+            <line x1="18" y1="20" x2="18" y2="10"></line>
+            <line x1="12" y1="20" x2="12" y2="4"></line>
+            <line x1="6" y1="20" x2="6" y2="14"></line>
+          </svg>
+        </a>
+        <a href="{% url 'admin_dashboard' %}?active_view=checkout" class="app-sidebar-link" title="Checkout">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="feather feather-plus-circle" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="10" />
+            <path d="M12 8v8M8 12h8" />
+          </svg>
+        </a>
+        <a href="{% url 'admin_dashboard' %}?active_view=return" class="app-sidebar-link" title="Return">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-left-circle">
+            <circle cx="12" cy="12" r="10" />
+            <path d="M12 8l-4 4 4 4M16 12H8" />
+          </svg>
+        </a>
+        <a href="#" class="app-sidebar-link" onclick="toggleSidebarSection('books'); return false;" title="Books">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-book">
+            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+          </svg>
+        </a>
+        <a href="#" class="app-sidebar-link" onclick="toggleSidebarSection('users'); return false;" title="Students">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-users">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+            <circle cx="9" cy="7" r="4"></circle>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+          </svg>
+        </a>
+        <a href="{% url 'admin_logout' %}" class="app-sidebar-link" title="Logout">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-log-out">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+            <polyline points="16 17 21 12 16 7" />
+            <line x1="21" y1="12" x2="9" y2="12" />
+          </svg>
+        </a>
+      </div>
+      <!-- ===== END SIDEBAR ICONS ===== -->
+
+      <!-- ===== BOOKS SIDEBAR PANEL ===== -->
+      <div id="sidebar-books" class="sidebar-section" style="display: none;">
+        <div style="padding: 12px; border-bottom: 1px solid var(--message-box-border); flex: 0 0 auto;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <h3 style="margin: 0; font-size: 0.95rem; color: var(--main-color); font-weight: 600;">Books</h3>
+            <button onclick="toggleSidebarSection('books'); return false;" style="background: none; border: none; cursor: pointer; color: var(--main-color); font-size: 1.3rem; padding: 0; width: 24px; height: 24px; line-height: 1;">&times;</button>
+          </div>
+          <div style="display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap;">
+            <span style="background: var(--accent-soft); color: var(--accent); padding: 4px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 500;">{{ total_books_count|default:0 }} Total</span>
+            <span style="background: var(--success-bg); color: var(--success); padding: 4px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 500;">{{ available_books_count|default:0 }} Available</span>
+            <span style="background: var(--danger-bg); color: var(--danger); padding: 4px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 500;">{{ currently_borrowed|default:0 }} Borrowed</span>
+          </div>
+          <div>
+            <input type="text" id="bookSearch" placeholder="Search books..." onkeyup="searchBooks()" style="width: 100%; padding: 10px 12px; border: 2px solid var(--message-box-border); border-radius: 8px; background: var(--search-area-bg); color: var(--main-color); font-size: 0.85rem; box-sizing: border-box;">
+          </div>
+        </div>
+        <div id="booksList" style="flex: 1; overflow-y: auto; padding: 12px; min-height: 0;">
+          {% for book in all_books %}
+          <div class="book-item" data-title="{{ book.Title|lower }}" data-author="{{ book.mainAuthor|lower }}" data-callnumber="{{ book.callNumber|lower }}" style="padding: 12px; margin-bottom: 10px; background: var(--message-box-hover); border-radius: 8px; border-left: 4px solid {% if book.available_copies > 0 %}var(--success){% else %}var(--danger){% endif %}; position: relative;">
+            <div style="font-weight: 600; font-size: 0.9rem; color: var(--main-color); margin-bottom: 6px;">{{ book.Title }}</div>
+            <div style="font-size: 0.75rem; color: var(--secondary-color); margin-bottom: 6px;">{{ book.mainAuthor }}</div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; padding: 6px; background: var(--app-container); border-radius: 6px;">
+              <span style="font-size: 0.75rem; color: var(--main-color); font-weight: 500;">{{ book.available_copies }} available / {{ book.total_copies }} copies</span>
+              <span style="font-size: 0.7rem; color: var(--secondary-color);">{{ book.callNumber }}</span>
+            </div>
+            <details style="margin-top: 8px;">
+              <summary style="cursor: pointer; font-size: 0.75rem; font-weight: 500; color: var(--main-color); padding: 4px; border-radius: 4px; background: var(--app-container);">View All Copies ({{ book.total_copies }})</summary>
+              <div style="margin-top: 8px; padding-left: 8px;">
+                {% for copy in book.copies %}
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px; margin-bottom: 4px; background: var(--app-container); border-radius: 4px; border-left: 2px solid {% if copy.status == 'Available' %}var(--success){% else %}var(--danger){% endif %};">
+                  <div style="flex: 1;">
+                    <div style="font-size: 0.7rem; font-weight: 500; color: var(--main-color);">{{ copy.accessionNumber }}</div>
+                    <div style="font-size: 0.65rem; color: var(--secondary-color);">{{ copy.Location }}</div>
+                  </div>
+                  <span style="padding: 2px 6px; border-radius: 4px; font-size: 0.65rem; {% if copy.status == 'Available' %}background: var(--success-bg); color: var(--success);{% else %}background: var(--danger-bg); color: var(--danger);{% endif %}">{{ copy.status }}</span>
+                </div>
+                {% empty %}
+                <p style="font-size: 0.7rem; color: var(--secondary-color); padding: 8px;">No copies available</p>
+                {% endfor %}
+              </div>
+            </details>
+          </div>
+          {% empty %}
+          <p style="text-align: center; color: var(--secondary-color); padding: 20px; font-size: 0.8rem;">No books</p>
+          {% endfor %}
+        </div>
+      </div>
+      <!-- ===== END BOOKS SIDEBAR PANEL ===== -->
+
+      <!-- ===== USERS SIDEBAR PANEL ===== -->
+      <div id="sidebar-users" class="sidebar-section" style="display: none;">
+        <div style="padding: 12px; border-bottom: 1px solid var(--message-box-border); flex: 0 0 auto;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <h3 style="margin: 0; font-size: 0.95rem; color: var(--main-color); font-weight: 600;">Students</h3>
+            <button onclick="toggleSidebarSection('users'); return false;" style="background: none; border: none; cursor: pointer; color: var(--main-color); font-size: 1.3rem; padding: 0; width: 24px; height: 24px; line-height: 1;">&times;</button>
+          </div>
+          <div style="margin-bottom: 10px;">
+            <span style="background: var(--accent-soft); color: var(--accent); padding: 4px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 500;">{{ total_users_count|default:0 }} Students</span>
+          </div>
+          <div>
+            <input type="text" id="userSearch" placeholder="Search students..." onkeyup="searchUsers()" style="width: 100%; padding: 10px 12px; border: 2px solid var(--message-box-border); border-radius: 8px; background: var(--search-area-bg); color: var(--main-color); font-size: 0.85rem; box-sizing: border-box;">
+          </div>
+        </div>
+        <div id="usersList" style="flex: 1; overflow-y: auto; padding: 12px; min-height: 0;">
+          {% for grade_num in "7,8,9,10,11,12"|split:"," %}
+          <details class="grade-section" {% if grade_num == "7" %}open{% endif %} style="margin-bottom: 8px; border-radius: 8px; overflow: hidden; background: var(--message-box-hover);">
+            <summary style="cursor: pointer; padding: 10px 12px; color: var(--accent-contrast); font-weight: 600; font-size: 0.85rem; display: flex; justify-content: space-between; align-items: center; user-select: none; transition: all 0.3s ease;">
+              <span>Grade {{ grade_num }}</span>
+              <span style="background: var(--accent-soft); color: var(--accent); padding: 2px 8px; border-radius: 12px; font-size: 0.75rem;">{{ students_by_grade|get_item:grade_num|length }}</span>
+            </summary>
+            <div style="padding: 8px;">
+              {% for user in students_by_grade|get_item:grade_num %}
+              <div class="user-item" data-name="{{ user.name|lower }}" data-schoolid="{{ user.school_id|lower }}" data-grade="grade {{ grade_num }}" data-batch="{{ user.batch|lower }}" data-section="{{ user.section|default:''|lower }}" style="padding: 10px; margin-bottom: 6px; background: var(--app-container); border-radius: 6px; border-left: 3px solid var(--accent); position: relative;">
+                <div style="font-weight: 600; font-size: 0.8rem; color: var(--main-color); margin-bottom: 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ user.name }}</div>
+                <div style="font-size: 0.7rem; color: var(--secondary-color); margin-bottom: 2px;">{{ user.school_id }}</div>
+                <div style="font-size: 0.65rem; color: var(--secondary-color);">{{ user.batch }}{% if user.section %} | {{ user.section }}{% endif %}</div>
+              </div>
+              {% empty %}
+              <p style="text-align: center; color: var(--secondary-color); padding: 12px; font-size: 0.75rem;">No students in this grade</p>
+              {% endfor %}
+            </div>
+          </details>
+          {% endfor %}
+        </div>
+      </div>
+      <!-- ===== END USERS SIDEBAR PANEL ===== -->
+
+      <!-- ===== MAIN CONTENT ===== -->
+      <main class="projects-section main-container">
+
         <div class="kpi-grid">
-            <!-- lol reminder: total books in library -->
-            <div class="kpi-card">
-                <div class="kpi-header">
-                    <div class="kpi-info">
-                        <h3>Total Books</h3>
-                        <div class="kpi-value">{{ total_books_count|default:0 }}</div>
-                        <div class="kpi-subtitle">in collection</div>
-                    </div>
-                    <div class="kpi-icon">
-                        <i class="fas fa-book"></i>
-                    </div>
-                </div>
+          <div class="kpi-card">
+            <div class="kpi-header">
+              <div class="kpi-info">
+                <h3>Total Books</h3>
+                <div class="kpi-value">{{ total_books_count|default:0 }}</div>
+                <div class="kpi-subtitle">in collection</div>
+              </div>
+              <div class="kpi-icon"><i class="fas fa-book"></i></div>
             </div>
-            
-            <!-- lol reminder: currently borrowed books -->
-            <div class="kpi-card">
-                <div class="kpi-header">
-                    <div class="kpi-info">
-                        <h3>Currently Borrowed</h3>
-                        <div class="kpi-value">{{ currently_borrowed|default:0 }}</div>
-                        <div class="kpi-subtitle">{{ available_books|default:0 }} available</div>
-                    </div>
-                    <div class="kpi-icon">
-                        <i class="fas fa-book-reader"></i>
-                    </div>
-                </div>
-            </div>
+          </div>
 
-            <!-- note to self: registered users with trend indicator -->
-            <div class="kpi-card">
-                <div class="kpi-header">
-                    <div class="kpi-info">
-                        <h3>Registered Users</h3>
-                        <div class="kpi-value">{{ total_accounts|default:0 }}</div>
-                        <!-- tiny reminder: shows new accounts in selected period -->
-                        <div class="kpi-trend trend-up">
-                            <i class="fas fa-arrow-up"></i>
-                            <span>+{{ period_new_accounts|default:0 }} in {{ period_label|lower }}</span>
-                        </div>
-                    </div>
-                    <div class="kpi-icon">
-                        <i class="fas fa-users"></i>
-                    </div>
-                </div>
+          <div class="kpi-card">
+            <div class="kpi-header">
+              <div class="kpi-info">
+                <h3>Currently Borrowed</h3>
+                <div class="kpi-value">{{ currently_borrowed|default:0 }}</div>
+                <div class="kpi-subtitle">{{ available_books|default:0 }} available</div>
+              </div>
+              <div class="kpi-icon"><i class="fas fa-book-reader"></i></div>
             </div>
+          </div>
 
-            <!-- tiny reminder: total borrows (all-time and period-specific) -->
-            <div class="kpi-card">
-                <div class="kpi-header">
-                    <div class="kpi-info">
-                        <h3>Total Borrows</h3>
-                        <div class="kpi-value">{{ total_borrows_all_time|default:0 }}</div>
-                        <div class="kpi-subtitle">{{ period_borrows|default:0 }} in {{ period_label|lower }}</div>
-                    </div>
-                    <div class="kpi-icon">
-                        <i class="fas fa-exchange-alt"></i>
-                    </div>
+          <div class="kpi-card">
+            <div class="kpi-header">
+              <div class="kpi-info">
+                <h3>Registered Users</h3>
+                <div class="kpi-value">{{ total_accounts|default:0 }}</div>
+                <div class="kpi-trend trend-up">
+                  <i class="fas fa-arrow-up"></i>
+                  <span>+{{ period_new_accounts|default:0 }} in {{ period_label|lower }}</span>
                 </div>
+              </div>
+              <div class="kpi-icon"><i class="fas fa-users"></i></div>
             </div>
-            
-            <!-- note to self: overdue books - changes color based on count -->
-            <div class="kpi-card kpi-card-{% if overdue_books > 0 %}danger{% else %}success{% endif %}">
-                <div class="kpi-header">
-                    <div class="kpi-info">
-                        <h3>Overdue Books</h3>
-                        <!-- tiny reminder: red if overdue books exist, green if none -->
-                        <div class="kpi-value kpi-value-{% if overdue_books > 0 %}danger{% else %}success{% endif %}">
-                            {{ overdue_books|default:0 }}
-                        </div>
-                        <div class="kpi-subtitle">need attention</div>
-                    </div>
-                    <div class="kpi-icon kpi-icon-{% if overdue_books > 0 %}danger{% else %}success{% endif %}">
-                        <i class="fas fa-exclamation-triangle"></i>
-                    </div>
+          </div>
+
+          <div class="kpi-card">
+            <div class="kpi-header">
+              <div class="kpi-info">
+                <h3>Total Borrows</h3>
+                <div class="kpi-value">{{ total_borrows_all_time|default:0 }}</div>
+                <div class="kpi-subtitle">{{ period_borrows|default:0 }} in {{ period_label|lower }}</div>
+              </div>
+              <div class="kpi-icon"><i class="fas fa-exchange-alt"></i></div>
+            </div>
+          </div>
+
+          <div class="kpi-card kpi-card-{% if overdue_books > 0 %}danger{% else %}success{% endif %}">
+            <div class="kpi-header">
+              <div class="kpi-info">
+                <h3>Overdue Books</h3>
+                <div class="kpi-value kpi-value-{% if overdue_books > 0 %}danger{% else %}success{% endif %}">
+                  {{ overdue_books|default:0 }}
                 </div>
+                <div class="kpi-subtitle">need attention</div>
+              </div>
+              <div class="kpi-icon kpi-icon-{% if overdue_books > 0 %}danger{% else %}success{% endif %}">
+                <i class="fas fa-exclamation-triangle"></i>
+              </div>
             </div>
-            
-            <!-- lol reminder: return rate percentage -->
-            <div class="kpi-card">
-                <div class="kpi-header">
-                    <div class="kpi-info">
-                        <h3>Return Rate</h3>
-                        <div class="kpi-value">{{ return_rate|default:0 }}%</div>
-                        <div class="kpi-subtitle">on-time returns</div>
-                    </div>
-                    <div class="kpi-icon">
-                        <i class="fas fa-undo-alt"></i>
-                    </div>
-                </div>
+          </div>
+
+          <div class="kpi-card">
+            <div class="kpi-header">
+              <div class="kpi-info">
+                <h3>Return Rate</h3>
+                <div class="kpi-value">{{ return_rate|default:0 }}%</div>
+                <div class="kpi-subtitle">on-time returns</div>
+              </div>
+              <div class="kpi-icon"><i class="fas fa-undo-alt"></i></div>
             </div>
+          </div>
         </div>
 
-        <!-- lol divider so i can find stuff fast -->
         <div class="charts-grid">
-            <!-- tiny reminder: monthly borrows line chart -->
-            <div class="chart-card">
-                <div class="chart-header">
-                    <h3>Monthly Borrows Trend</h3>
-                    <div class="chart-legend">
-                        <div class="legend-item">
-                            <div class="legend-color legend-color-blue"></div>
-                            <span>Borrows</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="chart-container">
-                    <!-- note to self: chart.js canvas for monthly trend -->
-                    <canvas id="revenueChart"></canvas>
-                </div>
-            </div>
-    
-            <!-- lol reminder: daily activity bar chart (last 7 days) -->
-            <div class="chart-card">
-                <div class="chart-header">
-                    <h3>Daily Activity (Last 7 Days)</h3>
-                    <div class="chart-legend">
-                        <div class="legend-item">
-                            <div class="legend-color legend-color-purple"></div>
-                            <span>Borrows / Day</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="chart-container">
-                    <!-- note to self: chart.js canvas for daily activity -->
-                    <canvas id="userChart"></canvas>
-                </div>
-            </div>
-        </div>
-
-        <!-- lol divider so i can find stuff fast -->
-        <div class="additional-charts">
-            <!-- tiny reminder: books by type pie chart -->
-            <div class="chart-card">
-                <div class="chart-header">
-                    <h3>Books by Type</h3>
-                </div>
-                <div class="pie-chart-container">
-                    <!-- lol reminder: chart.js pie chart for book types -->
-                    <canvas id="salesChart"></canvas>
-                </div>
-            </div>
-
-            <!-- tiny reminder: books by language pie chart -->
-            <div class="chart-card">
-                <div class="chart-header">
-                    <h3>Books by Language</h3>
-                </div>
-                <div class="pie-chart-container">
-                    <!-- quick note: chart.js pie chart for languages -->
-                    <canvas id="languageChart"></canvas>
-                </div>
-            </div>
-            
-            <!-- note to self: library performance metrics card -->
-            <div class="metrics-card">
-                <h3>Library Performance</h3>
-                
-                <!-- quick note: book utilization progress bar -->
-                <div class="metric-item">
-                    <div class="metric-header">
-                        <span>Book Utilization</span>
-                        <span>{{ currently_borrowed|default:0 }}/{{ total_books_count|default:1 }}</span>
-                    </div>
-                    <div class="progress-bar">
-                        <!-- note to self: progress bar animated via javascript using data-percent attribute -->
-                        <div class="progress-fill progress-fill-blue" data-percent="{{ utilization_percent|default:0 }}" style="width: 0%;"></div>
-                    </div>
-                </div>
-                
-                <!-- note to self: return rate progress bar -->
-                <div class="metric-item">
-                    <div class="metric-header">
-                        <span>Return Rate</span>
-                        <span>{{ return_rate|default:0 }}%</span>
-                    </div>
-                    <div class="progress-bar">
-                        <div class="progress-fill progress-fill-green" data-percent="{{ return_rate|default:0 }}" style="width: 0%;"></div>
-                    </div>
-                </div>
-                
-                <!-- note to self: average borrow duration progress bar -->
-                <div class="metric-item">
-                    <div class="metric-header">
-                        <span>Avg. Borrow Duration</span>
-                        <span>{{ avg_borrow_days|default:0 }} days</span>
-                    </div>
-                    <div class="progress-bar">
-                        <div class="progress-fill progress-fill-purple" data-percent="{{ avg_borrow_percent|default:0 }}" style="width: 0%;"></div>
-                    </div>
-                </div>
-                
-                <!-- tiny reminder: active period borrows progress bar -->
-                <div class="metric-item">
-                    <div class="metric-header">
-                        <span>Active Period Borrows</span>
-                        <span>{{ period_borrows|default:0 }}</span>
-                    </div>
-                    <div class="progress-bar">
-                        <!-- lol reminder: hardcoded width as this is a relative indicator -->
-                        <div class="progress-fill progress-fill-orange" style="width: 85%;"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- lol divider so i can find stuff fast -->
-        <div class="stats-grid">
-            <!-- quick note: top borrowers leaderboard -->
-            <div class="chart-card">
-                <div class="chart-header">
-                    <h3><i class="fas fa-star"></i> Top Borrowers</h3>
-                </div>
-                <div class="activity-list">
-                    <!-- quick note: loop through top borrowers from django context -->
-                    {% for borrower in top_borrowers %}
-                    <div class="activity-item activity-item-border">
-                        <div class="activity-content">
-                            <div class="activity-icon icon-blue">
-                                <i class="fas fa-user"></i>
-                            </div>
-                            <div class="activity-text">
-                                <h4>{{ borrower.accountName }}</h4>
-                                <p>ID: {{ borrower.accountID }}</p>
-                            </div>
-                        </div>
-                        <div class="activity-time activity-count-blue">
-                            {{ borrower.borrow_count }} borrows
-                        </div>
-                    </div>
-                    {% empty %}
-                    <p class="empty-state">No data available</p>
-                    {% endfor %}
-                </div>
-            </div>
-
-            <!-- tiny reminder: most borrowed books list -->
-            <div class="chart-card">
-                <div class="chart-header">
-                    <h3><i class="fas fa-fire"></i> Most Borrowed Books</h3>
-                </div>
-                <div class="activity-list">
-                    <!-- lol reminder: loop through most borrowed books -->
-                    {% for book in most_borrowed %}
-                    <div class="activity-item activity-item-border">
-                        <div class="activity-content">
-                            <div class="activity-icon icon-purple">
-                                <i class="fas fa-book"></i>
-                            </div>
-                            <div class="activity-text">
-                                <!-- note to self: truncate long titles to 5 words -->
-                                <h4>{{ book.bookTitle|truncatewords:5 }}</h4>
-                                <p>Acc: {{ book.bookID }}</p>
-                            </div>
-                        </div>
-                        <div class="activity-time activity-count-purple">
-                            {{ book.borrow_count }}x
-                        </div>
-                    </div>
-                    {% empty %}
-                    <p class="empty-state">No data available</p>
-                    {% endfor %}
-                </div>
-            </div>
-
-            <!-- tiny reminder: location statistics (physical library locations) -->
-            <div class="chart-card">
-                <div class="chart-header">
-                    <h3><i class="fas fa-map-marker-alt"></i> Location Stats</h3>
-                </div>
-                <div class="activity-list">
-                    <!-- tiny reminder: loop through location statistics -->
-                    {% for loc in location_stats %}
-                    <div class="activity-item activity-item-border">
-                        <div class="activity-content">
-                            <div class="activity-icon icon-green">
-                                <i class="fas fa-bookmark"></i>
-                            </div>
-                            <div class="activity-text">
-                                <h4>{{ loc.Location|truncatewords:3 }}</h4>
-                                <!-- lol reminder: show available vs borrowed breakdown -->
-                                <p>Available: {{ loc.available }} | Borrowed: {{ loc.borrowed }}</p>
-                            </div>
-                        </div>
-                        <div class="activity-time activity-count-green">
-                            {{ loc.total }} books
-                        </div>
-                    </div>
-                    {% empty %}
-                    <p class="empty-state">No data available</p>
-                    {% endfor %}
-                </div>
-            </div>
-
-            <!-- lol reminder: overall gender distribution -->
-            <div class="chart-card">
-                <div class="chart-header">
-                    <h3><i class="fas fa-users"></i> Overall Gender Distribution</h3>
-                </div>
-                <div style="display: flex; justify-content: center; align-items: center; padding: 1rem; min-height: 400px;">
-                    <canvas id="overallGenderChart" width="300" height="300" style="max-width: 100%;"></canvas>
-                </div>
-            </div>
-
-            <!-- tiny reminder: gender distribution by grade -->
-            <div class="chart-card">
-                <div class="chart-header">
-                    <h3><i class="fas fa-graduation-cap"></i> Gender Distribution by Grade</h3>
-                    <select id="batchSelect" style="padding: 0.5rem; border-radius: 6px; background: var(--search-area-bg); color: var(--main-color); border: 2px solid var(--message-box-border); margin-left: auto;">
-                        {% for batch in batch_gender_pie_data %}
-                        <option value="{{ batch }}">{{ batch }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div style="display: flex; justify-content: center; align-items: center; padding: 1rem; min-height: 400px;">
-                    <canvas id="batchGenderChart" width="300" height="300" style="max-width: 100%;"></canvas>
-                </div>
-            </div>
-        </div>
-
-        <!-- lol divider so i can find stuff fast -->
-        {% if overdue_books > 0 %}
-        <div class="chart-card chart-card-danger">
+          <div class="chart-card">
             <div class="chart-header">
-                <h3 class="chart-header-danger">
-                    <i class="fas fa-exclamation-circle"></i> Overdue Books ({{ overdue_books }})
-                </h3>
+              <h3>Monthly Borrows Trend</h3>
+              <div class="chart-legend">
+                <div class="legend-item">
+                  <div class="legend-color legend-color-blue"></div>
+                  <span>Borrows</span>
+                </div>
+              </div>
+            </div>
+            <div class="chart-container">
+              <canvas id="revenueChart"></canvas>
+            </div>
+          </div>
+
+          <div class="chart-card">
+            <div class="chart-header">
+              <h3>Daily Activity (Last 7 Days)</h3>
+              <div class="chart-legend">
+                <div class="legend-item">
+                  <div class="legend-color legend-color-purple"></div>
+                  <span>Borrows / Day</span>
+                </div>
+              </div>
+            </div>
+            <div class="chart-container">
+              <canvas id="userChart"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <div class="additional-charts">
+          <div class="chart-card">
+            <div class="chart-header"><h3>Books by Type</h3></div>
+            <div class="pie-chart-container">
+              <canvas id="salesChart"></canvas>
+            </div>
+          </div>
+
+          <div class="chart-card">
+            <div class="chart-header"><h3>Books by Language</h3></div>
+            <div class="pie-chart-container">
+              <canvas id="languageChart"></canvas>
+            </div>
+          </div>
+
+          <div class="metrics-card">
+            <h3>Library Performance</h3>
+            <div class="metric-item">
+              <div class="metric-header">
+                <span>Book Utilization</span>
+                <span>{{ currently_borrowed|default:0 }}/{{ total_books_count|default:1 }}</span>
+              </div>
+              <div class="progress-bar">
+                <div class="progress-fill progress-fill-blue" data-percent="{{ utilization_percent|default:0 }}" style="width: 0%;"></div>
+              </div>
+            </div>
+            <div class="metric-item">
+              <div class="metric-header">
+                <span>Return Rate</span>
+                <span>{{ return_rate|default:0 }}%</span>
+              </div>
+              <div class="progress-bar">
+                <div class="progress-fill progress-fill-green" data-percent="{{ return_rate|default:0 }}" style="width: 0%;"></div>
+              </div>
+            </div>
+            <div class="metric-item">
+              <div class="metric-header">
+                <span>Avg. Borrow Duration</span>
+                <span>{{ avg_borrow_days|default:0 }} days</span>
+              </div>
+              <div class="progress-bar">
+                <div class="progress-fill progress-fill-purple" data-percent="{{ avg_borrow_percent|default:0 }}" style="width: 0%;"></div>
+              </div>
+            </div>
+            <div class="metric-item">
+              <div class="metric-header">
+                <span>Active Period Borrows</span>
+                <span>{{ period_borrows|default:0 }}</span>
+              </div>
+              <div class="progress-bar">
+                <div class="progress-fill progress-fill-orange" style="width: 85%;"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="stats-grid">
+          <div class="chart-card">
+            <div class="chart-header">
+              <h3><i class="fas fa-star"></i> Top Borrowers</h3>
             </div>
             <div class="activity-list">
-                <!-- tiny reminder: loop through overdue books list -->
-                {% for overdue in overdue_list %}
-                <div class="activity-item">
-                    <div class="activity-content">
-                        <div class="activity-icon icon-red">
-                            <i class="fas fa-clock"></i>
-                        </div>
-                        <div class="activity-text">
-                            <!-- tiny reminder: show book title and borrower info -->
-                            <h4>{{ overdue.bookTitle|truncatewords:6 }}</h4>
-                            <p>{{ overdue.accountName }} ({{ overdue.accountID }})</p>
-                        </div>
-                    </div>
-                    <!-- lol reminder: display due date in danger styling -->
-                    <div class="activity-time activity-time-danger">
-                        Due: {{ overdue.return_date|date:"M d, Y" }}
-                    </div>
+              {% for borrower in top_borrowers %}
+              <div class="activity-item activity-item-border">
+                <div class="activity-content">
+                  <div class="activity-icon icon-blue"><i class="fas fa-user"></i></div>
+                  <div class="activity-text">
+                    <h4>{{ borrower.accountName }}</h4>
+                    <p>ID: {{ borrower.accountID }}</p>
+                  </div>
                 </div>
-                {% endfor %}
+                <div class="activity-time activity-count-blue">{{ borrower.borrow_count }} borrows</div>
+              </div>
+              {% empty %}
+              <p class="empty-state">No data available</p>
+              {% endfor %}
             </div>
+          </div>
+
+          <div class="chart-card">
+            <div class="chart-header">
+              <h3><i class="fas fa-fire"></i> Most Borrowed Books</h3>
+            </div>
+            <div class="activity-list">
+              {% for book in most_borrowed %}
+              <div class="activity-item activity-item-border">
+                <div class="activity-content">
+                  <div class="activity-icon icon-purple"><i class="fas fa-book"></i></div>
+                  <div class="activity-text">
+                    <h4>{{ book.bookTitle|truncatewords:5 }}</h4>
+                    <p>Acc: {{ book.bookID }}</p>
+                  </div>
+                </div>
+                <div class="activity-time activity-count-purple">{{ book.borrow_count }}x</div>
+              </div>
+              {% empty %}
+              <p class="empty-state">No data available</p>
+              {% endfor %}
+            </div>
+          </div>
+
+          <div class="chart-card">
+            <div class="chart-header">
+              <h3><i class="fas fa-map-marker-alt"></i> Location Stats</h3>
+            </div>
+            <div class="activity-list">
+              {% for loc in location_stats %}
+              <div class="activity-item activity-item-border">
+                <div class="activity-content">
+                  <div class="activity-icon icon-green"><i class="fas fa-bookmark"></i></div>
+                  <div class="activity-text">
+                    <h4>{{ loc.Location|truncatewords:3 }}</h4>
+                    <p>Available: {{ loc.available }} | Borrowed: {{ loc.borrowed }}</p>
+                  </div>
+                </div>
+                <div class="activity-time activity-count-green">{{ loc.total }} books</div>
+              </div>
+              {% empty %}
+              <p class="empty-state">No data available</p>
+              {% endfor %}
+            </div>
+          </div>
+
+          <div class="chart-card">
+            <div class="chart-header">
+              <h3><i class="fas fa-users"></i> Overall Gender Distribution</h3>
+            </div>
+            <div style="display: flex; justify-content: center; align-items: center; padding: 1rem; min-height: 400px;">
+              <canvas id="overallGenderChart" width="300" height="300" style="max-width: 100%;"></canvas>
+            </div>
+          </div>
+
+          <div class="chart-card">
+            <div class="chart-header">
+              <h3><i class="fas fa-graduation-cap"></i> Gender Distribution by Grade</h3>
+              <select id="batchSelect" style="padding: 0.5rem; border-radius: 6px; background: var(--search-area-bg); color: var(--main-color); border: 2px solid var(--message-box-border); margin-left: auto;">
+                {% for batch in batch_gender_pie_data %}
+                <option value="{{ batch }}">{{ batch }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div style="display: flex; justify-content: center; align-items: center; padding: 1rem; min-height: 400px;">
+              <canvas id="batchGenderChart" width="300" height="300" style="max-width: 100%;"></canvas>
+            </div>
+          </div>
+        </div>
+
+        {% if overdue_books > 0 %}
+        <div class="chart-card chart-card-danger">
+          <div class="chart-header">
+            <h3 class="chart-header-danger">
+              <i class="fas fa-exclamation-circle"></i> Overdue Books ({{ overdue_books }})
+            </h3>
+          </div>
+          <div class="activity-list">
+            {% for overdue in overdue_list %}
+            <div class="activity-item">
+              <div class="activity-content">
+                <div class="activity-icon icon-red"><i class="fas fa-clock"></i></div>
+                <div class="activity-text">
+                  <h4>{{ overdue.bookTitle|truncatewords:6 }}</h4>
+                  <p>{{ overdue.accountName }} ({{ overdue.accountID }})</p>
+                </div>
+              </div>
+              <div class="activity-time activity-time-danger">Due: {{ overdue.return_date|date:"M d, Y" }}</div>
+            </div>
+            {% endfor %}
+          </div>
         </div>
         {% endif %}
 
-        <!-- lol divider so i can find stuff fast -->
         <div class="activity-card">
-            <div class="activity-header">
-                <h3><i class="fas fa-history"></i> Recent Activity</h3>
-            </div>
-            <div class="activity-list">
-                <!-- tiny reminder: loop through recently borrowed books -->
-                {% for activity in borrowed_books %}
-                <div class="activity-item">
-                    <div class="activity-content">
-                        <div class="activity-icon icon-blue">
-                            <i class="fas fa-book"></i>
-                        </div>
-                        <div class="activity-text">
-                            <!-- tiny reminder: show book title and borrower -->
-                            <h4>{{ activity.bookTitle|truncatewords:8 }} was borrowed</h4>
-                            <p>{{ activity.accountName }} ({{ activity.accountID }})</p>
-                        </div>
-                    </div>
-                    <!-- quick note: display borrow date and time -->
-                    <div class="activity-time">{{ activity.borrow_date|date:"M d, Y H:i" }}</div>
+          <div class="activity-header">
+            <h3><i class="fas fa-history"></i> Recent Activity</h3>
+          </div>
+          <div class="activity-list">
+            {% for activity in borrowed_books %}
+            <div class="activity-item">
+              <div class="activity-content">
+                <div class="activity-icon icon-blue"><i class="fas fa-book"></i></div>
+                <div class="activity-text">
+                  <h4>{{ activity.bookTitle|truncatewords:8 }} was borrowed</h4>
+                  <p>{{ activity.accountName }} ({{ activity.accountID }})</p>
                 </div>
-                {% empty %}
-                <p class="empty-state">No recent activity</p>
-                {% endfor %}
+              </div>
+              <div class="activity-time">{{ activity.borrow_date|date:"M d, Y H:i" }}</div>
             </div>
+            {% empty %}
+            <p class="empty-state">No recent activity</p>
+            {% endfor %}
+          </div>
         </div>
-    </main>
-    </div>
 
-    <!-- lol divider so i can find stuff fast -->
-    <script>
-        // tiny reminder: inject metrics json from django backend
-        // note to self: escapejs filter prevents xss attacks
-        window.analyticsData = JSON.parse('{{ metrics_json|escapejs }}');
-        window.overallGenderLabels = {{ overall_gender_labels|safe }};
-        window.overallGenderData = {{ overall_gender_data|safe }};
-        window.batchGenderPieData = {{ batch_gender_pie_data|safe }};
-    </script>
-    
-    <!-- note to self: main statistics javascript file (handles chart.js rendering and interactions) -->
-    <script src="{% static 'Scripts/js/statistics.js' %}"></script>
-    <script>
-        // lol reminder: gender pie charts
-        document.addEventListener('DOMContentLoaded', function() {
-            const rootStyles = getComputedStyle(document.documentElement);
-            const genderColors = [
-                rootStyles.getPropertyValue('--accent').trim() || '#2f3a40',
-                rootStyles.getPropertyValue('--info').trim() || '#2f5b6b',
-                rootStyles.getPropertyValue('--warning').trim() || '#8a6b2e'
-            ];
+      </main>
+      <!-- ===== END MAIN CONTENT ===== -->
 
-            // note to self: overall gender chart
-            const overallCtx = document.getElementById('overallGenderChart').getContext('2d');
-            new Chart(overallCtx, {
-                type: 'pie',
-                data: {
-                    labels: window.overallGenderLabels,
-                    datasets: [{
-                        data: window.overallGenderData,
-                        backgroundColor: genderColors,
-                        borderColor: genderColors,
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: {
-                            position: 'bottom',
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    return context.label + ': ' + context.parsed + '%';
-                                }
-                            }
-                        }
-                    }
-                }
-            });
+    </div><!-- end app-content -->
+  </div><!-- end app-container -->
 
-            // tiny reminder: batch gender chart
-            const batchCtx = document.getElementById('batchGenderChart').getContext('2d');
-            let batchChart = new Chart(batchCtx, {
-                type: 'pie',
-                data: {
-                    labels: window.batchGenderPieData['Grade 7'].labels,
-                    datasets: [{
-                        data: window.batchGenderPieData['Grade 7'].data,
-                        backgroundColor: genderColors,
-                        borderColor: genderColors,
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: {
-                            position: 'bottom',
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    return context.label + ': ' + context.parsed + '%';
-                                }
-                            }
-                        }
-                    }
-                }
-            });
+  <script>
+    window.analyticsData = JSON.parse('{{ metrics_json|escapejs }}');
+    window.overallGenderLabels = {{ overall_gender_labels|safe }};
+    window.overallGenderData = {{ overall_gender_data|safe }};
+    window.batchGenderPieData = {{ batch_gender_pie_data|safe }};
+  </script>
 
-            // tiny reminder: batch selector
-            document.getElementById('batchSelect').addEventListener('change', function() {
-                const selectedBatch = this.value;
-                const data = window.batchGenderPieData[selectedBatch];
-                batchChart.data.labels = data.labels;
-                batchChart.data.datasets[0].data = data.data;
-                batchChart.update();
-            });
-        });
-        
-        // note to self: export menu toggle
-        (function() {
-            const toggle = document.getElementById('exportToggle');
-            const menu = document.getElementById('exportMenu');
-            if (!toggle || !menu) return;
+  <script src="{% static 'Scripts/js/statistics.js' %}"></script>
+  <script src="{% static 'Scripts/js/cadmin.js' %}"></script>
 
-            toggle.addEventListener('click', function(event) {
-                event.stopPropagation();
-                menu.classList.toggle('show');
-            });
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const rootStyles = getComputedStyle(document.documentElement);
+      const genderColors = [
+        rootStyles.getPropertyValue('--accent').trim() || '#2f3a40',
+        rootStyles.getPropertyValue('--info').trim() || '#2f5b6b',
+        rootStyles.getPropertyValue('--warning').trim() || '#8a6b2e'
+      ];
 
-            document.addEventListener('click', function(event) {
-                if (!menu.contains(event.target) && event.target !== toggle) {
-                    menu.classList.remove('show');
-                }
-            });
-        })();
-    </script>
-    <script>
-      // lol reminder: theme switcher (theme already loaded in head)
-      document.querySelector(".mode-switch").addEventListener("click", function() {
-        if (document.documentElement.classList.contains('dark')) {
-          document.documentElement.classList.remove('dark');
-          document.documentElement.classList.add('light');
-          localStorage.setItem('theme', 'light');
-        } else {
-          document.documentElement.classList.remove('light');
-          document.documentElement.classList.add('dark');
-          localStorage.setItem('theme', 'dark');
+      // note to self: overall gender chart
+      const overallCtx = document.getElementById('overallGenderChart').getContext('2d');
+      new Chart(overallCtx, {
+        type: 'pie',
+        data: {
+          labels: window.overallGenderLabels,
+          datasets: [{ data: window.overallGenderData, backgroundColor: genderColors, borderColor: genderColors, borderWidth: 1 }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { position: 'bottom' },
+            tooltip: { callbacks: { label: function(context) { return context.label + ': ' + context.parsed + '%'; } } }
+          }
         }
       });
-    </script>
-        <script src="{% static 'Scripts/js/portal_search.js' %}"></script>
-        <script>
-            if (window.initPortalSearch) {
-                window.initPortalSearch({
-                    inputId: 'analyticsSearchInput',
-                    suggestionsId: 'analyticsSearchSuggestions'
-                });
-            }
-        </script>
-    </div>
-  </div>
+
+      // tiny reminder: batch gender chart
+      const batchCtx = document.getElementById('batchGenderChart').getContext('2d');
+      let batchChart = new Chart(batchCtx, {
+        type: 'pie',
+        data: {
+          labels: window.batchGenderPieData['Grade 7'].labels,
+          datasets: [{ data: window.batchGenderPieData['Grade 7'].data, backgroundColor: genderColors, borderColor: genderColors, borderWidth: 1 }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { position: 'bottom' },
+            tooltip: { callbacks: { label: function(context) { return context.label + ': ' + context.parsed + '%'; } } }
+          }
+        }
+      });
+
+      document.getElementById('batchSelect').addEventListener('change', function() {
+        const data = window.batchGenderPieData[this.value];
+        batchChart.data.labels = data.labels;
+        batchChart.data.datasets[0].data = data.data;
+        batchChart.update();
+      });
+    });
+
+    // note to self: export menu toggle
+    (function() {
+      const toggle = document.getElementById('exportToggle');
+      const menu = document.getElementById('exportMenu');
+      if (!toggle || !menu) return;
+      toggle.addEventListener('click', function(e) { e.stopPropagation(); menu.classList.toggle('show'); });
+      document.addEventListener('click', function(e) { if (!menu.contains(e.target) && e.target !== toggle) menu.classList.remove('show'); });
+    })();
+
+    // quick note: period selector auto-submit and range toggle
+    document.getElementById('period-select').addEventListener('change', function() {
+      const rangeFields = document.getElementById('period-range-fields');
+      if (this.value === 'range') {
+        rangeFields.style.display = 'flex';
+      } else {
+        rangeFields.style.display = 'none';
+        document.getElementById('period-form').submit();
+      }
+    });
+  </script>
+
+  <script>
+    function searchBooks() {
+      const input = document.getElementById('bookSearch');
+      const booksList = document.getElementById('booksList');
+      if (!input || !booksList) return;
+      const filter = input.value.toLowerCase();
+      const items = booksList.getElementsByClassName('book-item');
+      let visibleCount = 0;
+      for (let i = 0; i < items.length; i++) {
+        const title = items[i].getAttribute('data-title') || '';
+        const author = items[i].getAttribute('data-author') || '';
+        const callNumber = items[i].getAttribute('data-callnumber') || '';
+        const accession = items[i].getAttribute('data-accession') || '';
+        if (title.includes(filter) || author.includes(filter) || callNumber.includes(filter) || accession.includes(filter)) {
+          items[i].style.display = ''; visibleCount++;
+        } else {
+          items[i].style.display = 'none';
+        }
+      }
+      let noResultsMsg = document.getElementById('booksNoResults');
+      if (visibleCount === 0 && filter !== '') {
+        if (!noResultsMsg) {
+          noResultsMsg = document.createElement('p');
+          noResultsMsg.id = 'booksNoResults';
+          noResultsMsg.style.cssText = 'text-align: center; color: var(--secondary-color); padding: 20px; font-size: 0.8rem;';
+          noResultsMsg.textContent = 'No books found';
+          booksList.appendChild(noResultsMsg);
+        }
+      } else if (noResultsMsg) { noResultsMsg.remove(); }
+    }
+
+    function searchUsers() {
+      const input = document.getElementById('userSearch');
+      const usersList = document.getElementById('usersList');
+      if (!input || !usersList) return;
+      const filter = input.value.toLowerCase();
+      const gradeSections = usersList.getElementsByClassName('grade-section');
+      let totalVisibleCount = 0;
+      for (let section of gradeSections) {
+        const items = section.getElementsByClassName('user-item');
+        let visibleInSection = 0;
+        for (let item of items) {
+          const name = item.getAttribute('data-name') || '';
+          const schoolId = item.getAttribute('data-schoolid') || '';
+          const grade = item.getAttribute('data-grade') || '';
+          const batch = item.getAttribute('data-batch') || '';
+          const sectionValue = item.getAttribute('data-section') || '';
+          if (name.includes(filter) || schoolId.includes(filter) || grade.includes(filter) || batch.includes(filter) || sectionValue.includes(filter)) {
+            item.style.display = ''; visibleInSection++; totalVisibleCount++;
+          } else { item.style.display = 'none'; }
+        }
+        if (filter !== '' && visibleInSection === 0) { section.style.display = 'none'; }
+        else { section.style.display = ''; if (filter !== '' && visibleInSection > 0) section.setAttribute('open', ''); }
+      }
+      let noResultsMsg = document.getElementById('usersNoResults');
+      if (totalVisibleCount === 0 && filter !== '') {
+        if (!noResultsMsg) {
+          noResultsMsg = document.createElement('p');
+          noResultsMsg.id = 'usersNoResults';
+          noResultsMsg.style.cssText = 'text-align: center; color: var(--secondary-color); padding: 20px; font-size: 0.8rem;';
+          noResultsMsg.textContent = 'No students found';
+          usersList.appendChild(noResultsMsg);
+        }
+      } else if (noResultsMsg) { noResultsMsg.remove(); }
+    }
+  </script>
+
+  <script src="{% static 'Scripts/js/portal_search.js' %}"></script>
+  <script>
+    if (window.initPortalSearch) {
+      window.initPortalSearch({
+        inputId: 'analyticsSearchInput',
+        suggestionsId: 'analyticsSearchSuggestions'
+      });
+    }
+  </script>
+
 </body>
 </html>

@@ -404,6 +404,52 @@ def _build_analytics_context(request):
     else:
         avg_borrow_days = 0.0
 
+    # ========== SIDEBAR DATA (Books/Students) ==========
+    all_books = []
+    for book in Book.objects.all().order_by('-id'):
+        copies_payload = [
+            {
+                'accessionNumber': c.accessionNumber,
+                'Location': c.Location,
+                'status': c.status,
+            }
+            for c in book.copies.all()
+        ]
+        all_books.append({
+            'id': book.id,
+            'Title': book.Title,
+            'mainAuthor': book.mainAuthor,
+            'coAuthor': book.coAuthor,
+            'Publisher': book.Publisher,
+            'Edition': book.Edition,
+            'callNumber': book.callNumber,
+            'Language': book.Language,
+            'Type': book.Type,
+            'total_copies': book.get_total_copies(),
+            'available_copies': book.get_available_copies(),
+            'borrowed_copies': book.get_borrowed_copies(),
+            'copies': copies_payload,
+        })
+
+    students_by_grade = {}
+    total_users_count = total_accounts
+
+    for grade_num in range(7, 13):
+        grade_students = []
+        for user in students.objects.filter(grade_Level=grade_num).order_by('name'):
+            grade_students.append({
+                'name': user.name,
+                'school_id': user.school_id,
+                'email': user.email,
+                'grade': f'Grade {grade_num}',
+                'grade_num': grade_num,
+                'batch': user.batch or '',
+                'section': user.section or '',
+            })
+        students_by_grade[grade_num] = grade_students
+
+    available_books_count = available_books
+
     # ========== PERCENTAGES FOR UI (avoid template math) ==========
     utilization_percent = int(currently_borrowed / total_books_count * 100) if total_books_count > 0 else 0
     avg_borrow_percent = int(min((avg_borrow_days / 14) * 100, 100))  # relative to a 14-day baseline
@@ -483,7 +529,9 @@ def _build_analytics_context(request):
         "total_borrows_all_time": total_borrows_all_time,
         "currently_borrowed": currently_borrowed,
         "available_books": available_books,
+        "available_books_count": available_books_count,
         "overdue_books": overdue_books,
+        "total_users_count": total_users_count,
 
         # Percent / UI helpers
         "utilization_percent": utilization_percent,
@@ -502,6 +550,8 @@ def _build_analytics_context(request):
         "most_borrowed": list(most_borrowed),
         "location_stats": list(location_stats),
         "batch_stats": list(batch_stats),
+        "all_books": all_books,
+        "students_by_grade": students_by_grade,
 
         # Gender statistics
         "overall_gender_proportions": overall_gender_proportions,
@@ -664,12 +714,16 @@ def admin_logout(request):
 
 @staff_member_required
 def admin_dashboard(request):
-    # Track which view to show after POST processing
-    active_view = 'borrowed'  # default view
+    # Track which view to show after navigation or POST processing.
+    active_view = request.GET.get('active_view', 'borrowed')
+    if active_view not in {'borrowed', 'checkout', 'return'}:
+        active_view = 'borrowed'
     
     if request.method == 'POST':
         action = request.POST.get('action')
-        active_view = request.POST.get('active_view', 'borrowed')  # Get the view that was active
+        active_view = request.POST.get('active_view', active_view)
+        if active_view not in {'borrowed', 'checkout', 'return'}:
+            active_view = 'borrowed'
         
         if action == 'checkout':
             accession_number = request.POST.get('book_id', '').strip()
@@ -1015,46 +1069,65 @@ def admin_dashboard(request):
             call_number = request.POST.get('call_number', '').strip()
             language = request.POST.get('language', '').strip() or 'English'
             book_type = request.POST.get('type', '').strip() or 'Other'
+            # ── New fields ──
+            editors = request.POST.get('editors', '').strip()
+            place_of_publication = request.POST.get('place_of_publication', '').strip()
+            copyright_date_raw = request.POST.get('copyright_date', '').strip()
+            publication_date_raw = request.POST.get('publication_date', '').strip()
+            acquisition_status = request.POST.get('acquisition_status', '').strip() or None
 
-            copies_raw = request.POST.get('copies_list', '').strip()
+            copyright_date = None
+            publication_date = None
+            if copyright_date_raw:
+                try:
+                    from django.utils.dateparse import parse_date as _pd
+                    copyright_date = _pd(copyright_date_raw)
+                except Exception:
+                    pass
+            if publication_date_raw:
+                try:
+                    from django.utils.dateparse import parse_date as _pd
+                    publication_date = _pd(publication_date_raw)
+                except Exception:
+                    pass
+
+            # ── Copies — collect all hidden `copies_list` values ──
+            copies_raw_list = request.POST.getlist('copies_list')
+            # filter out empty strings (rows where accession/location were blank)
+            copies_raw_list = [v for v in copies_raw_list if v.strip()]
 
             if not title or not main_author or not call_number:
                 messages.error(request, 'Title, Main Author, and Call Number are required.')
                 return redirect('admin_dashboard')
 
-            if not copies_raw:
-                messages.error(request, 'Please provide at least one copy (accession number, location, status).')
+            if not copies_raw_list:
+                messages.error(request, 'Please add at least one copy (accession number and location).')
                 return redirect('admin_dashboard')
 
             allowed_status = {'Available', 'Unavailable', 'Borrowed', 'Lost'}
             copies_to_create = []
-            for line in copies_raw.splitlines():
+            for line in copies_raw_list:
                 line = line.strip()
                 if not line:
                     continue
-
-                # Accept: ACC,Location,Status  OR  ACC | Location | Status
                 parts = [p.strip() for p in (line.split('|') if '|' in line else line.split(','))]
                 parts = [p for p in parts if p]
                 if len(parts) < 2:
-                    messages.error(request, f'Invalid copy line: "{line}". Use "ACC, Location, Status".')
+                    messages.error(request, f'Invalid copy entry: "{line}".')
                     return redirect('admin_dashboard')
-
                 accession = parts[0]
                 location = parts[1]
                 status = parts[2] if len(parts) >= 3 else 'Available'
                 if status not in allowed_status:
                     status = 'Available'
-
                 copies_to_create.append((accession, location, status))
 
             if not copies_to_create:
-                messages.error(request, 'No valid copy lines found.')
+                messages.error(request, 'No valid copies found.')
                 return redirect('admin_dashboard')
 
             try:
                 with transaction.atomic():
-                    # One Book per call number; copies are BookCopy rows.
                     book, created = Book.objects.get_or_create(
                         callNumber=call_number,
                         defaults={
@@ -1065,11 +1138,16 @@ def admin_dashboard(request):
                             'Edition': edition or None,
                             'Language': language,
                             'Type': book_type,
+                            'Editors': editors or None,
+                            'placeofPublication': place_of_publication or None,
+                            'copyrightDate': copyright_date,
+                            'publicationDate': publication_date,
+                            'acquisitionStatus': acquisition_status,
                         }
                     )
 
                     if not created:
-                        # Update core fields (keep it simple: overwrite with provided non-empty values)
+                        # Update all fields if the book already exists under this call number
                         book.Title = title or book.Title
                         book.mainAuthor = main_author or book.mainAuthor
                         book.coAuthor = co_author or book.coAuthor
@@ -1077,6 +1155,16 @@ def admin_dashboard(request):
                         book.Edition = edition or book.Edition
                         book.Language = language or book.Language
                         book.Type = book_type or book.Type
+                        if editors:
+                            book.Editors = editors
+                        if place_of_publication:
+                            book.placeofPublication = place_of_publication
+                        if copyright_date:
+                            book.copyrightDate = copyright_date
+                        if publication_date:
+                            book.publicationDate = publication_date
+                        if acquisition_status:
+                            book.acquisitionStatus = acquisition_status
                         book.save()
 
                     for accession, location, status in copies_to_create:
@@ -1087,12 +1175,12 @@ def admin_dashboard(request):
                             status=status,
                         )
 
-                messages.success(request, f'Book "{title}" saved and {len(copies_to_create)} copy/copies added.')
+                messages.success(request, f'Book "{title}" saved with {len(copies_to_create)} copy/copies.')
             except IntegrityError:
-                messages.error(request, 'Could not save book/copies. Accession numbers and call numbers must be unique.')
+                messages.error(request, 'Could not save — accession numbers and call numbers must be unique.')
             except Exception as e:
                 messages.error(request, f'Error adding book: {str(e)}')
-
+                
         elif action == 'import_students':
             csv_file = request.FILES.get('students_csv')
             if not csv_file:

@@ -37,7 +37,7 @@ class BulkImportAdmin(admin.ModelAdmin):
         """Add import/export URLs to changelist context."""
         extra_context = extra_context or {}
         import_url = reverse(f'admin:{self.model._meta.app_label}_{self.model._meta.model_name}_import_csv')
-        download_url = reverse(f'admin:{self.model._meta.app_label}_{self.model._meta.model_name}_download_template')
+        download_url = reverse(f'admin:{self.model._meta.app_label}_{self.model._meta.model_name}_downloa  b zd_template')
         extra_context['import_url'] = import_url
         extra_context['download_url'] = download_url
         return super().changelist_view(request, extra_context=extra_context)

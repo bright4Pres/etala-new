@@ -55,15 +55,9 @@
   <div class="app-container">
   <div class="app-header">
     <div class="app-header-left">
-      <span class="app-icon"></span>
       <p class="app-name">Library Admin</p>
       <div class="search-wrapper">
         <input class="search-input" type="text" placeholder="Search">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="feather feather-search" viewBox="0 0 24 24">
-          <defs></defs>
-          <circle cx="11" cy="11" r="8"></circle>
-          <path d="M21 21l-4.35-4.35"></path>
-        </svg>
       </div>
     </div>
     <div class="app-header-right">
@@ -531,9 +525,9 @@
 </div>
 </div>
 
-    <!-- quick note: add book modal -->
+       <!-- quick note: add book modal — full model fields + dynamic copy rows -->
     <div id="addBookModal" class="modal" style="display: none;">
-      <div class="modal-content">
+      <div class="modal-content" style="max-width: 780px;">
         <div class="modal-header">
           <h2 style="margin: 0; color: var(--main-color);">Add Book</h2>
           <button onclick="closeBookAddModal()" class="modal-close">&times;</button>
@@ -541,17 +535,39 @@
         <form method="post" action="{% url 'admin_dashboard' %}" id="addBookForm">
           {% csrf_token %}
           <input type="hidden" name="action" value="add_book">
-
+ 
+          <!-- ── SECTION: Identifiers ── -->
+          <p style="margin: 1rem 0 0.4rem; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--secondary-color);">Identifiers</p>
+ 
           <div class="form-row">
             <div class="form-group">
-              <label>Title *</label>
+              <label>Call Number <span style="color:var(--danger)">*</span></label>
+              <input type="text" name="call_number" id="addBookCallNumber" required placeholder="e.g. 823.914 ROW">
+              <small style="display:block; color: var(--secondary-color); margin-top: 4px;">One Book record per Call Number. Add multiple physical copies below.</small>
+            </div>
+            <div class="form-group">
+              <label>Acquisition Status</label>
+              <select name="acquisition_status" id="addBookAcquisitionStatus">
+                <option value="">— select —</option>
+                <option value="Donated">Donated</option>
+                <option value="Acquired">Acquired</option>
+              </select>
+            </div>
+          </div>
+ 
+          <!-- ── SECTION: Bibliographic info ── -->
+          <p style="margin: 1rem 0 0.4rem; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--secondary-color);">Bibliographic Info</p>
+ 
+          <div class="form-row">
+            <div class="form-group" style="flex: 2;">
+              <label>Title <span style="color:var(--danger)">*</span></label>
               <input type="text" name="title" id="addBookTitle" required>
             </div>
           </div>
-
+ 
           <div class="form-row">
             <div class="form-group">
-              <label>Main Author *</label>
+              <label>Main Author <span style="color:var(--danger)">*</span></label>
               <input type="text" name="main_author" id="addBookMainAuthor" required>
             </div>
             <div class="form-group">
@@ -559,7 +575,17 @@
               <input type="text" name="co_author" id="addBookCoAuthor">
             </div>
           </div>
-
+ 
+          <div class="form-row">
+            <div class="form-group">
+              <label>Editors</label>
+              <input type="text" name="editors" id="addBookEditors" placeholder="e.g. Smith, J.; Lee, A.">
+            </div>
+          </div>
+ 
+          <!-- ── SECTION: Publication details ── -->
+          <p style="margin: 1rem 0 0.4rem; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--secondary-color);">Publication Details</p>
+ 
           <div class="form-row">
             <div class="form-group">
               <label>Publisher</label>
@@ -567,16 +593,32 @@
             </div>
             <div class="form-group">
               <label>Edition</label>
-              <input type="text" name="edition" id="addBookEdition">
+              <input type="text" name="edition" id="addBookEdition" placeholder="e.g. 3rd ed.">
             </div>
           </div>
-
+ 
           <div class="form-row">
             <div class="form-group">
-              <label>Call Number *</label>
-              <input type="text" name="call_number" id="addBookCallNumber" required>
-              <small style="display:block; color: var(--secondary-color); margin-top: 4px;">One Book per Call Number; add multiple copies below (unique Accession Numbers).</small>
+              <label>Place of Publication</label>
+              <input type="text" name="place_of_publication" id="addBookPlaceOfPublication" placeholder="e.g. Manila, Philippines">
             </div>
+          </div>
+ 
+          <div class="form-row">
+            <div class="form-group">
+              <label>Copyright Date</label>
+              <input type="date" name="copyright_date" id="addBookCopyrightDate">
+            </div>
+            <div class="form-group">
+              <label>Publication Date</label>
+              <input type="date" name="publication_date" id="addBookPublicationDate">
+            </div>
+          </div>
+ 
+          <!-- ── SECTION: Classification ── -->
+          <p style="margin: 1rem 0 0.4rem; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--secondary-color);">Classification</p>
+ 
+          <div class="form-row">
             <div class="form-group">
               <label>Language</label>
               <select name="language" id="addBookLanguage">
@@ -586,41 +628,42 @@
                 <option value="Other">Other</option>
               </select>
             </div>
-          </div>
-
-          <div class="form-row">
             <div class="form-group">
               <label>Type</label>
               <select name="type" id="addBookType">
                 <option value="Analytics">Analytics</option>
                 <option value="Article">Article</option>
-                <option value="Books">Books</option>
+                <option value="Books" selected>Books</option>
                 <option value="Thesis">Thesis</option>
                 <option value="DOST Resources">DOST Resources</option>
                 <option value="Journal">Journal</option>
                 <option value="US Reference Materials">US Reference Materials</option>
-                <option value="Other" selected>Other</option>
+                <option value="Other">Other</option>
               </select>
             </div>
           </div>
-
-          <div class="form-row">
-            <div class="form-group" style="width: 100%;">
-              <label>Copies (one per line) *</label>
-              <textarea name="copies_list" id="addBookCopies" required rows="6" style="width: 100%; padding: 10px; border: 2px solid var(--message-box-border); border-radius: 8px; background: var(--search-area-bg); color: var(--main-color); box-sizing: border-box; resize: vertical;" placeholder="ACC001, Main Library, Available
-ACC002, Main Library, Borrowed
-ACC003, Annex, Unavailable"></textarea>
-              <small style="display:block; color: var(--secondary-color); margin-top: 6px;">Format: AccessionNumber, Location, Status (Available/Unavailable/Borrowed/Lost). Status defaults to Available if omitted.</small>
-            </div>
+ 
+          <!-- ── SECTION: Physical Copies ── -->
+          <p style="margin: 1rem 0 0.4rem; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--secondary-color);">Physical Copies <span style="color:var(--danger)">*</span></p>
+ 
+          <div id="addBookCopiesContainer" style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 8px;">
+            <!-- first copy row injected by JS on open -->
           </div>
-
-          <div class="modal-actions">
+ 
+          <button type="button" onclick="addCopyRow()" style="display: flex; align-items: center; gap: 6px; background: var(--accent-soft); color: var(--accent); border: 1px dashed var(--accent); border-radius: 6px; padding: 7px 14px; font-size: 0.8rem; font-weight: 600; cursor: pointer; width: 100%; justify-content: center; transition: background 0.2s;"
+            onmouseover="this.style.background='var(--accent-soft-strong)'" onmouseout="this.style.background='var(--accent-soft)'">
+            + Add Another Copy
+          </button>
+ 
+          <small style="display:block; color: var(--secondary-color); margin-top: 6px;">Each copy needs a unique Accession Number. Status defaults to Available if left blank.</small>
+ 
+          <div class="modal-actions" style="margin-top: 1.25rem;">
             <button type="button" onclick="closeBookAddModal()" class="btn-secondary">Cancel</button>
             <button type="submit" class="btn-primary">Add Book</button>
           </div>
         </form>
       </div>
-    </div>
+    </div> 
 
     <!-- tiny reminder: add user modal -->
     <div id="addUserModal" class="modal" style="display: none;">
@@ -902,6 +945,98 @@ ACC003, Annex, Unavailable"></textarea>
     </div>
 
     <script src="{% static 'Scripts/js/cadmin.js' %}"></script>
+    <script>
+      // ── Copy row builder ──────────────────────────────────────────────────────
+      let _copyRowIndex = 0;
+ 
+      function buildCopyRow(index) {
+        const row = document.createElement('div');
+        row.className = 'add-copy-row';
+        row.dataset.index = index;
+        row.style.cssText = 'display: grid; grid-template-columns: 1fr 1fr 140px 36px; gap: 8px; align-items: center; padding: 10px 12px; background: var(--message-box-hover); border-radius: 8px; border: 1px solid var(--message-box-border);';
+ 
+        // hidden field that carries the structured value on submit
+        const hidden = document.createElement('input');
+        hidden.type = 'hidden';
+        hidden.name = 'copies_list';
+        hidden.dataset.rowIndex = index;
+ 
+        const acc = document.createElement('input');
+        acc.type = 'text';
+        acc.className = 'copy-acc';
+        acc.placeholder = 'Accession No. *';
+        acc.required = index === 0; // first row is required
+        acc.style.cssText = 'padding: 7px 10px; border: 2px solid var(--message-box-border); border-radius: 6px; background: var(--search-area-bg); color: var(--main-color); font-family: monospace; font-size: 0.85rem; width: 100%;';
+ 
+        const loc = document.createElement('input');
+        loc.type = 'text';
+        loc.className = 'copy-loc';
+        loc.placeholder = 'Location *';
+        loc.style.cssText = 'padding: 7px 10px; border: 2px solid var(--message-box-border); border-radius: 6px; background: var(--search-area-bg); color: var(--main-color); font-size: 0.85rem; width: 100%;';
+ 
+        const sta = document.createElement('select');
+        sta.className = 'copy-sta';
+        sta.style.cssText = 'padding: 7px 8px; border: 2px solid var(--message-box-border); border-radius: 6px; background: var(--search-area-bg); color: var(--main-color); font-size: 0.85rem; width: 100%;';
+        ['Available', 'Unavailable', 'Borrowed', 'Lost'].forEach(opt => {
+          const o = document.createElement('option');
+          o.value = opt; o.textContent = opt;
+          sta.appendChild(o);
+        });
+ 
+        // note: reference acc/loc/sta directly — no DOM query needed, avoids null errors
+        function syncHidden() {
+          hidden.value = (acc.value.trim() && loc.value.trim())
+            ? `${acc.value.trim()},${loc.value.trim()},${sta.value}`
+            : '';
+        }
+ 
+        acc.addEventListener('input', syncHidden);
+        loc.addEventListener('input', syncHidden);
+        sta.addEventListener('change', syncHidden);
+ 
+        const del = document.createElement('button');
+        del.type = 'button';
+        del.title = 'Remove this copy';
+        del.innerHTML = '&times;';
+        del.style.cssText = 'background: var(--danger-bg); color: var(--danger); border: 1px solid var(--danger); border-radius: 6px; width: 36px; height: 36px; font-size: 1.1rem; cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center;';
+        del.onclick = function() {
+          const container = document.getElementById('addBookCopiesContainer');
+          if (container.children.length <= 1) return; // keep at least one row
+          row.remove();
+          // make sure first remaining row has required on acc
+          const firstAcc = container.querySelector('.copy-acc');
+          if (firstAcc) firstAcc.required = true;
+        };
+ 
+        row.appendChild(acc);
+        row.appendChild(loc);
+        row.appendChild(sta);
+        row.appendChild(hidden);
+        row.appendChild(del);
+        syncHidden(); // initialise hidden value — called AFTER elements are in row
+        return row;
+      }
+ 
+      function addCopyRow() {
+        _copyRowIndex++;
+        const container = document.getElementById('addBookCopiesContainer');
+        container.appendChild(buildCopyRow(_copyRowIndex));
+      }
+ 
+      // Override openBookAddModal to reset everything properly
+      function openBookAddModal() {
+        document.getElementById('addBookForm').reset();
+        _copyRowIndex = 0;
+        const container = document.getElementById('addBookCopiesContainer');
+        container.innerHTML = '';
+        container.appendChild(buildCopyRow(0));
+        document.getElementById('addBookModal').style.display = 'flex';
+      }
+ 
+      function closeBookAddModal() {
+        document.getElementById('addBookModal').style.display = 'none';
+      }
+    </script>
     <script>
 
       // tiny reminder: form validation and status handlers
